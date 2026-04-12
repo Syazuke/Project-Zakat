@@ -1,3 +1,5 @@
+"use client";
+
 import Zakat from "@/app/components/moleculs/Zakat";
 import { useEffect, useState } from "react";
 
