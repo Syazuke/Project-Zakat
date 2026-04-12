@@ -27,7 +27,7 @@ const HeroSection = () => {
             href="#bayar"
             className="bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition self-center p-3 shadow-lg shadow-emerald-200"
           >
-            Bayar Zakat
+            Bayar Zakat Sekarang
           </a>
           <a
             href="#kalkulator"
