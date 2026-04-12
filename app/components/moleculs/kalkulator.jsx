@@ -128,7 +128,7 @@ const Kalkulator = () => {
                   </p>
                   <p className="text-sm text-gray-500 mt-2">
                     {zakatType === "fidyah"
-                      ? "*Perhitungan menggunakan estimasi fidyah Rp 45.000/hari"
+                      ? "*Perhitungan menggunakan estimasi fidyah Rp 65.000/hari"
                       : "*Perhitungan ini menggunakan standar 2.5%"}
                   </p>
                 </div>
