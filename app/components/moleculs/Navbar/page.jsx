@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import "../../../globals.css";
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
