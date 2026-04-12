@@ -132,7 +132,7 @@ export default function AdminDashboard() {
       </aside>
 
       {/* 2. KONTEN UTAMA */}
-      <main className="flex flex-col h-screen overflow-y-auto">
+      <main className="flex flex-col h-screen overflow-y-auto w-full">
         {/* HEADER ATAS */}
         <header className="bg-white shadow-sm p-4 md:p-6 flex justify-between items-center sticky top-0 z-10">
           <div className="flex items-center gap-4">
