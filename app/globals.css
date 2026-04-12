@@ -1,0 +1,39 @@
+/* Import Font Awesome (Opsional, tapi valid) */
+@import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Cara yang BENAR untuk membuat variabel tema (Mendukung Dark Mode) */
+@layer base {
+
+  /* 1. TEMA TERANG (Light Mode) */
+  :root {
+    --bg-primary: #059669;
+    --text-hover: #059669;
+    --background: #ffffff;
+    /* Putih */
+    --foreground: #000000;
+    /* Hitam */
+  }
+
+  /* 2. TEMA GELAP (Dark Mode) - Akan aktif jika class 'dark' dipanggil */
+  .dark {
+    --bg-primary: #10b981;
+    /* Emerald 500 (Sedikit lebih terang agar jelas di latar gelap) */
+    --text-hover: #10b981;
+    --background: #111827;
+    /* Abu-abu sangat gelap (Bukan hitam pekat) */
+    --foreground: #ffffff;
+    /* Teks Putih */
+  }
+}
+
+/* 3. Terapkan variabel ke Body */
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  /* Tambahkan efek transisi agar saat ganti tema terasa halus */
+  transition: background-color 0.3s ease, color 0.3s ease;
+}

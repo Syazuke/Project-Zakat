@@ -1,0 +1,29 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// Tambahkan model Anda di sini
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      String   @default("USER")
+  createdAt DateTime @default(now())
+}
+
+model ZakatTransaction {
+  id            String   @id @default(cuid())
+  name          String   @default("Hamba Allah")
+  message       String?  @db.Text                
+  zakatType     String   
+  amount        Float
+  paymentMethod String
+  status        String   @default("PENDING") 
+  createdAt     DateTime @default(now())
+}
