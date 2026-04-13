@@ -97,7 +97,7 @@ const Zakat = ({ nominalZakat, zakatType }) => {
           type="text"
           value={nama}
           onChange={(e) => setNama(e.target.value)}
-          placeholder="Contoh: Abdullah (Kosongkan untuk Hamba Allah)"
+          placeholder="Kosongkan untuk Hamba Allah"
           className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-500 outline-none transition bg-white"
         />
       </div>
@@ -110,11 +110,10 @@ const Zakat = ({ nominalZakat, zakatType }) => {
           value={jenisZakat}
           onChange={(e) => setJenisZakat(e.target.value)}
           className="w-full px-4 py-2 rounded-lg border border-gray-300
-          focus:ring-2 focus:ring-emerald-500 outline-none transition bg-white"
+          focus:ring-2 focus:ring-emerald-500 outline-none transition bg-white cursor-pointer"
         >
           <option value="penghasilan">Zakat Penghasilan</option>
           <option value="maal">Zakat Maal</option>
-          <option value="fitrah">Zakat Fitrah</option>
           <option value="fidyah">Fidyah</option>
         </select>
       </div>

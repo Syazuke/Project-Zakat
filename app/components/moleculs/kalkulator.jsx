@@ -60,7 +60,7 @@ const Kalkulator = () => {
                 <div
                   key={type}
                   onClick={() => handleTabChange(type)}
-                  className={`px-6 py-2 rounded-md font-medium capitalize transition-all ${
+                  className={`px-6 py-2 rounded-md font-medium capitalize transition-all cursor-pointer ${
                     zakatType === type
                       ? "bg-emerald-600 text-white shadow-md"
                       : "text-gray-600 hover:bg-gray-50"
