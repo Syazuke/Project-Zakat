@@ -76,9 +76,15 @@ export async function POST(request) {
 
     return NextResponse.json({ token: snapToken }, { status: 200 });
   } catch (error) {
-    console.error("Error Tokenizer:", error);
+    // 1. Tampilkan error asli Midtrans di log Vercel
+    console.error("ERROR ASLI MIDTRANS:", error.message || error);
+
+    // 2. Kirim error asli Midtrans ke Frontend agar muncul di layar Anda
     return NextResponse.json(
-      { message: "Gagal membuat tagihan" },
+      {
+        message: "Gagal membuat tagihan",
+        detail: error.message || "Cek log Vercel untuk detail",
+      },
       { status: 500 },
     );
   }
