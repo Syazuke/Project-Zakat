@@ -122,7 +122,7 @@ export default function AdminDashboard() {
             href="/"
             className="flex items-center justify-center gap-3 p-3 bg-emerald-700 rounded-lg text-white font-medium transition"
           >
-            Home
+            Kembali ke halama awal
           </a>
           {/* Tambahkan menu lain di sini nanti */}
         </nav>
