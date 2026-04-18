@@ -83,7 +83,7 @@ export default function AdminDashboard() {
       {isSidebarOpen && (
         <div
           className="fixed inset-0 bg-black/40 z-40 lg:hidden backdrop-blur-sm transition-all"
-          onClick={() => setIsSidebarOpen(false)} // Tutup sidebar jika area gelap diklik
+          onClick={() => setIsSidebarOpen(false)}
         />
       )}
       <aside
@@ -118,6 +118,7 @@ export default function AdminDashboard() {
           >
             <span className="text-xl">📊</span> Dashboard
           </a>
+          <a href="/">Home</a>
           {/* Tambahkan menu lain di sini nanti */}
         </nav>
 

@@ -1,43 +1,68 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/app/libs/prisma";
+import bcrypt from "bcryptjs";
+import { SignJWT } from "jose"; // 1. Tambahkan import ini
+import { cookies } from "next/headers"; // 2. Tambahkan import ini
 
 export async function POST(request) {
   try {
     const body = await request.json();
     const { email, password, role } = body;
 
-    // 1. Cari pengguna berdasarkan email di database
-    const user = await prisma.user.findUnique({
-      where: { email: email },
-    });
+    const user = await prisma.user.findUnique({ where: { email: email } });
 
     if (!user) {
       return NextResponse.json(
-        { message: "Akun tidak ditemukan. Silakan daftar terlebih dahulu." },
+        { message: "Akun tidak ditemukan." },
         { status: 404 },
       );
     }
 
-    // 2. Cek apakah kata sandi cocok
-    // CATATAN: Ini membandingkan teks biasa (karena kita sedang belajar).
-    // Di aplikasi nyata, Anda harus menggunakan bcrypt.compare()
-    if (user.password !== password) {
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordValid) {
       return NextResponse.json(
-        { message: "Kata sandi yang Anda masukkan salah!" },
+        { message: "Kata sandi salah!" },
         { status: 401 },
       );
     }
 
-    // 3. Cek apakah Peran (Role) sesuai
-    // Jika ada yang mencoba login ke tab Admin, tapi rolenya di database bukan admin
     if (role === "admin" && user.role !== "admin") {
-      return NextResponse.json(
-        { message: "Akses ditolak! Anda tidak memiliki izin sebagai Admin." },
-        { status: 403 },
-      );
+      return NextResponse.json({ message: "Akses ditolak!" }, { status: 403 });
     }
 
-    // 4. Jika semua benar, kembalikan data user (TIDAK BOLEH mengirim ulang password ke frontend)
+    // =========================================================
+    // ✨ PERUBAHAN BARU: MEMBUAT TOKEN DAN MENYIMPANNYA DI COOKIE
+    // =========================================================
+
+    // a. Buat Kunci Rahasia (Ambil dari .env)
+    const secret = new TextEncoder().encode(
+      process.env.JWT_SECRET || "rahasia_kunci_zakat_123",
+    );
+
+    // b. Buat Token (Karcis yang berlaku 1 hari)
+    const token = await new SignJWT({
+      id: user.id,
+      email: user.email,
+      role: user.role,
+    })
+      .setProtectedHeader({ alg: "HS256" })
+      .setExpirationTime("1d")
+      .sign(secret);
+
+    // c. Masukkan Token ke Cookie Browser (HttpOnly agar tidak bisa dicuri hacker)
+    cookies().set("admin_token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production", // Wajib HTTPS saat di Vercel
+      sameSite: "strict",
+      maxAge: 60 * 60 * 24, // Umur cookie: 1 hari (dalam detik)
+      path: "/",
+    });
+
+    // =========================================================
+
+    // =========================================================
+
     return NextResponse.json(
       {
         message: "Login berhasil!",
@@ -53,7 +78,7 @@ export async function POST(request) {
   } catch (error) {
     console.error("Error Login:", error);
     return NextResponse.json(
-      { message: "Terjadi kesalahan pada server" },
+      { message: "Terjadi kesalahan server" },
       { status: 500 },
     );
   }

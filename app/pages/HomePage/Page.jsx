@@ -8,12 +8,12 @@ import Navigation from "@/app/components/moleculs/Navbar/page";
 
 export default function ZakatHomePage() {
   return (
-    <div className="">
+    <main>
       <Navigation />
       <HeroSection />
       <About />
       <Calculator />
       <Footer />
-    </div>
+    </main>
   );
 }

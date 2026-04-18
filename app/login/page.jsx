@@ -32,24 +32,31 @@ export default function LoginPage() {
 
       const data = await response.json();
 
-      if (response.ok) {
-        alert(`Selamat datang, ${data.user.name}!`);
-
-        // Simpan data sesi ke localStorage
-        localStorage.setItem("isLoggedIn", "true");
-        localStorage.setItem("userRole", data.user.role);
-        localStorage.setItem("userName", data.user.name);
-
-        document.cookie =
-          "isLoggedIn=true; path=/; max-age=86400; Secure; SameSite=Strict";
-        // Arahkan ke halaman yang sesuai
-        if (data.user.role === "admin") {
-          router.push("/admin/dashboard");
-        } else {
-          router.push("/"); // Lempar ke halaman Kalkulator Zakat
-        }
-      } else {
+      // CEK STATUS: Jika ditolak (401, 404, 403, dll)
+      if (!response.ok) {
         alert(`Gagal Masuk: ${data.message}`);
+        return; // Hentikan eksekusi di sini! Jangan lanjut ke bawah.
+      }
+
+      // Jika berhasil (Status 200/OK), jalankan ini:
+      alert(`Selamat datang, ${data.user.name}!`);
+
+      // Simpan data sesi ke localStorage
+      localStorage.setItem("isLoggedIn", "true");
+      localStorage.setItem("userRole", data.user.role);
+      localStorage.setItem("userName", data.user.name);
+
+      // Catatan: Jika Anda sudah menggunakan HTTP-only cookies lewat JWT di backend,
+      // baris document.cookie di bawah ini sebenarnya tidak perlu lagi (bahkan disarankan dihapus demi keamanan).
+      // Tapi saya biarkan agar sesuai dengan desain Anda saat ini.
+      document.cookie =
+        "isLoggedIn=true; path=/; max-age=86400; Secure; SameSite=Strict";
+
+      // Arahkan ke halaman yang sesuai
+      if (data.user.role === "admin") {
+        router.push("/admin/dashboard");
+      } else {
+        router.push("/"); // Lempar ke halaman Kalkulator Zakat
       }
     } catch (error) {
       alert("Terjadi kesalahan jaringan. Silakan coba lagi.");

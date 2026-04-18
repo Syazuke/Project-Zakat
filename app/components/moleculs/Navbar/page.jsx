@@ -32,6 +32,9 @@ const Navigation = () => {
             <a href="#bayar" className="py-4 mb-6 hover:text-hover">
               Bayar Zakat
             </a>
+            <a href="/admin/dashboard" className="py-4 mb-6 hover:text-hover">
+              Dashboard
+            </a>
             <a href="/login" className="py-4 mb-6 hover:text-hover">
               Login Admin
             </a>
@@ -58,6 +61,9 @@ const Navigation = () => {
             </a>
             <a href="#bayar" className="py-4 hover:text-hover">
               Bayar Zakat
+            </a>
+            <a href="/admin/dashboard" className="py-4 hover:text-hover">
+              Dashboard
             </a>
             <a href="/login" className="py-4 hover:text-hover">
               Login Admin
