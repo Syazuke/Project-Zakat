@@ -118,7 +118,12 @@ export default function AdminDashboard() {
           >
             <span className="text-xl">📊</span> Dashboard
           </a>
-          <a href="/">Home</a>
+          <a
+            href="/"
+            className="flex items-center justify-center gap-3 p-3 bg-emerald-700 rounded-lg text-white font-medium transition"
+          >
+            Home
+          </a>
           {/* Tambahkan menu lain di sini nanti */}
         </nav>
 
