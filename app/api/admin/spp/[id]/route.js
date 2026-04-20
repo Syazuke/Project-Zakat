@@ -3,12 +3,11 @@ import { prisma } from "@/app/libs/prisma";
 
 export async function DELETE(request, { params }) {
   try {
-    const id = params.id;
+    const id = params.id; // Sekarang berupa Teks/String (cuid)
 
-    // 🚨 PENTING: Ganti 'sppTransaction' dengan nama tabel SPP di schema.prisma Anda!
     await prisma.sppTransaction.delete({
       where: {
-        id: parseInt(id), // Asumsi ID berupa angka (Int)
+        id: id, // ✨ PERUBAHAN DI SINI: Tidak lagi menggunakan parseInt(id)
       },
     });
 
