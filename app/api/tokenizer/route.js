@@ -3,8 +3,8 @@ import Midtrans from "midtrans-client";
 import { prisma } from "@/app/libs/prisma";
 import { z } from "zod";
 
-// 1. Buku Aturan Zod
-const ZakatSchema = z.object({
+// 1. Buku Aturan Zod (Sudah disesuaikan dengan schema baru)
+const PembayaranSchema = z.object({
   nama: z
     .string()
     .max(100, "Nama maksimal 100 karakter")
@@ -18,18 +18,18 @@ const ZakatSchema = z.object({
     "fidyah",
     "sedekah",
     "Zakat",
+    "SPP",
+    "Biaya Sekolah",
   ]),
+  // Hanya paymentMonth yang tersisa untuk SPP
+  paymentMonth: z.string().optional(),
 });
 
 export async function POST(request) {
   try {
-    // 1. Tangkap data utuh dari frontend
     const rawData = await request.json();
+    const validasi = PembayaranSchema.safeParse(rawData);
 
-    // 2. Suruh Zod memeriksa datanya
-    const validasi = ZakatSchema.safeParse(rawData);
-
-    // Jika data melanggar aturan, langsung tolak sebelum masuk database!
     if (!validasi.success) {
       console.error("Validasi gagal:", validasi.error.format());
       return NextResponse.json(
@@ -38,32 +38,59 @@ export async function POST(request) {
       );
     }
 
-    // Ambil data yang sudah dipastikan aman dan bersih
     const dataBersih = validasi.data;
 
-    // 3. SIMPAN KE DATABASE (Gunakan dataBersih)
-    const newTransaction = await prisma.zakatTransaction.create({
-      data: {
-        name: dataBersih.nama,
-        message: dataBersih.pesan || "",
-        zakatType: dataBersih.zakatType,
-        amount: dataBersih.nominal,
-        paymentMethod: "Midtrans (Virtual Account / QRIS)",
-        status: "PENDING",
-      },
-    });
+    let newTransaction;
+    let orderIdMidtrans = "";
 
-    // 4. Inisialisasi Midtrans
+    // ========================================================
+    // ✨ PERCABANGAN GUDANG (ZAKAT vs SPP) ✨
+    // ========================================================
+    if (
+      dataBersih.zakatType === "SPP" ||
+      dataBersih.zakatType === "Biaya Sekolah"
+    ) {
+      // 1. Masukkan ke Gudang SPP (Sesuai Schema Baru)
+      newTransaction = await prisma.sppTransaction.create({
+        data: {
+          studentName: dataBersih.nama,
+          message: dataBersih.pesan || "-",
+          sppType: dataBersih.zakatType, // Menyimpan jenis: "SPP" atau "Biaya Sekolah"
+          paymentMonth: dataBersih.paymentMonth || "Bulan Ini",
+          amount: dataBersih.nominal,
+          status: "PENDING",
+        },
+      });
+      // Beri label SPP- agar tidak bentrok di Midtrans
+      // Catatan: newTransaction.id sekarang berupa String (cuid), contoh: "SPP-clnx..."
+      orderIdMidtrans = `SPP-${newTransaction.id}`;
+    } else {
+      // 2. Masukkan ke Gudang Zakat
+      newTransaction = await prisma.zakatTransaction.create({
+        data: {
+          name: dataBersih.nama,
+          message: dataBersih.pesan || "",
+          zakatType: dataBersih.zakatType,
+          amount: dataBersih.nominal,
+          paymentMethod: "Midtrans (Virtual Account / QRIS)",
+          status: "PENDING",
+        },
+      });
+      // Beri label ZKT- agar tidak bentrok di Midtrans
+      orderIdMidtrans = `ZKT-${newTransaction.id}`;
+    }
+    // ========================================================
+
+    // Inisialisasi Midtrans
     let snap = new Midtrans.Snap({
       isProduction: false,
       serverKey: process.env.MIDTRANS_SERVER_KEY,
       clientKey: process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY,
     });
 
-    // 5. Buat Parameter Tagihan (Gunakan ID dari database)
     let parameter = {
       transaction_details: {
-        order_id: newTransaction.id,
+        order_id: orderIdMidtrans,
         gross_amount: dataBersih.nominal,
       },
       customer_details: {
@@ -71,15 +98,11 @@ export async function POST(request) {
       },
     };
 
-    // 6. Minta Token
     const snapToken = await snap.createTransactionToken(parameter);
 
     return NextResponse.json({ token: snapToken }, { status: 200 });
   } catch (error) {
-    // 1. Tampilkan error asli Midtrans di log Vercel
     console.error("ERROR ASLI MIDTRANS:", error.message || error);
-
-    // 2. Kirim error asli Midtrans ke Frontend agar muncul di layar Anda
     return NextResponse.json(
       {
         message: "Gagal membuat tagihan",

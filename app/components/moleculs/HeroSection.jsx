@@ -2,7 +2,7 @@
 
 import React from "react";
 import Image from "next/image";
-import Masjid from "@/app/assets/images/masjid.jpg";
+import Masjid from "@/app/assets/images/masjid.webp";
 
 const HeroSection = () => {
   return (
@@ -34,6 +34,12 @@ const HeroSection = () => {
             className="bg-white border-2 border-emerald-600 text-emerald-600 self-center py-3 px-6 rounded-lg font-semibold hover:bg-emerald-50 transition"
           >
             Kalkulator Zakat
+          </a>
+          <a
+            href="#SPP"
+            className="bg-white border-2 border-emerald-600 text-emerald-600 self-center py-3 px-6 rounded-lg font-semibold hover:bg-emerald-50 transition"
+          >
+            Bayar SPP disini
           </a>
         </div>
         <div className="flex flex-row item-center gap-4 pt-10">

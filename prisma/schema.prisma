@@ -27,3 +27,14 @@ model ZakatTransaction {
   status        String   @default("PENDING") 
   createdAt     DateTime @default(now())
 }
+
+model SppTransaction {
+  id            String   @id @default(cuid())
+  studentName   String
+  message       String
+  sppType       String
+  paymentMonth  String
+  amount        Int
+  status        String   @default("PENDING")
+  createdAt     DateTime @default(now())
+}

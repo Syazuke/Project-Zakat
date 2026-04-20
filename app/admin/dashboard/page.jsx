@@ -2,25 +2,34 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import * as XLSX from "xlsx"; // TAMBAHAN: Import library Excel
+import * as XLSX from "xlsx";
 
 export default function AdminDashboard() {
   const router = useRouter();
   const [adminName, setAdminName] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [totalDanaZakat, setTotalDanaZakat] = useState(0);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [totalMuzakki, setTotalMuzakki] = useState(0);
+
+  // ✨ STATE STATISTIK GABUNGAN ✨
+  const [totalPendapatan, setTotalPendapatan] = useState(0);
+  const [detailPendapatan, setDetailPendapatan] = useState({
+    zakat: 0,
+    spp: 0,
+  });
+  const [totalOrang, setTotalOrang] = useState(0);
   const [pendingVerifikasi, setPendingVerifikasi] = useState(0);
 
-  // STATE: Untuk menyimpan daftar riwayat transaksi
+  // STATE ZAKAT
   const [riwayatTransaksi, setRiwayatTransaksi] = useState([]);
+  const [filterBulanZakat, setFilterBulanZakat] = useState("semua");
 
-  // STATE BARU: Untuk efek loading tombol export
+  // STATE SPP
+  const [riwayatSPP, setRiwayatSPP] = useState([]);
+  const [filterBulanSPP, setFilterBulanSPP] = useState("semua");
+
+  // STATE TAB & EXPORT
+  const [activeTab, setActiveTab] = useState("zakat");
   const [isExporting, setIsExporting] = useState(false);
-
-  // ✨ STATE BARU: Untuk filter bulan
-  const [filterBulan, setFilterBulan] = useState("semua");
 
   useEffect(() => {
     const isLoggedIn = localStorage.getItem("isLoggedIn");
@@ -30,6 +39,7 @@ export default function AdminDashboard() {
       setAdminName(localStorage.getItem("userName") || "Admin");
       fetchDashboardStats();
       fetchRiwayatTransaksi();
+      fetchRiwayatSPP();
     }
   }, [router]);
 
@@ -37,14 +47,18 @@ export default function AdminDashboard() {
     try {
       const response = await fetch("/api/admin/stats");
       const data = await response.json();
-
       if (response.ok) {
-        setTotalDanaZakat(data.totalZakat);
-        setTotalMuzakki(data.totalMuzakki);
+        setTotalPendapatan(data.totalZakat); // Di API, totalZakat adalah variabel gabungan
+        setTotalOrang(data.totalMuzakki);
         setPendingVerifikasi(data.pendingVerifikasi);
+        // Simpan detail rincian untuk ditampilkan kecil di bawah total
+        setDetailPendapatan({
+          zakat: data.detailZakat || 0,
+          spp: data.detailSPP || 0,
+        });
       }
     } catch (error) {
-      console.error("Gagal memuat statistik total uang", error);
+      console.error("Gagal memuat statistik", error);
     }
   };
 
@@ -52,114 +66,172 @@ export default function AdminDashboard() {
     try {
       const response = await fetch("/api/admin/transactions");
       const data = await response.json();
-      if (response.ok) {
-        setRiwayatTransaksi(data.transactions);
-      }
+      if (response.ok) setRiwayatTransaksi(data.transactions);
     } catch (error) {
-      console.error("Gagal memuat riwayat", error);
+      console.error("Gagal memuat riwayat zakat", error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // FUNGSI: Untuk Export Data Excel
+  const fetchRiwayatSPP = async () => {
+    try {
+      const response = await fetch("/api/admin/spp");
+      const data = await response.json();
+      if (response.ok) setRiwayatSPP(data.transactions || []);
+    } catch (error) {
+      console.error("Gagal memuat riwayat SPP", error);
+    }
+  };
+
+  // ==========================================
+  // ✨ FUNGSI EXPORT EXCEL GABUNGAN ✨
+  // ==========================================
   const handleExportExcel = async () => {
     setIsExporting(true);
     try {
-      const response = await fetch("/api/admin/transactions/success");
+      // Tentukan URL API berdasarkan Tab yang sedang aktif
+      const apiUrl =
+        activeTab === "zakat"
+          ? "/api/admin/transactions/success"
+          : "/api/admin/spp/success";
+      const response = await fetch(apiUrl);
       const result = await response.json();
 
       if (!response.ok) throw new Error(result.message);
 
       const dataTransaksi = result.data;
-
       if (!dataTransaksi || dataTransaksi.length === 0) {
-        alert("Belum ada data transaksi yang sukses.");
+        alert(`Belum ada data ${activeTab.toUpperCase()} yang sukses.`);
         setIsExporting(false);
         return;
       }
 
-      const dataRapih = dataTransaksi.map((item, index) => ({
-        No: index + 1,
-        "Nama Muzakki": item.name || "Hamba Allah",
-        "Jenis Zakat": item.zakatType,
-        "Nominal (Rp)": item.amount,
-        "Pesan/Doa": item.message || "-",
-        "Tanggal Bayar": new Date(item.createdAt).toLocaleDateString("id-ID", {
-          day: "numeric",
-          month: "long",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-        Status: item.status,
-      }));
+      // Rapihkan data sesuai jenis tab
+      let dataRapih = [];
+      if (activeTab === "zakat") {
+        dataRapih = dataTransaksi.map((item, index) => ({
+          No: index + 1,
+          "Nama Muzakki": item.name || "Hamba Allah",
+          "Jenis Zakat": item.zakatType,
+          "Nominal (Rp)": item.amount,
+          "Pesan/Doa": item.message || "-",
+          "Tanggal Bayar": new Date(item.createdAt).toLocaleString("id-ID"),
+          Status: item.status,
+        }));
+      } else {
+        dataRapih = dataTransaksi.map((item, index) => ({
+          No: index + 1,
+          "Nama Siswa": item.studentName,
+          "Jenis Tagihan": item.sppType,
+          "Bulan Tagihan": item.paymentMonth,
+          "Nominal (Rp)": item.amount,
+          Pesan: item.message || "-",
+          "Tanggal Bayar": new Date(item.createdAt).toLocaleString("id-ID"),
+          Status: item.status,
+        }));
+      }
 
       const worksheet = XLSX.utils.json_to_sheet(dataRapih);
       worksheet["!cols"] = [
         { wch: 5 },
-        { wch: 40 },
         { wch: 30 },
-        { wch: 15 },
         { wch: 20 },
-        { wch: 50 },
+        { wch: 20 },
+        { wch: 20 },
+        { wch: 40 },
         { wch: 25 },
         { wch: 15 },
       ];
-
       const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Laporan Zakat");
-
-      XLSX.writeFile(workbook, `Laporan_Zakat_${new Date().getTime()}.xlsx`);
+      XLSX.utils.book_append_sheet(
+        workbook,
+        worksheet,
+        `Laporan ${activeTab.toUpperCase()}`,
+      );
+      XLSX.writeFile(
+        workbook,
+        `Laporan_${activeTab.toUpperCase()}_${new Date().getTime()}.xlsx`,
+      );
     } catch (error) {
-      console.error("Gagal export:", error);
-      alert("Gagal mengunduh data Excel. Pastikan API terhubung.");
+      alert("Gagal mengunduh data Excel.");
     } finally {
       setIsExporting(false);
     }
   };
 
-  // ✨ FUNGSI BARU: Hapus 1 Data
+  // ==========================================
+  // ✨ FUNGSI HAPUS ZAKAT
+  // ==========================================
   const handleDeleteSingle = async (id) => {
-    if (!window.confirm("Yakin ingin menghapus transaksi ini selamanya?"))
+    if (!window.confirm("Yakin ingin menghapus transaksi Zakat ini selamanya?"))
       return;
-
     try {
       const response = await fetch(`/api/admin/transactions/${id}`, {
         method: "DELETE",
       });
-
       if (response.ok) {
-        alert("Data berhasil dihapus!");
         setRiwayatTransaksi(riwayatTransaksi.filter((trx) => trx.id !== id));
-      } else {
-        alert("Gagal menghapus data.");
+        fetchDashboardStats();
       }
     } catch (error) {
       alert("Terjadi kesalahan jaringan.");
     }
   };
 
-  // ✨ FUNGSI BARU: Hapus Data > 1 Bulan
   const handleDeleteLama = async () => {
     if (
       !window.confirm(
-        "PERINGATAN BAHAYA!\nYakin ingin menghapus SEMUA data yang umurnya lebih dari 1 bulan?",
+        "PERINGATAN!\nYakin ingin menghapus SEMUA data Zakat yang umurnya lebih dari 1 bulan?",
       )
     )
       return;
-
     try {
       const response = await fetch(`/api/admin/transactions/bulk`, {
         method: "DELETE",
       });
-      const result = await response.json();
-
       if (response.ok) {
-        alert(result.message || "Data lama berhasil dibersihkan!");
-        fetchRiwayatTransaksi(); // Tarik data ulang
-      } else {
-        alert("Gagal membersihkan data.");
+        fetchRiwayatTransaksi();
+        fetchDashboardStats();
+        alert("Data lama berhasil dibersihkan!");
+      }
+    } catch (error) {
+      alert("Terjadi kesalahan jaringan.");
+    }
+  };
+
+  // ==========================================
+  // ✨ FUNGSI HAPUS SPP
+  // ==========================================
+  const handleDeleteSingleSPP = async (id) => {
+    if (!window.confirm("Yakin ingin menghapus transaksi SPP ini selamanya?"))
+      return;
+    try {
+      const response = await fetch(`/api/admin/spp/${id}`, {
+        method: "DELETE",
+      });
+      if (response.ok) {
+        setRiwayatSPP(riwayatSPP.filter((spp) => spp.id !== id));
+        fetchDashboardStats();
+      }
+    } catch (error) {
+      alert("Terjadi kesalahan jaringan.");
+    }
+  };
+
+  const handleDeleteLamaSPP = async () => {
+    if (
+      !window.confirm(
+        "PERINGATAN!\nYakin ingin menghapus SEMUA data SPP yang umurnya lebih dari 1 bulan?",
+      )
+    )
+      return;
+    try {
+      const response = await fetch(`/api/admin/spp/bulk`, { method: "DELETE" });
+      if (response.ok) {
+        fetchRiwayatSPP();
+        fetchDashboardStats();
+        alert("Data SPP lama dibersihkan!");
       }
     } catch (error) {
       alert("Terjadi kesalahan jaringan.");
@@ -175,337 +247,363 @@ export default function AdminDashboard() {
     }
   };
 
-  // ✨ LOGIKA PEMISAH BULAN (Filter)
-  const dataTampil = riwayatTransaksi.filter((trx) => {
-    if (filterBulan === "semua") return true;
-
+  // LOGIKA FILTER
+  const dataTampilZakat = riwayatTransaksi.filter((trx) => {
+    if (filterBulanZakat === "semua") return true;
     const trxDate = new Date(trx.createdAt);
     const now = new Date();
-
-    if (filterBulan === "bulan_ini") {
+    if (filterBulanZakat === "bulan_ini")
       return (
         trxDate.getMonth() === now.getMonth() &&
         trxDate.getFullYear() === now.getFullYear()
       );
-    } else if (filterBulan === "bulan_lalu") {
+    if (filterBulanZakat === "bulan_lalu")
       return (
         trxDate.getMonth() !== now.getMonth() ||
         trxDate.getFullYear() !== now.getFullYear()
       );
-    }
     return true;
   });
 
-  if (isLoading) {
+  const dataTampilSPP = riwayatSPP.filter((trx) => {
+    if (filterBulanSPP === "semua") return true;
+    const trxDate = new Date(trx.createdAt);
+    const now = new Date();
+    if (filterBulanSPP === "bulan_ini")
+      return (
+        trxDate.getMonth() === now.getMonth() &&
+        trxDate.getFullYear() === now.getFullYear()
+      );
+    if (filterBulanSPP === "bulan_lalu")
+      return (
+        trxDate.getMonth() !== now.getMonth() ||
+        trxDate.getFullYear() !== now.getFullYear()
+      );
+    return true;
+  });
+
+  if (isLoading)
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 text-emerald-600 font-bold">
+      <div className="min-h-screen flex items-center justify-center font-bold text-emerald-600">
         Memuat Dashboard...
       </div>
     );
-  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex font-sans overflow-hidden relative">
-      {/* 1. SIDEBAR KIRI */}
-      {isSidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/40 z-40 lg:hidden backdrop-blur-sm transition-all"
-          onClick={() => setIsSidebarOpen(false)}
-        />
-      )}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-emerald-800 text-white flex flex-col transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 ${
-          isSidebarOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"
-        }`}
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-emerald-800 text-white flex flex-col hidden lg:flex`}
       >
-        <div className="p-6 border-b border-emerald-700 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-emerald-800 font-bold text-xl">
-              Z
-            </div>
-            <div>
-              <h2 className="font-bold text-lg leading-tight">AdminPanel</h2>
-              <p className="text-xs text-emerald-300">ZakatKu App</p>
-            </div>
+        <div className="p-6 border-b border-emerald-700 flex items-center gap-3">
+          <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-emerald-800 font-bold text-xl">
+            Z
           </div>
-
-          <button
-            onClick={() => setIsSidebarOpen(false)}
-            className="lg:hidden text-emerald-300 hover:text-white p-2"
-          >
-            ✕
-          </button>
+          <div>
+            <h2 className="font-bold text-lg leading-tight">AdminPanel</h2>
+            <p className="text-xs text-emerald-300">ZakatKu & SPP</p>
+          </div>
         </div>
-
         <nav className="flex-1 p-4 space-y-2">
           <a
             href="#"
-            className="flex items-center gap-3 p-3 bg-emerald-700 rounded-lg text-white font-medium transition"
+            className="flex items-center gap-3 p-3 bg-emerald-700 rounded-lg text-white font-medium"
           >
             <span className="text-xl">📊</span> Dashboard
           </a>
-          <a
-            href="/"
-            className="flex items-center justify-center gap-3 p-3 bg-emerald-700 rounded-lg text-white font-medium transition"
-          >
-            Kembali ke halama awal
-          </a>
         </nav>
-
         <div className="p-4 border-t border-emerald-700">
           <button
             onClick={handleLogout}
             className="w-full flex items-center justify-center gap-2 p-3 bg-red-500 hover:bg-red-600 rounded-lg text-white font-medium transition"
           >
-            Keluar (Logout)
+            Keluar
           </button>
         </div>
       </aside>
 
-      {/* 2. KONTEN UTAMA */}
-      <main className="flex flex-col h-screen overflow-y-auto w-full">
-        {/* HEADER ATAS */}
+      <main className="flex flex-col h-screen overflow-y-auto w-full lg:ml-64">
         <header className="bg-white shadow-sm p-4 md:p-6 flex justify-between items-center sticky top-0 z-10">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => setIsSidebarOpen(true)}
-              className="lg:hidden p-2 text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition"
-            >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
-              </svg>
-            </button>
-            <h1 className="text-2xl font-bold text-gray-800">
-              Ringkasan Dashboard
-            </h1>
-          </div>
+          <h1 className="text-2xl font-bold text-gray-800">Dashboard Utama</h1>
           <div className="flex items-center gap-3">
             <div className="text-right hidden sm:block">
               <p className="text-sm font-bold text-gray-800">{adminName}</p>
-              <p className="text-xs text-gray-500">Amil Zakat (Admin)</p>
-            </div>
-            <div className="w-10 h-10 bg-emerald-100 rounded-full border-2 border-emerald-500 flex items-center justify-center text-emerald-700 font-bold">
-              Z
+              <p className="text-xs text-gray-500">Administrator</p>
             </div>
           </div>
         </header>
 
         <div className="p-4 md:p-6 space-y-6">
-          {/* Kartu Statistik */}
+          {/* ✨ KARTU STATISTIK GABUNGAN ✨ */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col">
               <p className="text-gray-500 text-sm font-medium mb-1">
-                Total Dana Zakat (Bulan ini)
+                Total Pendapatan (Bulan Ini)
               </p>
               <h3 className="text-3xl font-bold text-gray-900">
-                Rp {totalDanaZakat.toLocaleString("id-ID")}
+                Rp {totalPendapatan.toLocaleString("id-ID")}
               </h3>
-              <p className="text-emerald-600 text-sm mt-2 font-medium">
-                Berdasarkan data Midtrans
+              <p className="text-gray-400 text-xs mt-2 font-medium">
+                Zakat:{" "}
+                <span className="text-emerald-600 font-bold">
+                  Rp {detailPendapatan.zakat.toLocaleString("id-ID")}
+                </span>{" "}
+                | SPP:{" "}
+                <span className="text-blue-600 font-bold">
+                  Rp {detailPendapatan.spp.toLocaleString("id-ID")}
+                </span>
               </p>
             </div>
 
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col">
               <p className="text-gray-500 text-sm font-medium mb-1">
-                Total Muzakki Aktif
+                Total Pembayar Aktif
               </p>
               <h3 className="text-3xl font-bold text-gray-900">
-                {totalMuzakki} Orang
+                {totalOrang} Orang
               </h3>
               <p className="text-emerald-600 text-sm mt-2 font-medium">
-                Bulan ini
+                Gabungan Muzakki & Siswa
               </p>
             </div>
 
             <div className="bg-gradient-to-br from-emerald-600 to-emerald-800 p-6 rounded-2xl shadow-md text-white flex flex-col justify-between">
               <div>
                 <p className="text-emerald-100 text-sm font-medium mb-1">
-                  Menunggu Verifikasi
+                  Menunggu Verifikasi (Pending)
                 </p>
                 <h3 className="text-3xl font-bold">
                   {pendingVerifikasi} Transaksi
                 </h3>
               </div>
-              <button className="mt-4 bg-white text-emerald-700 py-2 px-4 rounded-lg text-sm font-bold hover:bg-emerald-50 transition w-fit">
-                Cek Sekarang →
-              </button>
             </div>
           </div>
 
-          {/* Tabel Transaksi Terbaru */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mt-8">
-            {/* ✨ HEADER TABEL & KONTROL PANEL BARU ✨ */}
-            <div className="p-6 border-b border-gray-100 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
-              <h3 className="text-lg font-bold text-gray-900">
-                Riwayat Pembayaran Terbaru
-              </h3>
-
-              <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
-                {/* 1. Filter Bulan */}
-                <select
-                  value={filterBulan}
-                  onChange={(e) => setFilterBulan(e.target.value)}
-                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 outline-none focus:border-emerald-500 bg-white cursor-pointer"
-                >
-                  <option value="semua">Semua Waktu</option>
-                  <option value="bulan_ini">Bulan Ini</option>
-                  <option value="bulan_lalu">Bulan Sebelumnya</option>
-                </select>
-
-                {/* 2. Tombol Hapus Data Lama */}
-                <button
-                  onClick={handleDeleteLama}
-                  className="bg-red-50 text-red-600 border border-red-200 px-4 py-2 rounded-lg hover:bg-red-100 text-sm font-bold transition shadow-sm flex items-center gap-2"
-                >
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                    />
-                  </svg>
-                  Bersihkan Lama
-                </button>
-
-                {/* 3. Tombol Export */}
-                <button
-                  onClick={handleExportExcel}
-                  disabled={isExporting}
-                  className="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 disabled:bg-emerald-300 flex items-center gap-2 text-sm font-bold transition shadow-sm"
-                >
-                  {isExporting ? (
-                    "Menyiapkan File..."
-                  ) : (
-                    <>
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                        />
-                      </svg>
-                      Export (Sukses)
-                    </>
-                  )}
-                </button>
-              </div>
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mt-4">
+            {/* MENU TAB */}
+            <div className="flex border-b border-gray-200">
+              <button
+                onClick={() => setActiveTab("zakat")}
+                className={`flex-1 py-4 text-sm font-bold transition ${
+                  activeTab === "zakat"
+                    ? "bg-emerald-50 text-emerald-700 border-b-2 border-emerald-600"
+                    : "text-gray-500 hover:bg-gray-50 hover:text-emerald-600"
+                }`}
+              >
+                Data Pembayaran Zakat
+              </button>
+              <button
+                onClick={() => setActiveTab("spp")}
+                className={`flex-1 py-4 text-sm font-bold transition ${
+                  activeTab === "spp"
+                    ? "bg-blue-50 text-blue-700 border-b-2 border-blue-600"
+                    : "text-gray-500 hover:bg-gray-50 hover:text-blue-600"
+                }`}
+              >
+                Data Pembayaran SPP
+              </button>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm text-gray-600">
-                <thead className="bg-gray-50 text-gray-700 font-semibold border-b border-gray-100">
-                  <tr>
-                    <th className="px-6 py-4">Tanggal</th>
-                    <th className="px-6 py-4">Nama Muzakki</th>
-                    <th className="px-6 py-4">Jenis Zakat</th>
-                    <th className="px-6 py-4">Pesan / Doa</th>
-                    <th className="px-6 py-4">Nominal</th>
-                    <th className="px-6 py-4">Status</th>
-                    {/* ✨ KOLOM AKSI BARU ✨ */}
-                    <th className="px-6 py-4 text-center">Aksi</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50">
-                  {dataTampil.length === 0 ? (
-                    <tr>
-                      <td
-                        colSpan="7"
-                        className="px-6 py-8 text-center text-gray-400"
-                      >
-                        Belum ada data transaksi untuk filter ini.
-                      </td>
-                    </tr>
-                  ) : (
-                    // ✨ ITERASI MENGGUNAKAN dataTampil ✨
-                    dataTampil.map((trx) => (
-                      <tr key={trx.id} className="hover:bg-gray-50 transition">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {new Date(trx.createdAt).toLocaleDateString("id-ID", {
-                            day: "numeric",
-                            month: "short",
-                            year: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </td>
-                        <td className="px-6 py-4 font-medium text-gray-900">
-                          {trx.name}
-                        </td>
-                        <td className="px-6 py-4 capitalize">
-                          {trx.zakatType}
-                        </td>
-                        <td
-                          className="px-6 py-4 italic text-gray-500 max-w-xs truncate"
-                          title={trx.message}
-                        >
-                          {trx.message || "-"}
-                        </td>
-                        <td className="px-6 py-4 font-bold text-emerald-600">
-                          Rp {trx.amount.toLocaleString("id-ID")}
-                        </td>
-                        <td className="px-6 py-4">
-                          <span
-                            className={`px-3 py-1 rounded-full text-xs font-bold ${
-                              trx.status === "SUCCESS" || trx.status === "PAID"
-                                ? "bg-emerald-100 text-emerald-700"
-                                : trx.status === "PENDING"
-                                  ? "bg-yellow-100 text-yellow-700"
-                                  : "bg-red-100 text-red-700"
-                            }`}
-                          >
-                            {trx.status}
-                          </span>
-                        </td>
-                        {/* ✨ TOMBOL HAPUS SATUAN ✨ */}
-                        <td className="px-6 py-4 text-center">
-                          <button
-                            onClick={() => handleDeleteSingle(trx.id)}
-                            className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-full transition"
-                            title="Hapus Transaksi"
-                          >
-                            <svg
-                              className="w-5 h-5"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth="2"
-                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                              />
-                            </svg>
-                          </button>
-                        </td>
+            {/* TAB ZAKAT */}
+            {activeTab === "zakat" && (
+              <div>
+                <div className="p-6 border-b border-gray-100 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
+                  <h3 className="text-lg font-bold text-gray-900">
+                    Riwayat Zakat
+                  </h3>
+                  <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
+                    <select
+                      value={filterBulanZakat}
+                      onChange={(e) => setFilterBulanZakat(e.target.value)}
+                      className="border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-emerald-500"
+                    >
+                      <option value="semua">Semua Waktu</option>
+                      <option value="bulan_ini">Bulan Ini</option>
+                      <option value="bulan_lalu">Bulan Sebelumnya</option>
+                    </select>
+                    <button
+                      onClick={handleDeleteLama}
+                      className="bg-red-50 text-red-600 px-4 py-2 rounded-lg text-sm font-bold hover:bg-red-100"
+                    >
+                      Bersihkan Lama
+                    </button>
+                    <button
+                      onClick={handleExportExcel}
+                      disabled={isExporting}
+                      className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-emerald-700 disabled:opacity-50"
+                    >
+                      {isExporting ? "Menyiapkan..." : "Export Excel (Sukses)"}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm text-gray-600">
+                    <thead className="bg-emerald-50 text-emerald-800 font-semibold">
+                      <tr>
+                        <th className="px-6 py-4">Tanggal</th>
+                        <th className="px-6 py-4">Nama Muzakki</th>
+                        <th className="px-6 py-4">Jenis Zakat</th>
+                        <th className="px-6 py-4">Nominal</th>
+                        <th className="px-6 py-4">Status</th>
+                        <th className="px-6 py-4 text-center">Aksi</th>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50">
+                      {dataTampilZakat.length === 0 ? (
+                        <tr>
+                          <td
+                            colSpan="6"
+                            className="px-6 py-8 text-center text-gray-400"
+                          >
+                            Belum ada data zakat.
+                          </td>
+                        </tr>
+                      ) : (
+                        dataTampilZakat.map((trx) => (
+                          <tr
+                            key={trx.id}
+                            className="hover:bg-gray-50 transition"
+                          >
+                            <td className="px-6 py-4">
+                              {new Date(trx.createdAt).toLocaleDateString(
+                                "id-ID",
+                              )}
+                            </td>
+                            <td className="px-6 py-4 font-medium text-gray-900">
+                              {trx.name}
+                            </td>
+                            <td className="px-6 py-4 capitalize">
+                              {trx.zakatType}
+                            </td>
+                            <td className="px-6 py-4 font-bold text-emerald-600">
+                              Rp {trx.amount.toLocaleString("id-ID")}
+                            </td>
+                            <td className="px-6 py-4">
+                              <span
+                                className={`px-2 py-1 rounded text-xs font-bold ${trx.status === "SUCCESS" || trx.status === "PAID" ? "bg-emerald-100 text-emerald-700" : trx.status === "PENDING" ? "bg-yellow-100 text-yellow-700" : "bg-red-100 text-red-700"}`}
+                              >
+                                {trx.status}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 text-center">
+                              <button
+                                onClick={() => handleDeleteSingle(trx.id)}
+                                className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-full"
+                              >
+                                🗑️
+                              </button>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* ✨ TAB SPP (DISESUAIKAN DENGAN SCHEMA BARU) ✨ */}
+            {activeTab === "spp" && (
+              <div>
+                <div className="p-6 border-b border-gray-100 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
+                  <h3 className="text-lg font-bold text-gray-900">
+                    Riwayat Pembayaran SPP
+                  </h3>
+                  <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
+                    <select
+                      value={filterBulanSPP}
+                      onChange={(e) => setFilterBulanSPP(e.target.value)}
+                      className="border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-500"
+                    >
+                      <option value="semua">Semua Waktu</option>
+                      <option value="bulan_ini">Bulan Ini</option>
+                      <option value="bulan_lalu">Bulan Sebelumnya</option>
+                    </select>
+                    <button
+                      onClick={handleDeleteLamaSPP}
+                      className="bg-red-50 text-red-600 px-4 py-2 rounded-lg text-sm font-bold hover:bg-red-100"
+                    >
+                      Bersihkan Lama
+                    </button>
+                    <button
+                      onClick={handleExportExcel}
+                      disabled={isExporting}
+                      className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 disabled:opacity-50"
+                    >
+                      {isExporting ? "Menyiapkan..." : "Export Excel (Sukses)"}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm text-gray-600">
+                    <thead className="bg-blue-50 text-blue-800 font-semibold">
+                      <tr>
+                        <th className="px-6 py-4">Tanggal Bayar</th>
+                        <th className="px-6 py-4">Nama Siswa</th>
+                        <th className="px-6 py-4">Jenis Tagihan</th>
+                        <th className="px-6 py-4">Bulan Tagihan</th>
+                        <th className="px-6 py-4">Nominal</th>
+                        <th className="px-6 py-4">Status</th>
+                        <th className="px-6 py-4 text-center">Aksi</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50">
+                      {dataTampilSPP.length === 0 ? (
+                        <tr>
+                          <td
+                            colSpan="7"
+                            className="px-6 py-8 text-center text-gray-400"
+                          >
+                            Belum ada data SPP saat ini.
+                          </td>
+                        </tr>
+                      ) : (
+                        dataTampilSPP.map((spp) => (
+                          <tr
+                            key={spp.id}
+                            className="hover:bg-gray-50 transition"
+                          >
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              {new Date(spp.createdAt).toLocaleDateString(
+                                "id-ID",
+                              )}
+                            </td>
+                            <td className="px-6 py-4 font-medium text-gray-900">
+                              {spp.studentName}
+                            </td>
+                            <td className="px-6 py-4 capitalize">
+                              {spp.sppType}
+                            </td>
+                            <td className="px-6 py-4 font-bold">
+                              {spp.paymentMonth}
+                            </td>
+                            <td className="px-6 py-4 font-bold text-blue-600">
+                              Rp {spp.amount.toLocaleString("id-ID")}
+                            </td>
+                            <td className="px-6 py-4">
+                              <span
+                                className={`px-2 py-1 rounded text-xs font-bold ${spp.status === "SUCCESS" || spp.status === "PAID" ? "bg-blue-100 text-blue-700" : spp.status === "PENDING" ? "bg-yellow-100 text-yellow-700" : "bg-red-100 text-red-700"}`}
+                              >
+                                {spp.status}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 text-center">
+                              <button
+                                onClick={() => handleDeleteSingleSPP(spp.id)}
+                                className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-full"
+                              >
+                                🗑️
+                              </button>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </main>

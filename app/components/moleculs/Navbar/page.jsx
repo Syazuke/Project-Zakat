@@ -10,11 +10,11 @@ const Navigation = () => {
         <div className="flex justify-between items-center py-2">
           <div className="flex justify-center items-center gap-2">
             <div className="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center text-white font-bold text-xl">
-              Z
+              D
             </div>
             <div className="flex flex-col">
               <span className="font-bold text-xl text-emerald-800">
-                Yayasan Zakat
+                DKM Ayatul Muthmainnah
               </span>
               <p className="text-[10px]">Mensucikan Harta Anda</p>
             </div>
@@ -31,6 +31,9 @@ const Navigation = () => {
             </a>
             <a href="#bayar" className="py-4 mb-6 hover:text-hover">
               Bayar Zakat
+            </a>
+            <a href="#SPP" className="py-4 mb-6 hover:text-hover">
+              Bayar SPP
             </a>
             <a href="/admin/dashboard" className="py-4 mb-6 hover:text-hover">
               Dashboard
@@ -61,6 +64,9 @@ const Navigation = () => {
             </a>
             <a href="#bayar" className="py-4 hover:text-hover">
               Bayar Zakat
+            </a>
+            <a href="#SPP" className="py-4 hover:text-hover">
+              Bayar SPP
             </a>
             <a href="/admin/dashboard" className="py-4 hover:text-hover">
               Dashboard

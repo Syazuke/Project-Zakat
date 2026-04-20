@@ -2,31 +2,35 @@
 
 import React, { useState } from "react";
 
-// Kita menerima nominalZakat dan zakatType dari Kalkulator.jsx
-const Zakat = ({ nominalZakat, zakatType }) => {
-  // State untuk menyimpan ketikan user
-  const [nama, setNama] = useState("");
+const FormSpp = () => {
+  // State untuk menyimpan ketikan wali murid
+  const [namaSiswa, setNamaSiswa] = useState("");
+  const [jenisSpp, setJenisSpp] = useState("SPP"); // Default ke SPP
+  const [bulanTagihan, setBulanTagihan] = useState("Januari"); // State Baru untuk SPP
+  const [nominal, setNominal] = useState(0);
   const [pesan, setPesan] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [nominal, setZakat] = useState(0);
-  const [jenisZakat, setJenisZakat] = useState("");
 
-  const checkoutZakat = async () => {
-    if (nominal <= 0) {
-      alert("Silakan hitung nominal zakat terlebih dahulu.");
+  const checkoutSPP = async () => {
+    if (nominal < 10000) {
+      alert("Minimal pembayaran adalah Rp 10.000");
+      return;
+    }
+    if (namaSiswa.trim() === "") {
+      alert("Mohon isi Nama Lengkap Siswa.");
       return;
     }
 
     setIsLoading(true);
-    // Jika nama kosong, otomatis jadi Hamba Allah
-    const namaValid = nama.trim() === "" ? "Hamba Allah" : nama;
 
-    // DATA INI YANG DIKIRIM KE BACKEND (Harus sama persis namanya)
+    // ✨ DATA INI YANG DIKIRIM KE BACKEND ✨
+    // Kuncinya harus sama dengan yang diminta Zod di file tokenizer
     const dataTransaksi = {
-      nama: namaValid,
-      pesan: pesan,
+      nama: namaSiswa,
+      pesan: pesan || "-",
       nominal: nominal,
-      zakatType: jenisZakat || "Zakat",
+      zakatType: jenisSpp, // Tetap pakai nama kunci 'zakatType' agar Zod tidak bingung
+      paymentMonth: bulanTagihan, // Mengirimkan Bulan Tagihan
     };
 
     try {
@@ -48,8 +52,8 @@ const Zakat = ({ nominalZakat, zakatType }) => {
       // Panggil popup Midtrans Snap
       window.snap.pay(token, {
         onSuccess: function (result) {
-          alert("Alhamdulillah, Zakat berhasil ditunaikan!");
-          window.location.reload(); // Refresh halaman agar form kembali bersih
+          alert("Alhamdulillah, Pembayaran berhasil!");
+          window.location.reload();
         },
         onPending: function (result) {
           alert("Menunggu pembayaran Anda.");
@@ -70,85 +74,134 @@ const Zakat = ({ nominalZakat, zakatType }) => {
   };
 
   const handleFormatRupiah = (e) => {
-    // Hapus semua karakter yang bukan angka
     let rawValue = e.target.value.replace(/\D/g, "");
-
-    // Jika input kosong (dihapus semua), kembalikan ke 0
     if (rawValue === "") {
-      setZakat(0);
+      setNominal(0);
     } else {
-      // Ubah kembali menjadi angka utuh (Number)
-      setZakat(Number(rawValue));
+      setNominal(Number(rawValue));
     }
   };
 
   return (
-    <div className="bg-emerald-50 p-6 rounded-xl border border-emerald-100 mt-6 space-y-4 text-left">
-      <h3 className="font-bold text-emerald-800 text-lg border-b border-emerald-200 pb-2">
-        Lengkapi Data Muzakki
+    <div className="bg-blue-50 p-6 rounded-xl border border-blue-100 mt-6 space-y-4 text-left">
+      <h3 className="font-bold text-blue-800 text-lg border-b border-blue-200 pb-2">
+        Formulir Pembayaran Sekolah
       </h3>
 
-      {/* Input Nama */}
+      {/* Input Nama Siswa */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          Nama Lengkap (Opsional)
+          Nama Lengkap Siswa <span className="text-red-500">*</span>
         </label>
         <input
           type="text"
-          value={nama}
-          onChange={(e) => setNama(e.target.value)}
-          placeholder="Kosongkan untuk Hamba Allah"
-          className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-500 outline-none transition bg-white"
+          value={namaSiswa}
+          onChange={(e) => setNamaSiswa(e.target.value)}
+          placeholder="Masukkan nama siswa"
+          className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none transition bg-white"
         />
       </div>
 
+      {/* Grid untuk Jenis Pembayaran & Bulan */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {/* Jenis Tagihan */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Jenis Tagihan
+          </label>
+          <select
+            value={jenisSpp}
+            onChange={(e) => setJenisSpp(e.target.value)}
+            className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none transition bg-white cursor-pointer"
+          >
+            <option value="SPP">Bulanan (SPP)</option>
+            <option value="Biaya Sekolah">
+              Biaya Tahunan / Bangunan / Lainnya
+            </option>
+          </select>
+        </div>
+
+        {/* Bulan Tagihan (Hanya relevan jika jenisnya SPP, tapi dibiarkan ada juga tidak apa-apa) */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Untuk Bulan Tagihan
+          </label>
+          <select
+            value={bulanTagihan}
+            onChange={(e) => setBulanTagihan(e.target.value)}
+            className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none transition bg-white cursor-pointer"
+          >
+            {[
+              "Januari",
+              "Februari",
+              "Maret",
+              "April",
+              "Mei",
+              "Juni",
+              "Juli",
+              "Agustus",
+              "September",
+              "Oktober",
+              "November",
+              "Desember",
+            ].map((bulan) => (
+              <option key={bulan} value={bulan}>
+                {bulan}
+              </option>
+            ))}
+            <option value="Bukan Tagihan Bulanan">Bukan Tagihan Bulanan</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Input Nominal */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          Nominal Zakat (Rp)
+          Nominal Pembayaran (Rp) <span className="text-red-500">*</span>
         </label>
-        <div className="flex items-center border border-gray-300 rounded-lg px-3 py-3 focus-within:ring-2 focus-within:ring-[#10B981] focus-within:border-transparent bg-white">
+        <div className="flex items-center border border-gray-300 rounded-lg px-3 py-3 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent bg-white">
           <span className="text-gray-500 font-semibold mr-2">Rp.</span>
           <input
             type="text"
             value={nominal === 0 ? "" : nominal.toLocaleString("id-ID")}
             onChange={handleFormatRupiah}
             placeholder="Minimal Rp 10.000"
-            className="w-full focus:outline-none bg-transparent text-black"
+            className="w-full focus:outline-none bg-transparent text-black font-semibold"
           />
         </div>
       </div>
 
-      {/* Input Pesan / Doa */}
+      {/* Input Pesan / Keterangan */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          Pesan / Doa (Opsional)
+          Keterangan Tambahan (Opsional)
         </label>
         <textarea
           value={pesan}
           onChange={(e) => setPesan(e.target.value)}
-          placeholder="Tuliskan doa atau niat zakat Anda di sini..."
-          rows="3"
-          className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-500 outline-none resize-none transition bg-white"
+          placeholder="Misal: Pembayaran SPP sekaligus Uang Seragam..."
+          rows="2"
+          className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none resize-none transition bg-white"
         ></textarea>
       </div>
 
       {/* Tombol Bayar */}
       <button
         type="button"
-        onClick={checkoutZakat}
-        disabled={isLoading || nominal <= 0}
+        onClick={checkoutSPP}
+        disabled={isLoading || nominal < 10000 || namaSiswa.trim() === ""}
         className={`w-full font-bold py-3 rounded-lg transition-all shadow-md mt-2 ${
-          isLoading || nominal <= 0
+          isLoading || nominal < 10000 || namaSiswa.trim() === ""
             ? "bg-gray-400 text-gray-100 cursor-not-allowed shadow-none"
-            : "bg-[#10B981] text-white hover:bg-emerald-600 hover:-translate-y-0.5"
+            : "bg-blue-600 text-white hover:bg-blue-700 hover:-translate-y-0.5"
         }`}
       >
         {isLoading
           ? "Memproses..."
-          : `Tunaikan Zakat (Rp ${nominal.toLocaleString("id-ID")})`}
+          : `Bayar Sekarang (Rp ${nominal.toLocaleString("id-ID")})`}
       </button>
     </div>
   );
 };
 
-export default Zakat;
+export default FormSpp;

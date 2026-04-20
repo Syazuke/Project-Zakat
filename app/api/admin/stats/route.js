@@ -14,18 +14,19 @@ export async function GET() {
     if (!isLoggedIn) {
       return NextResponse.json({ message: "Akses Ditolak" }, { status: 401 });
     }
-    // 1. Menghitung Total Dana (Sudah ada sebelumnya)
-    const resultDana = await prisma.zakatTransaction.aggregate({
+
+    // ========================================================
+    // 1. HITUNG DATA ZAKAT
+    // ========================================================
+    const resultDanaZakat = await prisma.zakatTransaction.aggregate({
       _sum: { amount: true },
       where: {
         status: "SUCCESS",
         createdAt: { gte: firstDayOfMonth },
       },
     });
-    const totalAmount = resultDana._sum.amount || 0;
+    const totalAmountZakat = resultDanaZakat._sum.amount || 0;
 
-    // 2. TUGAS BARU: Menghitung Total Muzakki (Orang Unik yang sudah bayar bulan ini)
-    // Kita gunakan 'distinct' agar nama yang sama tidak dihitung dua kali
     const muzakkiList = await prisma.zakatTransaction.findMany({
       where: {
         status: "SUCCESS",
@@ -34,19 +35,48 @@ export async function GET() {
       select: { name: true },
       distinct: ["name"],
     });
-    const totalMuzakki = muzakkiList.length;
+    const totalMuzakkiZakat = muzakkiList.length;
 
-    // 3. TUGAS BARU: Menghitung Transaksi Menunggu Verifikasi (Status PENDING)
-    const pendingCount = await prisma.zakatTransaction.count({
+    const pendingZakat = await prisma.zakatTransaction.count({
       where: { status: "PENDING" },
     });
 
-    // Kirim ketiga data tersebut ke Dashboard
+    // ========================================================
+    // 2. HITUNG DATA SPP (TAMBAHAN BARU)
+    // ========================================================
+    const resultDanaSPP = await prisma.sppTransaction.aggregate({
+      _sum: { amount: true },
+      where: {
+        status: "SUCCESS",
+        createdAt: { gte: firstDayOfMonth },
+      },
+    });
+    const totalAmountSPP = resultDanaSPP._sum.amount || 0;
+
+    const siswaList = await prisma.sppTransaction.findMany({
+      where: {
+        status: "SUCCESS",
+        createdAt: { gte: firstDayOfMonth },
+      },
+      select: { studentName: true },
+      distinct: ["studentName"],
+    });
+    const totalSiswaSPP = siswaList.length;
+
+    const pendingSPP = await prisma.sppTransaction.count({
+      where: { status: "PENDING" },
+    });
+
+    // ========================================================
+    // 3. GABUNGKAN KEDUANYA & KIRIM KE DASHBOARD
+    // ========================================================
     return NextResponse.json(
       {
-        totalZakat: totalAmount,
-        totalMuzakki: totalMuzakki,
-        pendingVerifikasi: pendingCount,
+        totalZakat: totalAmountZakat + totalAmountSPP, // Total Uang Gabungan
+        totalMuzakki: totalMuzakkiZakat + totalSiswaSPP, // Total Orang Gabungan
+        pendingVerifikasi: pendingZakat + pendingSPP, // Total Pending Gabungan
+        detailZakat: totalAmountZakat,
+        detailSPP: totalAmountSPP,
       },
       { status: 200 },
     );
