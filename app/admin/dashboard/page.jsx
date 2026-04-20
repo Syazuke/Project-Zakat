@@ -292,7 +292,7 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-gray-50 flex font-sans overflow-hidden relative">
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-emerald-800 text-white flex flex-col hidden lg:flex`}
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-emerald-800 text-white flex flex-col lg:flex`}
       >
         <div className="p-6 border-b border-emerald-700 flex items-center gap-3">
           <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-emerald-800 font-bold text-xl">
