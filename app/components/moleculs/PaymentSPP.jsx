@@ -1,9 +1,9 @@
 "use client";
 
-import Zakat from "@/app/components/atoms/Zakat";
+import SPP from "@/app/components/atoms/SPP";
 import { useEffect, useState } from "react";
 
-const PaymentZakat = () => {
+const PaymentSPP = () => {
   useEffect(() => {
     const snapScipt = "https://app.sandbox.midtrans.com/snap/snap.js";
     const clientKey = process.env.NEXT_PUBLIC_CLIENT;
@@ -28,14 +28,14 @@ const PaymentZakat = () => {
     >
       <div className="text-center mb-10">
         <h2 className="text-3xl font-bold text-gray-900">
-          Form Pembayaran Zakat
+          Form Pembayaran SPP
         </h2>
         <div className="pt-6">
-          <Zakat nominalZakat={nominalZakat} nama={namaMuzaki} />
+          <SPP nominalZakat={nominalZakat} nama={namaMuzaki} />
         </div>
       </div>
     </section>
   );
 };
 
-export default PaymentZakat;
+export default PaymentSPP;
