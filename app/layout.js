@@ -1,3 +1,5 @@
+import Footer from "./components/moleculs/Footer/page";
+import Navigation from "./components/moleculs/Navbar/page";
 import "./globals.css";
 import { Inter } from "next/font/google";
 
@@ -18,7 +20,9 @@ export default function RootLayout({ children }) {
         />
       </head>
       <body className={inter.className}>
+        <Navigation />
         {children}
+        <Footer />
         <script
           type="text/javascript"
           src="https://app.sandbox.midtrans.com/snap/snap.js"

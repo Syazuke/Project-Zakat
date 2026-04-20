@@ -25,7 +25,7 @@ const HeroSection = () => {
         <div className="flex gap-2">
           <a
             href="#bayar"
-            className="bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition self-center p-3 shadow-lg shadow-emerald-200"
+            className="bg-white border-2 border-emerald-600 text-emerald-600 self-center py-3 px-6 rounded-lg font-semibold hover:bg-emerald-50 transition"
           >
             Bayar Zakat Sekarang
           </a>
@@ -36,7 +36,7 @@ const HeroSection = () => {
             Kalkulator Zakat
           </a>
           <a
-            href="#SPP"
+            href="/SPP"
             className="bg-white border-2 border-emerald-600 text-emerald-600 self-center py-3 px-6 rounded-lg font-semibold hover:bg-emerald-50 transition"
           >
             Bayar SPP disini

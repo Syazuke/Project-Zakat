@@ -19,27 +19,12 @@ const Navigation = () => {
               <p className="text-[10px]">Mensucikan Harta Anda</p>
             </div>
           </div>
-          <div className="hidden md:inline space-x-6">
-            <a href="#beranda" className="py-4 hover:text-hover">
-              Beranda
+          <div className="hidden md:inline space-x-10">
+            <a href="/" className="py-4 hover:text-hover">
+              Home
             </a>
-            <a href="#about" className="py-4 hover:text-hover">
-              Tentang
-            </a>
-            <a href="#kalkulator" className="py-4 mb-6 hover:text-hover">
-              Kalkulator
-            </a>
-            <a href="#bayar" className="py-4 mb-6 hover:text-hover">
-              Bayar Zakat
-            </a>
-            <a href="#SPP" className="py-4 mb-6 hover:text-hover">
-              Bayar SPP
-            </a>
-            <a href="/admin/dashboard" className="py-4 mb-6 hover:text-hover">
-              Dashboard
-            </a>
-            <a href="/login" className="py-4 mb-6 hover:text-hover">
-              Login Admin
+            <a href="/SPP" className="py-4 hover:text-hover">
+              SPP
             </a>
           </div>
           <button
@@ -53,26 +38,11 @@ const Navigation = () => {
           <div
             className={`absolute top-full left-0 w-full bg-white flex flex-col py-6 px-4 shadow-lg z-50 ${isOpen ? "border-b border-(--divider)" : ""}`}
           >
-            <a href="#beranda" className="py-4 hover:text-hover">
-              Beranda
+            <a href="/" className="py-4 hover:text-hover">
+              Home
             </a>
-            <a href="#about" className="py-4 hover:text-hover">
-              Tentang
-            </a>
-            <a href="#kalkulator" className="py-4 hover:text-hover">
-              Kalkulator
-            </a>
-            <a href="#bayar" className="py-4 hover:text-hover">
-              Bayar Zakat
-            </a>
-            <a href="#SPP" className="py-4 hover:text-hover">
-              Bayar SPP
-            </a>
-            <a href="/admin/dashboard" className="py-4 hover:text-hover">
-              Dashboard
-            </a>
-            <a href="/login" className="py-4 hover:text-hover">
-              Login Admin
+            <a href="/SPP" className="py-4 hover:text-hover">
+              SPP
             </a>
           </div>
         )}

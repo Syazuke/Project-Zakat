@@ -1,19 +1,18 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react"; // ✨ Tambahkan useEffect
 
 const FormSpp = () => {
   const [namaSiswa, setNamaSiswa] = useState("");
   const [jenisSpp, setJenisSpp] = useState("SPP");
-
-  // ✨ STATE BARU: Sekarang menggunakan Array (Daftar) untuk menampung banyak bulan
   const [bulanTagihan, setBulanTagihan] = useState([]);
-
   const [nominal, setNominal] = useState(0);
   const [pesan, setPesan] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  // Daftar bulan untuk ditampilkan di checkbox
+  // ✨ TETAPKAN HARGA SPP PER BULAN DI SINI ✨
+  const HARGA_SPP_PER_BULAN = 300000;
+
   const daftarBulan = [
     "Januari",
     "Februari",
@@ -29,13 +28,22 @@ const FormSpp = () => {
     "Desember",
   ];
 
-  // ✨ FUNGSI BARU: Untuk menambah/menghapus ceklis bulan
+  // ✨ EFEK OTOMATIS: Hitung nominal setiap kali bulan dicentang atau jenis diubah
+  useEffect(() => {
+    if (jenisSpp === "SPP") {
+      // Hitung: Jumlah bulan yang dicentang x 300.000
+      setNominal(bulanTagihan.length * HARGA_SPP_PER_BULAN);
+    } else {
+      // Jika ubah ke "Biaya Sekolah", reset nominal jadi 0 agar bisa diketik manual
+      setNominal(0);
+      setBulanTagihan([]); // Kosongkan centang bulan
+    }
+  }, [bulanTagihan, jenisSpp]);
+
   const handleToggleBulan = (bulan) => {
     if (bulanTagihan.includes(bulan)) {
-      // Jika sudah dicentang, maka hapus dari daftar (uncheck)
       setBulanTagihan(bulanTagihan.filter((b) => b !== bulan));
     } else {
-      // Jika belum dicentang, tambahkan ke daftar
       setBulanTagihan([...bulanTagihan, bulan]);
     }
   };
@@ -56,8 +64,6 @@ const FormSpp = () => {
 
     setIsLoading(true);
 
-    // ✨ GABUNGKAN NAMA BULAN JADI SATU KALIMAT ✨
-    // Contoh: ["Januari", "Februari"] diubah menjadi "Januari, Februari"
     const bulanFinal =
       jenisSpp === "SPP" ? bulanTagihan.join(", ") : "Bukan Tagihan Bulanan";
 
@@ -107,6 +113,9 @@ const FormSpp = () => {
   };
 
   const handleFormatRupiah = (e) => {
+    // Hanya izinkan format manual jika jenisnya BUKAN SPP
+    if (jenisSpp === "SPP") return;
+
     let rawValue = e.target.value.replace(/\D/g, "");
     setNominal(rawValue === "" ? 0 : Number(rawValue));
   };
@@ -148,13 +157,13 @@ const FormSpp = () => {
         </select>
       </div>
 
-      {/* ✨ KOTAK CENTANG BULAN (Hanya Muncul Jika Jenisnya SPP) ✨ */}
+      {/* KOTAK CENTANG BULAN */}
       {jenisSpp === "SPP" && (
         <div className="bg-white p-4 rounded-lg border border-gray-200">
           <label className="block text-sm font-bold text-gray-800 mb-3">
             Pilih Bulan Tagihan <span className="text-red-500">*</span>
             <span className="block text-xs text-gray-500 font-normal mt-0.5">
-              Bisa pilih lebih dari 1 bulan.
+              Tarif: Rp {HARGA_SPP_PER_BULAN.toLocaleString("id-ID")} / bulan
             </span>
           </label>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
@@ -185,22 +194,23 @@ const FormSpp = () => {
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Total Nominal Pembayaran (Rp) <span className="text-red-500">*</span>
         </label>
-        <div className="flex items-center border border-gray-300 rounded-lg px-3 py-3 focus-within:ring-2 focus-within:ring-blue-500 bg-white">
+        <div
+          className={`flex items-center border border-gray-300 rounded-lg px-3 py-3 focus-within:ring-2 focus-within:ring-blue-500 bg-white ${jenisSpp === "SPP" ? "bg-gray-100" : ""}`}
+        >
           <span className="text-gray-500 font-semibold mr-2">Rp.</span>
           <input
             type="text"
             value={nominal === 0 ? "" : nominal.toLocaleString("id-ID")}
             onChange={handleFormatRupiah}
-            placeholder="Ketik total yang harus dibayar"
-            className="w-full focus:outline-none bg-transparent text-black font-bold text-lg"
+            readOnly={jenisSpp === "SPP"} // ✨ Kunci input jika jenisnya SPP
+            placeholder={
+              jenisSpp === "SPP"
+                ? "Pilih bulan tagihan di atas"
+                : "Ketik total yang harus dibayar"
+            }
+            className={`w-full focus:outline-none bg-transparent text-black font-bold text-lg ${jenisSpp === "SPP" ? "cursor-not-allowed opacity-70" : ""}`}
           />
         </div>
-        {bulanTagihan.length > 1 && (
-          <p className="text-xs text-blue-600 mt-1.5 italic">
-            *Pastikan nominal di atas adalah total untuk {bulanTagihan.length}{" "}
-            bulan.
-          </p>
-        )}
       </div>
 
       {/* Input Pesan / Keterangan */}
@@ -211,7 +221,7 @@ const FormSpp = () => {
         <textarea
           value={pesan}
           onChange={(e) => setPesan(e.target.value)}
-          placeholder="Misal: Pembayaran SPP sekaligus Uang Seragam..."
+          placeholder="Misal: Pembayaran SPP bulan lalu yang tertunda..."
           rows="2"
           className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none resize-none transition bg-white"
         ></textarea>
