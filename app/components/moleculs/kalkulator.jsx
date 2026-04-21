@@ -8,6 +8,10 @@ const Kalkulator = () => {
   const [zakatToPay, setZakatToPay] = useState(0);
   const [nominalZakat, setNominalZakat] = useState(0);
   const [formValues, setFormValues] = useState({});
+
+  // ✨ STATE BARU: Untuk menampilkan pesan jika belum mencapai Nisab
+  const [pesanError, setPesanError] = useState("");
+
   const handleInputChange = (id, value) => {
     setFormValues((prev) => ({
       ...prev,
@@ -19,10 +23,32 @@ const Kalkulator = () => {
     setZakatType(type);
     setFormValues({});
     setZakatToPay(0);
+    setPesanError(""); // Kosongkan pesan error saat ganti tab
+  };
+
+  const nisab = (totalHarta, totalZakat) => {
+    const HARGA_EMAS_PER_GRAM = 1200000; // Harga emas saat ini (Bisa disesuaikan)
+    const NISAB_MAAL = 85 * HARGA_EMAS_PER_GRAM; // Batas minimal 85 gram emas
+
+    if (totalHarta === 0) {
+      totalZakat = 0;
+    } else if (totalHarta >= NISAB_MAAL) {
+      // Jika mencapai atau lebih dari nisab, hitung 2.5%
+      totalZakat = totalHarta * 0.025;
+    } else {
+      // Jika belum mencapai nisab
+      totalZakat = 0;
+      setPesanError(
+        `Total harta Anda (Rp ${totalHarta.toLocaleString("id-ID")}) belum mencapai Nisab Zakat Maal sebesar Rp ${NISAB_MAAL.toLocaleString("id-ID")} (setara 85 gram emas). Anda belum diwajibkan berzakat.`,
+      );
+    }
+    setZakatToPay(totalZakat);
+    setNominalZakat(totalZakat);
   };
 
   const handleCalculate = () => {
     let totalZakat = 0;
+    setPesanError(""); // Reset pesan error setiap kali tombol di-klik
 
     if (zakatType === "fidyah") {
       const hari = parseFloat(formValues["hari"]) || 0;
@@ -34,10 +60,10 @@ const Kalkulator = () => {
     } else if (zakatType === "maal") {
       const tabungan = parseFloat(formValues["tabungan"]) || 0;
       const emas = parseFloat(formValues["emas"]) || 0;
-      totalZakat = (tabungan + emas) * 0.025;
+      const aset = parseFloat(formValues["aset"]) || 0;
+      const totalHarta = tabungan + emas + aset;
+      return nisab(totalHarta, totalZakat);
     }
-    setZakatToPay(totalZakat);
-    setNominalZakat(totalZakat);
   };
 
   return (
@@ -78,7 +104,6 @@ const Kalkulator = () => {
                     {item.label}
                   </label>
 
-                  {/* Container Input dengan style border dan focus */}
                   <div className="flex items-center border border-gray-300 rounded-lg px-3 py-3 focus-within:ring-2 focus-within:ring-emerald-500 focus-within:border-transparent bg-white transition">
                     {item.id !== "hari" && (
                       <span className="text-gray-500 font-semibold mr-2">
@@ -114,12 +139,21 @@ const Kalkulator = () => {
 
               <button
                 onClick={handleCalculate}
-                className="w-full bg-emerald-600 text-white font-semibold py-3 rounded-lg hover:bg-emerald-700 transition"
+                className="w-full bg-emerald-600 text-white font-semibold py-3 rounded-lg hover:bg-emerald-700 transition mt-2"
               >
                 Hitung Zakat
               </button>
+
+              {/* TAMPILAN JIKA BELUM MENCAPAI NISAB */}
+              {pesanError && (
+                <div className="mt-4 p-4 bg-orange-50 border border-orange-200 rounded-xl text-center">
+                  <p className="text-orange-700 font-medium">{pesanError}</p>
+                </div>
+              )}
+
+              {/* TAMPILAN JIKA SUDAH MENCAPAI NISAB & WAJIB BAYAR */}
               {zakatToPay > 0 && (
-                <div className="mt-6 p-6 bg-white border border-emerald-200 rounded-xl text-center">
+                <div className="mt-4 p-6 bg-white border border-emerald-200 rounded-xl text-center">
                   <p className="text-gray-600 font-medium mb-2">
                     Total zakat yang harus ditunaikan:
                   </p>

@@ -26,6 +26,9 @@ const Navigation = () => {
             <a href="/SPP" className="py-4 hover:text-hover">
               SPP
             </a>
+            <a href="/zakat" className="py-4 hover:text-hover">
+              Zakat
+            </a>
           </div>
           <button
             onClick={() => setIsOpen(!isOpen)}

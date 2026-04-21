@@ -24,16 +24,10 @@ const HeroSection = () => {
         </p>
         <div className="flex gap-2">
           <a
-            href="#bayar"
+            href="/zakat"
             className="bg-white border-2 border-emerald-600 text-emerald-600 self-center py-3 px-6 rounded-lg font-semibold hover:bg-emerald-50 transition"
           >
-            Bayar Zakat Sekarang
-          </a>
-          <a
-            href="#kalkulator"
-            className="bg-white border-2 border-emerald-600 text-emerald-600 self-center py-3 px-6 rounded-lg font-semibold hover:bg-emerald-50 transition"
-          >
-            Kalkulator Zakat
+            Bayar Zakat disini
           </a>
           <a
             href="/SPP"
