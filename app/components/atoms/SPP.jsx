@@ -13,8 +13,18 @@ const FormSpp = () => {
   const HARGA_SPP_PER_BULAN = 300000;
 
   const daftarBulan = [
-    "Januari", "Februari", "Maret", "April", "Mei", "Juni",
-    "Juli", "Agustus", "September", "Oktober", "November", "Desember",
+    "Januari",
+    "Februari",
+    "Maret",
+    "April",
+    "Mei",
+    "Juni",
+    "Juli",
+    "Agustus",
+    "September",
+    "Oktober",
+    "November",
+    "Desember",
   ];
 
   useEffect(() => {
@@ -50,7 +60,8 @@ const FormSpp = () => {
 
     setIsLoading(true);
 
-    const bulanFinal = jenisSpp === "SPP" ? bulanTagihan.join(", ") : "Bukan Tagihan Bulanan";
+    const bulanFinal =
+      jenisSpp === "SPP" ? bulanTagihan.join(", ") : "Bukan Tagihan Bulanan";
 
     const dataTransaksi = {
       nama: namaSiswa,
@@ -80,13 +91,9 @@ const FormSpp = () => {
           window.location.reload();
         },
         onPending: function () {
-<<<<<<< HEAD
           alert(
             "Kode bayar telah dibuat! Silakan selesaikan pembayaran Anda via Bank/E-Wallet.",
           );
-=======
-          alert("Kode bayar telah dibuat! Silakan selesaikan pembayaran Anda via Bank/E-Wallet.");
->>>>>>> b5a19da19fb7b5d671449a83279587fbfe84e0f7
           window.location.reload();
         },
         onError: function () {
@@ -94,13 +101,9 @@ const FormSpp = () => {
           setIsLoading(false);
         },
         onClose: function () {
-<<<<<<< HEAD
           alert(
             "Anda menutup layar. Jika Anda sudah mendapat kode bayar (VA), silakan lanjutkan pembayaran di Bank/E-Wallet Anda.",
           );
-=======
-          alert("Anda menutup layar. Jika Anda sudah mendapat kode bayar (VA), silakan lanjutkan pembayaran di Bank/E-Wallet Anda.");
->>>>>>> b5a19da19fb7b5d671449a83279587fbfe84e0f7
           setIsLoading(false);
         },
       });
@@ -112,11 +115,7 @@ const FormSpp = () => {
   };
 
   const handleFormatRupiah = (e) => {
-<<<<<<< HEAD
     if (jenisSpp === "SPP") return;
-=======
-    if (jenisSpp === "SPP") return; 
->>>>>>> b5a19da19fb7b5d671449a83279587fbfe84e0f7
     let rawValue = e.target.value.replace(/\D/g, "");
     setNominal(rawValue === "" ? 0 : Number(rawValue));
   };
@@ -191,22 +190,20 @@ const FormSpp = () => {
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Total Nominal Pembayaran (Rp) <span className="text-red-500">*</span>
         </label>
-        <div className={`flex items-center border border-gray-300 rounded-lg px-3 py-3 focus-within:ring-2 focus-within:ring-blue-500 bg-white ${jenisSpp === "SPP" ? "bg-gray-100" : ""}`}>
+        <div
+          className={`flex items-center border border-gray-300 rounded-lg px-3 py-3 focus-within:ring-2 focus-within:ring-blue-500 bg-white ${jenisSpp === "SPP" ? "bg-gray-100" : ""}`}
+        >
           <span className="text-gray-500 font-semibold mr-2">Rp.</span>
           <input
             type="text"
             value={nominal === 0 ? "" : nominal.toLocaleString("id-ID")}
             onChange={handleFormatRupiah}
             readOnly={jenisSpp === "SPP"}
-<<<<<<< HEAD
             placeholder={
               jenisSpp === "SPP"
                 ? "Pilih bulan tagihan di atas"
                 : "Ketik total yang harus dibayar"
             }
-=======
-            placeholder={jenisSpp === "SPP" ? "Pilih bulan tagihan di atas" : "Ketik total yang harus dibayar"}
->>>>>>> b5a19da19fb7b5d671449a83279587fbfe84e0f7
             className={`w-full focus:outline-none bg-transparent text-black font-bold text-lg ${jenisSpp === "SPP" ? "cursor-not-allowed opacity-70" : ""}`}
           />
         </div>
