@@ -2,15 +2,17 @@
 
 import formConfig from "@/app/libs/form";
 import { useState } from "react";
+// Pastikan Anda memanggil komponen Zakat (Formulir Midtrans) jika ditaruh di bawah kalkulator
+// import Zakat from "./Zakat";
 
 const Kalkulator = () => {
   const [zakatType, setZakatType] = useState("penghasilan");
   const [zakatToPay, setZakatToPay] = useState(0);
   const [nominalZakat, setNominalZakat] = useState(0);
   const [formValues, setFormValues] = useState({});
-
-  // ✨ STATE BARU: Untuk menampilkan pesan jika belum mencapai Nisab
   const [pesanError, setPesanError] = useState("");
+
+  const HARGA_EMAS_PER_GRAM = 2880000; // Harga emas saat ini (Bisa disesuaikan)
 
   const handleInputChange = (id, value) => {
     setFormValues((prev) => ({
@@ -23,47 +25,67 @@ const Kalkulator = () => {
     setZakatType(type);
     setFormValues({});
     setZakatToPay(0);
-    setPesanError(""); // Kosongkan pesan error saat ganti tab
+    setNominalZakat(0);
+    setPesanError("");
   };
 
-  const nisab = (totalHarta, totalZakat) => {
-    const HARGA_EMAS_PER_GRAM = 1200000; // Harga emas saat ini (Bisa disesuaikan)
-    const NISAB_MAAL = 85 * HARGA_EMAS_PER_GRAM; // Batas minimal 85 gram emas
+  // ✨ FUNGSI KHUSUS CEK NISAB ✨
+  const cekNisab = (totalHarta, jenis) => {
+    let batasNisab = 0;
+    let pesan = "";
 
-    if (totalHarta === 0) {
-      totalZakat = 0;
-    } else if (totalHarta >= NISAB_MAAL) {
-      // Jika mencapai atau lebih dari nisab, hitung 2.5%
-      totalZakat = totalHarta * 0.025;
-    } else {
-      // Jika belum mencapai nisab
-      totalZakat = 0;
-      setPesanError(
-        `Total harta Anda (Rp ${totalHarta.toLocaleString("id-ID")}) belum mencapai Nisab Zakat Maal sebesar Rp ${NISAB_MAAL.toLocaleString("id-ID")} (setara 85 gram emas). Anda belum diwajibkan berzakat.`,
-      );
+    if (jenis === "maal") {
+      batasNisab = 85 * HARGA_EMAS_PER_GRAM; // Nisab Maal = 85 gram emas
+      pesan = `Total harta Anda belum mencapai Nisab Zakat Maal sebesar Rp ${batasNisab.toLocaleString("id-ID")}. Anda belum diwajibkan berzakat.`;
+    } else if (jenis === "penghasilan") {
+      batasNisab = (85 * HARGA_EMAS_PER_GRAM) / 12; // Nisab Penghasilan = 85 gram emas per tahun (dibagi 12 untuk bulanan)
+      pesan = `Total pendapatan Anda belum mencapai Nisab Zakat Penghasilan (Bulanan) sebesar Rp ${batasNisab.toLocaleString("id-ID")}. Anda belum diwajibkan berzakat.`;
     }
-    setZakatToPay(totalZakat);
-    setNominalZakat(totalZakat);
+
+    if (totalHarta >= batasNisab) {
+      return true; // Wajib Zakat
+    } else {
+      setPesanError(pesan);
+      return false; // Belum Wajib Zakat
+    }
   };
 
   const handleCalculate = () => {
     let totalZakat = 0;
-    setPesanError(""); // Reset pesan error setiap kali tombol di-klik
+    setPesanError(""); // Reset error setiap kali klik hitung
 
     if (zakatType === "fidyah") {
       const hari = parseFloat(formValues["hari"]) || 0;
-      totalZakat = hari * 65000;
+      totalZakat = hari * 65000; // Fidyah tidak pakai Nisab
     } else if (zakatType === "penghasilan") {
       const pendapatan = parseFloat(formValues["pendapatan"]) || 0;
       const bonus = parseFloat(formValues["bonus"]) || 0;
-      totalZakat = (pendapatan + bonus) * 0.025;
+      const totalPendapatan = pendapatan + bonus;
+
+      if (totalPendapatan > 0) {
+        // Cek Nisab dulu
+        const wajibZakat = cekNisab(totalPendapatan, "penghasilan");
+        if (wajibZakat) {
+          totalZakat = totalPendapatan * 0.025;
+        }
+      }
     } else if (zakatType === "maal") {
       const tabungan = parseFloat(formValues["tabungan"]) || 0;
       const emas = parseFloat(formValues["emas"]) || 0;
       const aset = parseFloat(formValues["aset"]) || 0;
       const totalHarta = tabungan + emas + aset;
-      return nisab(totalHarta, totalZakat);
+
+      if (totalHarta > 0) {
+        // Cek Nisab dulu
+        const wajibZakat = cekNisab(totalHarta, "maal");
+        if (wajibZakat) {
+          totalZakat = totalHarta * 0.025;
+        }
+      }
     }
+
+    setZakatToPay(totalZakat);
+    setNominalZakat(totalZakat); // Penting agar data nominal ini bisa dilempar ke form Midtrans
   };
 
   return (

@@ -1,15 +1,23 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 // Kita menerima nominalZakat dan zakatType dari Kalkulator.jsx
 const Zakat = ({ nominalZakat, zakatType }) => {
-  // State untuk menyimpan ketikan user
   const [nama, setNama] = useState("");
   const [pesan, setPesan] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [nominal, setZakat] = useState(0);
-  const [jenisZakat, setJenisZakat] = useState("");
+
+  // ✨ PERBAIKAN 1: Default state mengambil dari props kalkulator
+  const [nominal, setZakat] = useState(nominalZakat || 0);
+  const [jenisZakat, setJenisZakat] = useState(zakatType || "penghasilan");
+
+  // ✨ PERBAIKAN 2: Gunakan useEffect agar form otomatis update
+  // ketika user mengganti tab atau menghitung ulang di kalkulator
+  useEffect(() => {
+    if (zakatType) setJenisZakat(zakatType);
+    if (nominalZakat > 0) setZakat(nominalZakat);
+  }, [zakatType, nominalZakat]);
 
   const checkoutZakat = async () => {
     if (nominal <= 0) {
@@ -18,15 +26,14 @@ const Zakat = ({ nominalZakat, zakatType }) => {
     }
 
     setIsLoading(true);
-    // Jika nama kosong, otomatis jadi Hamba Allah
     const namaValid = nama.trim() === "" ? "Hamba Allah" : nama;
 
-    // DATA INI YANG DIKIRIM KE BACKEND (Harus sama persis namanya)
+    // ✨ PERBAIKAN 3: Sekarang mengirimkan jenisZakat yang akurat
     const dataTransaksi = {
       nama: namaValid,
       pesan: pesan,
       nominal: nominal,
-      zakatType: jenisZakat || "Zakat",
+      zakatType: jenisZakat,
     };
 
     try {
@@ -36,7 +43,7 @@ const Zakat = ({ nominalZakat, zakatType }) => {
           "Content-Type": "application/json",
           "ngrok-skip-browser-warning": "true",
         },
-        body: JSON.stringify(dataTransaksi), // Kirim paket datanya ke API
+        body: JSON.stringify(dataTransaksi),
       });
 
       if (!response.ok) {
@@ -45,11 +52,10 @@ const Zakat = ({ nominalZakat, zakatType }) => {
 
       const { token } = await response.json();
 
-      // Panggil popup Midtrans Snap
       window.snap.pay(token, {
         onSuccess: function (result) {
           alert("Alhamdulillah, Zakat berhasil ditunaikan!");
-          window.location.reload(); // Refresh halaman agar form kembali bersih
+          window.location.reload();
         },
         onPending: function (result) {
           alert("Menunggu pembayaran Anda.");
@@ -70,14 +76,10 @@ const Zakat = ({ nominalZakat, zakatType }) => {
   };
 
   const handleFormatRupiah = (e) => {
-    // Hapus semua karakter yang bukan angka
     let rawValue = e.target.value.replace(/\D/g, "");
-
-    // Jika input kosong (dihapus semua), kembalikan ke 0
     if (rawValue === "") {
       setZakat(0);
     } else {
-      // Ubah kembali menjadi angka utuh (Number)
       setZakat(Number(rawValue));
     }
   };
@@ -101,16 +103,15 @@ const Zakat = ({ nominalZakat, zakatType }) => {
           className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-500 outline-none transition bg-white"
         />
       </div>
+
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          Zakat Type
+          Jenis Zakat
         </label>
         <select
-          type="text"
           value={jenisZakat}
           onChange={(e) => setJenisZakat(e.target.value)}
-          className="w-full px-4 py-2 rounded-lg border border-gray-300
-          focus:ring-2 focus:ring-emerald-500 outline-none transition bg-white cursor-pointer"
+          className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-500 outline-none transition bg-white cursor-pointer"
         >
           <option value="penghasilan">Zakat Penghasilan</option>
           <option value="maal">Zakat Maal</option>

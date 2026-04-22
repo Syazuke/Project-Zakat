@@ -8,7 +8,6 @@ export default function AdminDashboard() {
   const router = useRouter();
   const [adminName, setAdminName] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // ✨ STATE STATISTIK GABUNGAN ✨
   const [totalPendapatan, setTotalPendapatan] = useState(0);
@@ -473,7 +472,7 @@ export default function AdminDashboard() {
                               {trx.name}
                             </td>
                             <td className="px-6 py-4 capitalize">
-                              {trx.zakatType}
+                              zakat {trx.zakatType}
                             </td>
                             <td className="px-6 py-4 font-bold text-emerald-600">
                               Rp {trx.amount.toLocaleString("id-ID")}
