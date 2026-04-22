@@ -4,10 +4,12 @@ import { useState } from "react";
 import { usePathname } from "next/navigation";
 
 const Navigation = () => {
-  const pathname = usePathname(); // 3. Panggil alatnya
+  const pathname = usePathname();
 
-  // 4. ✨ LOGIKA PENGHILANG: Jika URL berawalan /admin, jangan tampilkan Navbar
   if (pathname.startsWith("/admin" || "/login")) {
+    return null;
+  }
+  if (pathname.endsWith("/login")) {
     return null;
   }
   const [isOpen, setIsOpen] = useState(false);
