@@ -73,6 +73,33 @@ const FormSpp = () => {
       nominal: nominal,
       zakatType: jenisSpp,
       paymentMonth: bulanFinal,
+    }
+
+    const checkoutSPP = async () => {
+    if (nominal < 10000) {
+      alert("Minimal pembayaran adalah Rp 10.000");
+      return;
+    }
+    if (namaSiswa.trim() === "") {
+      alert("Mohon isi Nama Lengkap Siswa.");
+      return;
+    }
+    if (jenisSpp === "SPP" && bulanTagihan.length === 0) {
+      alert("Mohon centang minimal 1 bulan tagihan.");
+      return;
+    }
+
+    // Tombol akan berubah menjadi "Memproses..." dan tidak bisa diklik ganda
+    setIsLoading(true);
+
+    const bulanFinal = jenisSpp === "SPP" ? bulanTagihan.join(", ") : "Bukan Tagihan Bulanan";
+
+    const dataTransaksi = {
+      nama: namaSiswa,
+      pesan: pesan || "-",
+      nominal: nominal,
+      zakatType: jenisSpp,
+      paymentMonth: bulanFinal,
     };
 
     try {
@@ -89,27 +116,36 @@ const FormSpp = () => {
 
       const { token } = await response.json();
 
+      // Panggil popup Midtrans Snap
       window.snap.pay(token, {
         onSuccess: function () {
           alert("Alhamdulillah, Pembayaran berhasil!");
-          window.location.reload();
+          window.location.reload(); // Refresh halaman agar bersih kembali
         },
         onPending: function () {
-          alert("Menunggu pembayaran Anda.");
+          // Memicu ini jika user mengklik tombol "Selesai/Kembali ke Merchant" di Midtrans
+          alert("Kode bayar telah dibuat! Silakan selesaikan pembayaran Anda via Bank/E-Wallet.");
+          window.location.reload(); 
         },
         onError: function () {
-          alert("Pembayaran gagal!");
+          alert("Pembayaran gagal atau kadaluarsa!");
+          setIsLoading(false); // Matikan loading agar bisa coba lagi
         },
         onClose: function () {
-          alert("Anda menutup layar pembayaran sebelum menyelesaikan.");
+          // Memicu ini jika user klik tanda Silang (X)
+          alert("Anda menutup layar. Jika Anda sudah mendapat kode bayar (VA), silakan lanjutkan pembayaran di Bank/E-Wallet Anda.");
+          setIsLoading(false); // Matikan loading agar bisa coba bayar ulang jika belum dapat kode
         },
       });
+      
     } catch (error) {
       console.error("Error Checkout:", error);
       alert("Terjadi kesalahan sistem pembayaran.");
-    } finally {
-      setIsLoading(false);
-    }
+      setIsLoading(false); // Matikan loading jika error API
+    } 
+    
+    // 🚨 PERHATIAN: Saya menghapus blok 'finally { setIsLoading(false) }' dari sini.
+    // Dulu blok itu membuat tombol loading mati terlalu cepat sebelum popup ditutup.
   };
 
   const handleFormatRupiah = (e) => {
