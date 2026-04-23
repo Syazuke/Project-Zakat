@@ -10,22 +10,30 @@ export async function POST(request) {
     const orderId = data.order_id; // Contoh: ZAKAT-clnx... atau SPP-clnx...
     const grossAmount = data.gross_amount; // Nominal pembayaran
 
-    // Jika pembayaran sukses (settlement = sukses bayar, capture = sukses kartu kredit)
+    // Jika pembayaran sukses
     if (transactionStatus === "settlement" || transactionStatus === "capture") {
+      // ✨ KITA SIAPKAN VARIABEL KOSONG UNTUK MENAMPUNG NAMA
+      let namaPembayar = "Hamba Allah";
+
       // ==========================================
-      // 1. UPDATE DATABASE PRISMA ANDA
+      // 1. UPDATE DATABASE PRISMA & AMBIL NAMANYA
       // ==========================================
-      // Pastikan Anda memisahkan logika apakah ini ID Zakat atau SPP
       if (orderId.startsWith("ZAKAT-")) {
-        await prisma.zakatTransaction.update({
+        // Simpan hasil update ke dalam variabel 'trx'
+        const trx = await prisma.zakatTransaction.update({
           where: { id: orderId.replace("ZAKAT-", "") },
           data: { status: "SUCCESS" },
         });
+        // Ambil nama dari database (fallback ke Hamba Allah jika kosong)
+        namaPembayar = trx.name || "Hamba Allah";
       } else if (orderId.startsWith("SPP-")) {
-        await prisma.sppTransaction.update({
+        // Simpan hasil update ke dalam variabel 'trx'
+        const trx = await prisma.sppTransaction.update({
           where: { id: orderId.replace("SPP-", "") },
           data: { status: "SUCCESS" },
         });
+        // Ambil nama siswa dari database
+        namaPembayar = trx.studentName || "Siswa SPP";
       }
 
       // ==========================================
@@ -37,16 +45,15 @@ export async function POST(request) {
       // Siapkan paket data yang akan ditulis di kolom Excel
       const dataExcel = {
         tanggal: new Date().toLocaleString("id-ID"),
-        nama: orderId.startsWith("ZAKAT-") ? "Muzakki" : "Siswa SPP",
+        nama: namaPembayar, // 🎯 SEKARANG MENGGUNAKAN NAMA ASLI DARI DATABASE
         jenis: orderId.startsWith("ZAKAT-") ? "Zakat" : "SPP",
         keterangan: orderId,
         nominal: `Rp ${parseInt(grossAmount).toLocaleString("id-ID")}`,
         status: "SUCCESS",
       };
 
-      console.log("🚨 Mengirim data ke Google Sheets...");
+      console.log("🚨 Mengirim data ke Google Sheets...", dataExcel);
 
-      // ✨ PERBAIKAN FATAL: Tambahkan 'await' agar Vercel mau menunggu proses ini selesai
       await fetch(GOOGLE_SHEET_URL, {
         method: "POST",
         headers: {
@@ -61,7 +68,6 @@ export async function POST(request) {
       transactionStatus === "expire" ||
       transactionStatus === "cancel"
     ) {
-      // Logika jika pembayaran kadaluarsa atau dibatalkan
       if (orderId.startsWith("ZAKAT-")) {
         await prisma.zakatTransaction.update({
           where: { id: orderId.replace("ZAKAT-", "") },
@@ -75,7 +81,6 @@ export async function POST(request) {
       }
     }
 
-    // Pastikan response ini dipanggil paling akhir
     return NextResponse.json(
       { message: "Webhook berhasil diproses" },
       { status: 200 },
