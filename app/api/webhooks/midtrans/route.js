@@ -7,63 +7,74 @@ export async function POST(request) {
 
     // Status pembayaran dari Midtrans
     const transactionStatus = data.transaction_status;
-    const orderId = data.order_id; // Contoh: ZAKAT-clnx... atau SPP-clnx...
-    const grossAmount = data.gross_amount; // Nominal pembayaran
+    const orderId = data.order_id;
+    const grossAmount = data.gross_amount;
 
-    // Jika pembayaran sukses
     if (transactionStatus === "settlement" || transactionStatus === "capture") {
-      // ✨ KITA SIAPKAN VARIABEL KOSONG UNTUK MENAMPUNG NAMA
       let namaPembayar = "Hamba Allah";
+      let keteranganTambahan = orderId;
+
+      // ✨ 1. SIAPKAN 2 ALAMAT GOOGLE SHEETS BERBEDA
+      // Masukkan URL Google Sheets lama Anda di sini
+      const GOOGLE_SHEET_URL_ZAKAT =
+        "https://script.google.com/macros/s/AKfycbwEcV1fRA0xe_pCHd0lnEZGI5rbYZfXGw-LtKnX-xdRSV7lAPZbnIeYOrRWWOXl3hg/exec";
+
+      // Masukkan URL Google Sheets SPP yang BARU di sini
+      const GOOGLE_SHEET_URL_SPP =
+        "https://script.google.com/macros/s/AKfycbwevzDVjL_8pG-FRntzXxDDfhJdAM622flsKDpEDwv08wD97rwotvYqeIvauRiRtUs3IQ/exec";
+
+      // Variabel untuk menentukan tujuan pengiriman
+      let targetSheetUrl = "";
 
       // ==========================================
-      // 1. UPDATE DATABASE PRISMA & AMBIL NAMANYA
+      // 2. UPDATE DATABASE & PILIH TUJUAN SHEETS
       // ==========================================
       if (orderId.startsWith("ZAKAT-")) {
-        // Simpan hasil update ke dalam variabel 'trx'
         const trx = await prisma.zakatTransaction.update({
           where: { id: orderId.replace("ZAKAT-", "") },
           data: { status: "SUCCESS" },
         });
-        // Ambil nama dari database (fallback ke Hamba Allah jika kosong)
+
         namaPembayar = trx.name || "Hamba Allah";
+        keteranganTambahan = trx.zakatType; // Menampilkan jenis zakatnya
+        targetSheetUrl = GOOGLE_SHEET_URL_ZAKAT; // Arahkan ke Sheets Zakat
       } else if (orderId.startsWith("SPP-")) {
-        // Simpan hasil update ke dalam variabel 'trx'
         const trx = await prisma.sppTransaction.update({
           where: { id: orderId.replace("SPP-", "") },
           data: { status: "SUCCESS" },
         });
-        // Ambil nama siswa dari database
+
         namaPembayar = trx.studentName || "Siswa SPP";
+        keteranganTambahan = `Bulan: ${trx.paymentMonth}`; // Menampilkan bulan tagihan
+        targetSheetUrl = GOOGLE_SHEET_URL_SPP; // Arahkan ke Sheets SPP
       }
 
       // ==========================================
-      // ✨ 2. KIRIM DATA KE GOOGLE SHEETS SECARA REAL-TIME ✨
+      // 3. KIRIM DATA KE GOOGLE SHEETS TERPILIH
       // ==========================================
-      const GOOGLE_SHEET_URL =
-        "https://script.google.com/macros/s/AKfycbwEcV1fRA0xe_pCHd0lnEZGI5rbYZfXGw-LtKnX-xdRSV7lAPZbnIeYOrRWWOXl3hg/exec";
-
-      // Siapkan paket data yang akan ditulis di kolom Excel
       const dataExcel = {
         tanggal: new Date().toLocaleString("id-ID"),
-        nama: namaPembayar, // 🎯 SEKARANG MENGGUNAKAN NAMA ASLI DARI DATABASE
+        nama: namaPembayar,
         jenis: orderId.startsWith("ZAKAT-") ? "Zakat" : "SPP",
-        keterangan: orderId,
+        keterangan: keteranganTambahan, // Jauh lebih rapi untuk dibaca Admin!
         nominal: `Rp ${parseInt(grossAmount).toLocaleString("id-ID")}`,
         status: "SUCCESS",
       };
 
-      console.log("🚨 Mengirim data ke Google Sheets...", dataExcel);
+      console.log(`🚨 Mengirim data ke Sheets ${dataExcel.jenis}...`);
 
-      await fetch(GOOGLE_SHEET_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "text/plain;charset=utf-8",
-        },
-        body: JSON.stringify(dataExcel),
-      })
-        .then((res) => res.text())
-        .then((text) => console.log("✅ Balasan dari Sheets:", text))
-        .catch((err) => console.error("❌ Gagal kirim ke Sheets:", err));
+      if (targetSheetUrl !== "") {
+        await fetch(targetSheetUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "text/plain;charset=utf-8",
+          },
+          body: JSON.stringify(dataExcel),
+        })
+          .then((res) => res.text())
+          .then((text) => console.log("✅ Balasan dari Sheets:", text))
+          .catch((err) => console.error("❌ Gagal kirim ke Sheets:", err));
+      }
     } else if (
       transactionStatus === "expire" ||
       transactionStatus === "cancel"
