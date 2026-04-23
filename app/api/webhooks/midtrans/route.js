@@ -25,6 +25,7 @@ export async function POST(request) {
 
       // Variabel untuk menentukan tujuan pengiriman
       let targetSheetUrl = "";
+      let dataExcel;
 
       // ==========================================
       // 2. UPDATE DATABASE & PILIH TUJUAN SHEETS
@@ -35,36 +36,41 @@ export async function POST(request) {
           data: { status: "SUCCESS" },
         });
 
-        namaPembayar = trx.name || "Hamba Allah";
-        keteranganTambahan = trx.zakatType; // Menampilkan jenis zakatnya
-        targetSheetUrl = GOOGLE_SHEET_URL_ZAKAT; // Arahkan ke Sheets Zakat
+        // 📦 PAKET DATA KHUSUS ZAKAT
+        dataExcel = {
+          tanggal: new Date().toLocaleString("id-ID"),
+          nama: trx.name || "Hamba Allah",
+          jenis: trx.zakatType,
+          keterangan: trx.message,
+          nominal: `Rp ${parseInt(grossAmount).toLocaleString("id-ID")}`,
+          status: "SUCCESS",
+        };
+        targetSheetUrl = GOOGLE_SHEET_URL_ZAKAT;
       } else if (orderId.startsWith("SPP-")) {
         const trx = await prisma.sppTransaction.update({
           where: { id: orderId.replace("SPP-", "") },
           data: { status: "SUCCESS" },
         });
 
-        namaPembayar = trx.studentName || "Siswa SPP";
-        keteranganTambahan = `Bulan: ${trx.paymentMonth}`;
-        keterangan = trx.message;
+        // 📦 PAKET DATA KHUSUS SPP
+        dataExcel = {
+          tanggal: new Date().toLocaleString("id-ID"),
+          nama: trx.studentName,
+          jenis: trx.sppType,
+          tagihan: `Bulan: ${trx.paymentMonth}`,
+          keterangan: trx.message,
+          nominal: `Rp ${parseInt(grossAmount).toLocaleString("id-ID")}`,
+          status: "SUCCESS",
+        };
         targetSheetUrl = GOOGLE_SHEET_URL_SPP;
       }
 
       // ==========================================
-      // 3. KIRIM DATA KE GOOGLE SHEETS TERPILIH
+      // 3. EKSEKUSI PENGIRIMAN KE GOOGLE SHEETS
       // ==========================================
-      const dataExcel = {
-        tanggal: new Date().toLocaleString("id-ID"),
-        nama: namaPembayar,
-        jenis: orderId.startsWith("ZAKAT-") ? "Zakat" : "SPP",
-        keterangan: keteranganTambahan,
-        nominal: `Rp ${parseInt(grossAmount).toLocaleString("id-ID")}`,
-        status: "SUCCESS",
-      };
+      if (targetSheetUrl !== "" && dataExcel) {
+        console.log(`🚨 Mengirim data ke Sheets ${dataExcel.jenis}...`);
 
-      console.log(`🚨 Mengirim data ke Sheets ${dataExcel.jenis}...`);
-
-      if (targetSheetUrl !== "") {
         await fetch(targetSheetUrl, {
           method: "POST",
           headers: {

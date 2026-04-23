@@ -47,11 +47,11 @@ export async function POST(request) {
     // ✨ 2. PILIH KUNCI MIDTRANS YANG TEPAT DARI .ENV
     const serverKey = isSPP
       ? process.env.MIDTRANS_SERVER_KEY_SPP
-      : process.env.MIDTRANS_SERVER_KEY_ZAKAT;
+      : process.env.MIDTRANS_SERVER_KEY_Zakat;
 
     const clientKey = isSPP
       ? process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY_SPP
-      : process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY_ZAKAT;
+      : process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY_Zakat;
 
     let newTransaction;
     let orderIdMidtrans = "";

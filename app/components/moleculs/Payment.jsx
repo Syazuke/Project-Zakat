@@ -5,21 +5,30 @@ import { useEffect, useState } from "react";
 
 const PaymentZakat = () => {
   useEffect(() => {
-    const snapScipt = "https://app.sandbox.midtrans.com/snap/snap.js";
-    const clientKey = process.env.NEXT_PUBLIC_CLIENT_Zakat;
-    const script = document.createElement("script");
-    script.src = snapScipt;
-    script.setAttribute("data-client-key", clientKey);
-    script.async = true;
+    // Memastikan script Midtrans terpasang di halaman ini
+    const snapScript = "https://app.sandbox.midtrans.com/snap/snap.js";
+    // ✨ PERBAIKAN: Sesuaikan nama variabel dengan file .env
+    const clientKey = process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY_Zakat || "";
 
-    document.body.appendChild(script);
+    // Cek apakah script sudah ada agar tidak ganda
+    let script = document.querySelector('script[src="' + snapScript + '"]');
+
+    if (!script) {
+      script = document.createElement("script");
+      script.src = snapScript;
+      script.setAttribute("data-client-key", clientKey);
+      script.async = true;
+      document.body.appendChild(script);
+    }
 
     return () => {
-      document.body.removeChild(script);
+      if (script && script.parentNode) {
+        script.parentNode.removeChild(script);
+      }
     };
   }, []);
+
   const [nominalZakat, setNominalZakat] = useState(0);
-  const [namaMuzaki, setNamaMuzakki] = useState("");
 
   return (
     <section
@@ -31,7 +40,7 @@ const PaymentZakat = () => {
           Form Pembayaran Zakat
         </h2>
         <div className="pt-6">
-          <Zakat nominalZakat={nominalZakat} nama={namaMuzaki} />
+          <Zakat nominalZakat={nominalZakat} />
         </div>
       </div>
     </section>
