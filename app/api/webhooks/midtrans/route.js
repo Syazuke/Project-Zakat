@@ -38,7 +38,9 @@ export async function POST(request) {
 
         // 📦 PAKET DATA KHUSUS ZAKAT
         dataExcel = {
-          tanggal: new Date().toLocaleString("id-ID"),
+          tanggal: new Date().toLocaleString("id-ID", {
+            timeZone: "Asia/Jakarta",
+          }),
           nama: trx.name || "Hamba Allah",
           jenis: `Zakat ${trx.zakatType}`,
           keterangan: trx.message,
@@ -54,7 +56,9 @@ export async function POST(request) {
 
         // 📦 PAKET DATA KHUSUS SPP
         dataExcel = {
-          tanggal: new Date().toLocaleString("id-ID"),
+          tanggal: new Date().toLocaleString("id-ID", {
+            timeZone: "Asia/Jakarta",
+          }),
           nama: trx.studentName,
           jenis: trx.sppType,
           tagihan: `Bulan: ${trx.paymentMonth}`,
