@@ -45,8 +45,9 @@ export async function POST(request) {
         });
 
         namaPembayar = trx.studentName || "Siswa SPP";
-        keteranganTambahan = `Bulan: ${trx.paymentMonth}`; // Menampilkan bulan tagihan
-        targetSheetUrl = GOOGLE_SHEET_URL_SPP; // Arahkan ke Sheets SPP
+        keteranganTambahan = `Bulan: ${trx.paymentMonth}`;
+        keterangan = trx.message;
+        targetSheetUrl = GOOGLE_SHEET_URL_SPP;
       }
 
       // ==========================================
@@ -56,7 +57,7 @@ export async function POST(request) {
         tanggal: new Date().toLocaleString("id-ID"),
         nama: namaPembayar,
         jenis: orderId.startsWith("ZAKAT-") ? "Zakat" : "SPP",
-        keterangan: keteranganTambahan, // Jauh lebih rapi untuk dibaca Admin!
+        keterangan: keteranganTambahan,
         nominal: `Rp ${parseInt(grossAmount).toLocaleString("id-ID")}`,
         status: "SUCCESS",
       };

@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 const PaymentZakat = () => {
   useEffect(() => {
     const snapScipt = "https://app.sandbox.midtrans.com/snap/snap.js";
-    const clientKey = process.env.NEXT_PUBLIC_CLIENT;
+    const clientKey = process.env.NEXT_PUBLIC_CLIENT_Zakat;
     const script = document.createElement("script");
     script.src = snapScipt;
     script.setAttribute("data-client-key", clientKey);
