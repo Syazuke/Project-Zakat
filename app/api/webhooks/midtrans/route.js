@@ -40,7 +40,7 @@ export async function POST(request) {
         dataExcel = {
           tanggal: new Date().toLocaleString("id-ID"),
           nama: trx.name || "Hamba Allah",
-          jenis: trx.zakatType,
+          jenis: `Zakat ${trx.zakatType}`,
           keterangan: trx.message,
           nominal: `Rp ${parseInt(grossAmount).toLocaleString("id-ID")}`,
           status: "SUCCESS",
