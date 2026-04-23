@@ -8,9 +8,15 @@ export default function AdminDashboard() {
   const [adminName, setAdminName] = useState("");
   const [isLoading, setIsLoading] = useState(true);
 
-  // ✨ LINK SPREADSHEET (Ganti dengan link Google Sheets Anda)
-  const SPREADSHEET_URL =
+  // ==========================================
+  // ✨ LINK SPREADSHEET TERPISAH ✨
+  // ==========================================
+  const SPREADSHEET_URL_ZAKAT =
     "https://docs.google.com/spreadsheets/d/1iQLKVV6n_rC7297fcF7adkSfcY-PNYSNdjy-zrfp9r4/edit?usp=sharing";
+
+  // 🚨 MASUKKAN LINK GOOGLE SHEETS SPP (/edit) ANDA DI SINI:
+  const SPREADSHEET_URL_SPP =
+    "https://docs.google.com/spreadsheets/d/16jwSK4uiDIPqTKcEElfzfwZj-RXJ2Y2dYjyYvPRWNhI/edit?usp=sharing";
 
   // ✨ STATE STATISTIK GABUNGAN ✨
   const [totalPendapatan, setTotalPendapatan] = useState(0);
@@ -85,14 +91,14 @@ export default function AdminDashboard() {
   };
 
   // ==========================================
-  // ✨ FUNGSI BUKA GOOGLE SHEETS
+  // ✨ FUNGSI BUKA GOOGLE SHEETS DINAMIS
   // ==========================================
-  const handleOpenSpreadsheet = () => {
-    if (SPREADSHEET_URL === "LINK_GOOGLE_SHEETS_ANDA_DI_SINI") {
-      alert("Admin belum memasukkan link Google Sheets di kodingan.");
+  const handleOpenSpreadsheet = (url) => {
+    if (url === "LINK_SPREADSHEET_SPP_ANDA_DISINI") {
+      alert("Admin belum memasukkan link Google Sheets SPP di kodingan.");
       return;
     }
-    window.open(SPREADSHEET_URL, "_blank"); // Membuka di tab baru
+    window.open(url, "_blank"); // Membuka di tab baru
   };
 
   // ==========================================
@@ -227,7 +233,7 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-gray-50 flex font-sans overflow-hidden relative">
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-emerald-800 text-white flex flex-col lg:flex`}
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-emerald-800 text-white flex flex-col lg:flex hidden`}
       >
         <div className="p-6 border-b border-emerald-700 flex items-center gap-3">
           <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-emerald-800 font-bold text-xl">
@@ -361,12 +367,14 @@ export default function AdminDashboard() {
                     >
                       Bersihkan Lama
                     </button>
-                    {/* ✨ TOMBOL GOOGLE SHEETS BARU ✨ */}
+                    {/* ✨ TOMBOL GOOGLE SHEETS ZAKAT ✨ */}
                     <button
-                      onClick={handleOpenSpreadsheet}
+                      onClick={() =>
+                        handleOpenSpreadsheet(SPREADSHEET_URL_ZAKAT)
+                      }
                       className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-emerald-700 transition"
                     >
-                      📄 Buka Laporan Live
+                      📄 Laporan Live Zakat
                     </button>
                   </div>
                 </div>
@@ -460,12 +468,12 @@ export default function AdminDashboard() {
                     >
                       Bersihkan Lama
                     </button>
-                    {/* ✨ TOMBOL GOOGLE SHEETS BARU ✨ */}
+                    {/* ✨ TOMBOL GOOGLE SHEETS SPP ✨ */}
                     <button
-                      onClick={handleOpenSpreadsheet}
+                      onClick={() => handleOpenSpreadsheet(SPREADSHEET_URL_SPP)}
                       className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 transition"
                     >
-                      📄 Buka Laporan Live
+                      📄 Laporan Live SPP
                     </button>
                   </div>
                 </div>
