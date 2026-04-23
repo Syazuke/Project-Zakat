@@ -1,110 +1,86 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/app/libs/prisma";
-import crypto from "crypto";
 
 export async function POST(request) {
   try {
-    const notificationJson = await request.json();
+    const data = await request.json();
 
-    console.log(
-      "🔔 WEBHOOK MASUK! Status:",
-      notificationJson.transaction_status,
-      " | Order ID:",
-      notificationJson.order_id,
-    );
+    // Status pembayaran dari Midtrans
+    const transactionStatus = data.transaction_status;
+    const orderId = data.order_id; // Contoh: ZAKAT-clnx... atau SPP-clnx...
+    const grossAmount = data.gross_amount; // Nominal pembayaran
 
-    // 1. Verifikasi Keamanan Signature Midtrans
-    const mySignature = crypto
-      .createHash("sha512")
-      .update(
-        notificationJson.order_id +
-          notificationJson.status_code +
-          notificationJson.gross_amount +
-          process.env.MIDTRANS_SERVER_KEY,
-      )
-      .digest("hex");
+    // Jika pembayaran sukses (settlement = sukses bayar, capture = sukses kartu kredit)
+    if (transactionStatus === "settlement" || transactionStatus === "capture") {
+      // ==========================================
+      // 1. UPDATE DATABASE PRISMA ANDA
+      // ==========================================
+      // Pastikan Anda memisahkan logika apakah ini ID Zakat atau SPP
+      if (orderId.startsWith("ZAKAT-")) {
+        await prisma.zakatTransaction.update({
+          where: { id: orderId.replace("ZAKAT-", "") },
+          data: { status: "SUCCESS" },
+        });
+      } else if (orderId.startsWith("SPP-")) {
+        await prisma.sppTransaction.update({
+          where: { id: orderId.replace("SPP-", "") },
+          data: { status: "SUCCESS" },
+        });
+      }
 
-    if (mySignature !== notificationJson.signature_key) {
-      return NextResponse.json({ message: "Akses Ditolak!" }, { status: 403 });
-    }
+      // ==========================================
+      // ✨ 2. KIRIM DATA KE GOOGLE SHEETS SECARA REAL-TIME ✨
+      // ==========================================
 
-    const transactionStatus = notificationJson.transaction_status;
-    const rawOrderId = notificationJson.order_id; // Bentuk asli dari Midtrans (misal: ZKT-cln... atau SPP-cln...)
+      // 🚨 PASTE URL DARI GAMBAR ANDA KE DALAM TANDA KUTIP DI BAWAH INI:
+      const GOOGLE_SHEET_URL =
+        "https://script.google.com/macros/s/AKfycbzVGGkxEwi4KtQrs5NHR2dxuk-XPld9rq7gxZ2T45Obm_BwCd-PXuPOW2UvhOfu2VVr/exec";
 
-    if (!rawOrderId) {
-      return NextResponse.json(
-        { message: "Test Webhook Midtrans Berhasil Terhubung!" },
-        { status: 200 },
-      );
-    }
+      // Siapkan paket data yang akan ditulis di kolom Excel
+      const dataExcel = {
+        tanggal: new Date().toLocaleString("id-ID"),
+        nama: orderId.startsWith("ZAKAT-") ? "Muzakki" : "Siswa SPP", // Idealnya ambil dari DB
+        jenis: orderId.startsWith("ZAKAT-") ? "Zakat" : "SPP",
+        keterangan: orderId, // Kita isi dengan Order ID sebagai referensi unik
+        nominal: `Rp ${parseInt(grossAmount).toLocaleString("id-ID")}`,
+        status: "SUCCESS",
+      };
 
-    // ✨ Bersihkan label awalan (ZKT- atau SPP-) untuk mendapatkan ID asli di database
-    const orderIdBersih = rawOrderId.replace("ZKT-", "").replace("SPP-", "");
-
-    // ================================================================
-    // ✨ LOGIKA PENCARIAN GANDA (ZAKAT & SPP) ✨
-    // ================================================================
-
-    let transactionType = null;
-    let existingTransaction = null;
-
-    // A. Cari di tabel Zakat (ID berupa String, langsung pakai orderIdBersih)
-    existingTransaction = await prisma.zakatTransaction.findUnique({
-      where: { id: orderIdBersih },
-    });
-
-    if (existingTransaction) {
-      transactionType = "ZAKAT";
-    } else {
-      // B. Jika tidak ada di Zakat, cari di tabel SPP
-      existingTransaction = await prisma.sppTransaction.findUnique({
-        where: { id: orderIdBersih },
-      });
-
-      if (existingTransaction) {
-        transactionType = "SPP";
+      // Tembakkan datanya ke Google Sheets tanpa membuat user menunggu
+      fetch(GOOGLE_SHEET_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "text/plain;charset=utf-8",
+        },
+        body: JSON.stringify(dataExcel),
+      }).catch((err) => console.error("Gagal kirim ke Sheets:", err));
+    } else if (
+      transactionStatus === "expire" ||
+      transactionStatus === "cancel"
+    ) {
+      // Logika jika pembayaran kadaluarsa atau dibatalkan
+      if (orderId.startsWith("ZAKAT-")) {
+        await prisma.zakatTransaction.update({
+          where: { id: orderId.replace("ZAKAT-", "") },
+          data: { status: "FAILED" },
+        });
+      } else if (orderId.startsWith("SPP-")) {
+        await prisma.sppTransaction.update({
+          where: { id: orderId.replace("SPP-", "") },
+          data: { status: "FAILED" },
+        });
       }
     }
 
-    // Jika di kedua tabel tetap tidak ada
-    if (!existingTransaction) {
-      return NextResponse.json(
-        { message: "Transaksi tidak ditemukan di database Zakat maupun SPP." },
-        { status: 200 },
-      );
-    }
-    // ================================================================
-
-    // Tentukan Status Akhir
-    let finalStatus = "PENDING";
-    if (transactionStatus == "capture" || transactionStatus == "settlement") {
-      finalStatus = "SUCCESS";
-    } else if (
-      transactionStatus == "cancel" ||
-      transactionStatus == "deny" ||
-      transactionStatus == "expire"
-    ) {
-      finalStatus = "FAILED";
-    }
-
-    // ================================================================
-    // ✨ UPDATE TABEL YANG SESUAI ✨
-    // ================================================================
-    if (transactionType === "ZAKAT") {
-      await prisma.zakatTransaction.update({
-        where: { id: orderIdBersih }, // Menggunakan ID yang sudah dibersihkan
-        data: { status: finalStatus },
-      });
-    } else if (transactionType === "SPP") {
-      await prisma.sppTransaction.update({
-        where: { id: orderIdBersih }, // Menggunakan ID yang sudah dibersihkan
-        data: { status: finalStatus },
-      });
-    }
-
-    return NextResponse.json({ status: "OK" }, { status: 200 });
+    return NextResponse.json(
+      { message: "Webhook berhasil diproses" },
+      { status: 200 },
+    );
   } catch (error) {
-    console.error("Error Webhook Midtrans:", error);
-    return NextResponse.json({ message: "Internal Error" }, { status: 500 });
+    console.error("Webhook Error:", error);
+    return NextResponse.json(
+      { message: "Terjadi kesalahan pada Server" },
+      { status: 500 },
+    );
   }
 }

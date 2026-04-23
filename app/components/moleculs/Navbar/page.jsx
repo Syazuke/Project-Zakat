@@ -32,11 +32,11 @@ const Navigation = () => {
             <a href="/" className="py-4 hover:text-hover">
               Home
             </a>
-            <a href="/SPP" className="py-4 hover:text-hover">
-              SPP
-            </a>
             <a href="/zakat" className="py-4 hover:text-hover">
               Zakat
+            </a>
+            <a href="/SPP" className="py-4 hover:text-hover">
+              SPP
             </a>
           </div>
           <button
@@ -52,6 +52,9 @@ const Navigation = () => {
           >
             <a href="/" className="py-4 hover:text-hover">
               Home
+            </a>
+            <a href="/zakat" className="py-4 hover:text-hover">
+              Zakat
             </a>
             <a href="/SPP" className="py-4 hover:text-hover">
               SPP

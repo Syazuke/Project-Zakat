@@ -211,7 +211,7 @@ export default function LoginPage() {
               type="submit"
               className="w-full bg-emerald-600 text-white font-bold text-lg py-3 rounded-lg hover:bg-emerald-700 shadow-lg shadow-emerald-200 transition transform hover:-translate-y-0.5 mt-4"
             >
-              Masuk sebagai {role === "user" ? "Muzakki" : "Admin"}
+              Masuk
             </button>
           </form>
         </div>

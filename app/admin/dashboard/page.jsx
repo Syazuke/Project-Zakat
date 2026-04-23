@@ -2,12 +2,15 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import * as XLSX from "xlsx";
 
 export default function AdminDashboard() {
   const router = useRouter();
   const [adminName, setAdminName] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+
+  // ✨ LINK SPREADSHEET (Ganti dengan link Google Sheets Anda)
+  const SPREADSHEET_URL =
+    "https://script.google.com/macros/s/AKfycbzVGGkxEwi4KtQrs5NHR2dxuk-XPld9rq7gxZ2T45Obm_BwCd-PXuPOW2UvhOfu2VVr/exec";
 
   // ✨ STATE STATISTIK GABUNGAN ✨
   const [totalPendapatan, setTotalPendapatan] = useState(0);
@@ -26,9 +29,8 @@ export default function AdminDashboard() {
   const [riwayatSPP, setRiwayatSPP] = useState([]);
   const [filterBulanSPP, setFilterBulanSPP] = useState("semua");
 
-  // STATE TAB & EXPORT
+  // STATE TAB
   const [activeTab, setActiveTab] = useState("zakat");
-  const [isExporting, setIsExporting] = useState(false);
 
   useEffect(() => {
     const isLoggedIn = localStorage.getItem("isLoggedIn");
@@ -47,10 +49,9 @@ export default function AdminDashboard() {
       const response = await fetch("/api/admin/stats");
       const data = await response.json();
       if (response.ok) {
-        setTotalPendapatan(data.totalZakat); // Di API, totalZakat adalah variabel gabungan
+        setTotalPendapatan(data.totalZakat);
         setTotalOrang(data.totalMuzakki);
         setPendingVerifikasi(data.pendingVerifikasi);
-        // Simpan detail rincian untuk ditampilkan kecil di bawah total
         setDetailPendapatan({
           zakat: data.detailZakat || 0,
           spp: data.detailSPP || 0,
@@ -84,79 +85,14 @@ export default function AdminDashboard() {
   };
 
   // ==========================================
-  // ✨ FUNGSI EXPORT EXCEL GABUNGAN ✨
+  // ✨ FUNGSI BUKA GOOGLE SHEETS
   // ==========================================
-  const handleExportExcel = async () => {
-    setIsExporting(true);
-    try {
-      // Tentukan URL API berdasarkan Tab yang sedang aktif
-      const apiUrl =
-        activeTab === "zakat"
-          ? "/api/admin/transactions/success"
-          : "/api/admin/spp/success";
-      const response = await fetch(apiUrl);
-      const result = await response.json();
-
-      if (!response.ok) throw new Error(result.message);
-
-      const dataTransaksi = result.data;
-      if (!dataTransaksi || dataTransaksi.length === 0) {
-        alert(`Belum ada data ${activeTab.toUpperCase()} yang sukses.`);
-        setIsExporting(false);
-        return;
-      }
-
-      // Rapihkan data sesuai jenis tab
-      let dataRapih = [];
-      if (activeTab === "zakat") {
-        dataRapih = dataTransaksi.map((item, index) => ({
-          No: index + 1,
-          "Nama Muzakki": item.name || "Hamba Allah",
-          "Jenis Zakat": item.zakatType,
-          "Nominal (Rp)": item.amount,
-          "Pesan/Doa": item.message || "-",
-          "Tanggal Bayar": new Date(item.createdAt).toLocaleString("id-ID"),
-          Status: item.status,
-        }));
-      } else {
-        dataRapih = dataTransaksi.map((item, index) => ({
-          No: index + 1,
-          "Nama Siswa": item.studentName,
-          "Jenis Tagihan": item.sppType,
-          "Bulan Tagihan": item.paymentMonth,
-          "Nominal (Rp)": item.amount,
-          Pesan: item.message || "-",
-          "Tanggal Bayar": new Date(item.createdAt).toLocaleString("id-ID"),
-          Status: item.status,
-        }));
-      }
-
-      const worksheet = XLSX.utils.json_to_sheet(dataRapih);
-      worksheet["!cols"] = [
-        { wch: 5 },
-        { wch: 30 },
-        { wch: 20 },
-        { wch: 20 },
-        { wch: 20 },
-        { wch: 40 },
-        { wch: 25 },
-        { wch: 15 },
-      ];
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(
-        workbook,
-        worksheet,
-        `Laporan ${activeTab.toUpperCase()}`,
-      );
-      XLSX.writeFile(
-        workbook,
-        `Laporan_${activeTab.toUpperCase()}_${new Date().getTime()}.xlsx`,
-      );
-    } catch (error) {
-      alert("Gagal mengunduh data Excel.");
-    } finally {
-      setIsExporting(false);
+  const handleOpenSpreadsheet = () => {
+    if (SPREADSHEET_URL === "LINK_GOOGLE_SHEETS_ANDA_DI_SINI") {
+      alert("Admin belum memasukkan link Google Sheets di kodingan.");
+      return;
     }
+    window.open(SPREADSHEET_URL, "_blank"); // Membuka di tab baru
   };
 
   // ==========================================
@@ -291,7 +227,7 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-gray-50 flex font-sans overflow-hidden relative">
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-emerald-800 text-white flex flex-col lg:flex`}
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-emerald-800 text-white flex flex-col lg:flex hidden`}
       >
         <div className="p-6 border-b border-emerald-700 flex items-center gap-3">
           <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-emerald-800 font-bold text-xl">
@@ -425,12 +361,12 @@ export default function AdminDashboard() {
                     >
                       Bersihkan Lama
                     </button>
+                    {/* ✨ TOMBOL GOOGLE SHEETS BARU ✨ */}
                     <button
-                      onClick={handleExportExcel}
-                      disabled={isExporting}
-                      className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-emerald-700 disabled:opacity-50"
+                      onClick={handleOpenSpreadsheet}
+                      className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-emerald-700 transition"
                     >
-                      {isExporting ? "Menyiapkan..." : "Export Excel (Sukses)"}
+                      📄 Buka Laporan Live
                     </button>
                   </div>
                 </div>
@@ -501,7 +437,7 @@ export default function AdminDashboard() {
               </div>
             )}
 
-            {/* ✨ TAB SPP (DISESUAIKAN DENGAN SCHEMA BARU) ✨ */}
+            {/* TAB SPP */}
             {activeTab === "spp" && (
               <div>
                 <div className="p-6 border-b border-gray-100 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
@@ -524,12 +460,12 @@ export default function AdminDashboard() {
                     >
                       Bersihkan Lama
                     </button>
+                    {/* ✨ TOMBOL GOOGLE SHEETS BARU ✨ */}
                     <button
-                      onClick={handleExportExcel}
-                      disabled={isExporting}
-                      className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 disabled:opacity-50"
+                      onClick={handleOpenSpreadsheet}
+                      className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 transition"
                     >
-                      {isExporting ? "Menyiapkan..." : "Export Excel (Sukses)"}
+                      📄 Buka Laporan Live
                     </button>
                   </div>
                 </div>
