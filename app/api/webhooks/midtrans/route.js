@@ -34,7 +34,7 @@ export async function POST(request) {
 
       // 🚨 PASTE URL DARI GAMBAR ANDA KE DALAM TANDA KUTIP DI BAWAH INI:
       const GOOGLE_SHEET_URL =
-        "https://script.google.com/macros/s/AKfycbzVGGkxEwi4KtQrs5NHR2dxuk-XPld9rq7gxZ2T45Obm_BwCd-PXuPOW2UvhOfu2VVr/exec";
+        "https://script.google.com/macros/s/AKfycbwEcV1fRA0xe_pCHd0lnEZGI5rbYZfXGw-LtKnX-xdRSV7lAPZbnIeYOrRWWOXl3hg/exec";
 
       // Siapkan paket data yang akan ditulis di kolom Excel
       const dataExcel = {
