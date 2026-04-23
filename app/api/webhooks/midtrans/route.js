@@ -31,29 +31,32 @@ export async function POST(request) {
       // ==========================================
       // ✨ 2. KIRIM DATA KE GOOGLE SHEETS SECARA REAL-TIME ✨
       // ==========================================
-
-      // 🚨 PASTE URL DARI GAMBAR ANDA KE DALAM TANDA KUTIP DI BAWAH INI:
       const GOOGLE_SHEET_URL =
         "https://script.google.com/macros/s/AKfycbwEcV1fRA0xe_pCHd0lnEZGI5rbYZfXGw-LtKnX-xdRSV7lAPZbnIeYOrRWWOXl3hg/exec";
 
       // Siapkan paket data yang akan ditulis di kolom Excel
       const dataExcel = {
         tanggal: new Date().toLocaleString("id-ID"),
-        nama: orderId.startsWith("ZAKAT-") ? "Muzakki" : "Siswa SPP", // Idealnya ambil dari DB
+        nama: orderId.startsWith("ZAKAT-") ? "Muzakki" : "Siswa SPP",
         jenis: orderId.startsWith("ZAKAT-") ? "Zakat" : "SPP",
-        keterangan: orderId, // Kita isi dengan Order ID sebagai referensi unik
+        keterangan: orderId,
         nominal: `Rp ${parseInt(grossAmount).toLocaleString("id-ID")}`,
         status: "SUCCESS",
       };
 
-      // Tembakkan datanya ke Google Sheets tanpa membuat user menunggu
-      fetch(GOOGLE_SHEET_URL, {
+      console.log("🚨 Mengirim data ke Google Sheets...");
+
+      // ✨ PERBAIKAN FATAL: Tambahkan 'await' agar Vercel mau menunggu proses ini selesai
+      await fetch(GOOGLE_SHEET_URL, {
         method: "POST",
         headers: {
           "Content-Type": "text/plain;charset=utf-8",
         },
         body: JSON.stringify(dataExcel),
-      }).catch((err) => console.error("Gagal kirim ke Sheets:", err));
+      })
+        .then((res) => res.text())
+        .then((text) => console.log("✅ Balasan dari Sheets:", text))
+        .catch((err) => console.error("❌ Gagal kirim ke Sheets:", err));
     } else if (
       transactionStatus === "expire" ||
       transactionStatus === "cancel"
@@ -72,6 +75,7 @@ export async function POST(request) {
       }
     }
 
+    // Pastikan response ini dipanggil paling akhir
     return NextResponse.json(
       { message: "Webhook berhasil diproses" },
       { status: 200 },
