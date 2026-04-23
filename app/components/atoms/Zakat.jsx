@@ -46,11 +46,20 @@ const Zakat = ({ nominalZakat, zakatType }) => {
         body: JSON.stringify(dataTransaksi),
       });
 
-      if (!response.ok) {
-        throw new Error("Gagal memanggil API Midtrans");
+      if (!response.ok) throw new Error("Gagal memanggil API Midtrans");
+
+      // ✨ TANGKAP TOKEN DAN CLIENT KEY DARI BACKEND
+      const { token, clientKey } = await response.json();
+
+      // ✨ SUNTIKKAN CLIENT KEY YANG BENAR KE SCRIPT MIDTRANS SECARA DINAMIS
+      const scriptTag = document.querySelector('script[src*="snap.js"]');
+      if (scriptTag && clientKey) {
+        scriptTag.setAttribute("data-client-key", clientKey);
       }
 
-      const { token } = await response.json();
+      setSnapToken(token);
+      triggerSnapPopup(token);
+      // ... lanjutan catch kodingan Anda
 
       window.snap.pay(token, {
         onSuccess: function (result) {

@@ -3,7 +3,7 @@ import Midtrans from "midtrans-client";
 import { prisma } from "@/app/libs/prisma";
 import { z } from "zod";
 
-// 1. Buku Aturan Zod (Sudah disesuaikan dengan schema baru)
+// 1. Buku Aturan Zod
 const PembayaranSchema = z.object({
   nama: z
     .string()
@@ -21,7 +21,6 @@ const PembayaranSchema = z.object({
     "SPP",
     "Biaya Sekolah",
   ]),
-  // Hanya paymentMonth yang tersisa untuk SPP
   paymentMonth: z.string().optional(),
 });
 
@@ -40,32 +39,39 @@ export async function POST(request) {
 
     const dataBersih = validasi.data;
 
+    // ✨ 1. DETEKSI JENIS TRANSAKSI (SPP atau Zakat?)
+    const isSPP =
+      dataBersih.zakatType === "SPP" ||
+      dataBersih.zakatType === "Biaya Sekolah";
+
+    // ✨ 2. PILIH KUNCI MIDTRANS YANG TEPAT DARI .ENV
+    const serverKey = isSPP
+      ? process.env.MIDTRANS_SERVER_KEY_SPP
+      : process.env.MIDTRANS_SERVER_KEY_ZAKAT;
+
+    const clientKey = isSPP
+      ? process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY_SPP
+      : process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY_ZAKAT;
+
     let newTransaction;
     let orderIdMidtrans = "";
 
     // ========================================================
     // ✨ PERCABANGAN GUDANG (ZAKAT vs SPP) ✨
     // ========================================================
-    if (
-      dataBersih.zakatType === "SPP" ||
-      dataBersih.zakatType === "Biaya Sekolah"
-    ) {
-      // 1. Masukkan ke Gudang SPP (Sesuai Schema Baru)
+    if (isSPP) {
       newTransaction = await prisma.sppTransaction.create({
         data: {
           studentName: dataBersih.nama,
           message: dataBersih.pesan || "-",
-          sppType: dataBersih.zakatType, // Menyimpan jenis: "SPP" atau "Biaya Sekolah"
+          sppType: dataBersih.zakatType,
           paymentMonth: dataBersih.paymentMonth || "Bulan Ini",
           amount: dataBersih.nominal,
           status: "PENDING",
         },
       });
-      // Beri label SPP- agar tidak bentrok di Midtrans
-      // Catatan: newTransaction.id sekarang berupa String (cuid), contoh: "SPP-clnx..."
       orderIdMidtrans = `SPP-${newTransaction.id}`;
     } else {
-      // 2. Masukkan ke Gudang Zakat
       newTransaction = await prisma.zakatTransaction.create({
         data: {
           name: dataBersih.nama,
@@ -76,16 +82,16 @@ export async function POST(request) {
           status: "PENDING",
         },
       });
-      // Beri label ZKT- agar tidak bentrok di Midtrans
-      orderIdMidtrans = `ZKT-${newTransaction.id}`;
+      // PERHATIAN: Diubah menjadi ZAKAT- agar sinkron dengan file Webhook
+      orderIdMidtrans = `ZAKAT-${newTransaction.id}`;
     }
     // ========================================================
 
-    // Inisialisasi Midtrans
+    // ✨ 3. BANGUNKAN MIDTRANS DENGAN KUNCI YANG TERPILIH
     let snap = new Midtrans.Snap({
       isProduction: false,
-      serverKey: process.env.MIDTRANS_SERVER_KEY,
-      clientKey: process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY,
+      serverKey: serverKey, // Kunci dinamis
+      clientKey: clientKey, // Kunci dinamis
     });
 
     let parameter = {
@@ -100,7 +106,14 @@ export async function POST(request) {
 
     const snapToken = await snap.createTransactionToken(parameter);
 
-    return NextResponse.json({ token: snapToken }, { status: 200 });
+    // ✨ 4. KIRIM TOKEN DAN CLIENT_KEY KE FRONTEND
+    return NextResponse.json(
+      {
+        token: snapToken,
+        clientKey: clientKey, // Wajib dikirim agar UI Frontend bisa menyesuaikan!
+      },
+      { status: 200 },
+    );
   } catch (error) {
     console.error("ERROR ASLI MIDTRANS:", error.message || error);
     return NextResponse.json(

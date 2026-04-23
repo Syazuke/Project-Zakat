@@ -114,7 +114,14 @@ const FormSpp = () => {
 
       if (!response.ok) throw new Error("Gagal memanggil API Midtrans");
 
-      const { token } = await response.json();
+      // ✨ TANGKAP TOKEN DAN CLIENT KEY DARI BACKEND
+      const { token, clientKey } = await response.json();
+
+      // ✨ SUNTIKKAN CLIENT KEY YANG BENAR KE SCRIPT MIDTRANS SECARA DINAMIS
+      const scriptTag = document.querySelector('script[src*="snap.js"]');
+      if (scriptTag && clientKey) {
+        scriptTag.setAttribute("data-client-key", clientKey);
+      }
 
       setSnapToken(token);
       triggerSnapPopup(token);
