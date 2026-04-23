@@ -10,7 +10,7 @@ export default function AdminDashboard() {
 
   // ✨ LINK SPREADSHEET (Ganti dengan link Google Sheets Anda)
   const SPREADSHEET_URL =
-    "https://script.google.com/macros/s/AKfycbzVGGkxEwi4KtQrs5NHR2dxuk-XPld9rq7gxZ2T45Obm_BwCd-PXuPOW2UvhOfu2VVr/exec";
+    "https://docs.google.com/spreadsheets/d/1iQLKVV6n_rC7297fcF7adkSfcY-PNYSNdjy-zrfp9r4/edit?usp=sharing";
 
   // ✨ STATE STATISTIK GABUNGAN ✨
   const [totalPendapatan, setTotalPendapatan] = useState(0);
