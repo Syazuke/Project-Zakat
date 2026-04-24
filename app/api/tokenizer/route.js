@@ -102,11 +102,6 @@ export async function POST(request) {
       customer_details: {
         first_name: dataBersih.nama,
       },
-      // ✨ JURUS PAMUNGKAS: Paksa Midtrans kembali ke web Vercel Anda ✨
-      // Ganti URL di bawah ini dengan URL Vercel web Anda yang asli
-      callbacks: {
-        finish: "https://yayasan-zakat.vercel.app",
-      },
     };
 
     const snapToken = await snap.createTransactionToken(parameter);
