@@ -335,7 +335,7 @@ export default function AdminDashboard() {
 
       {/* --- SIDEBAR --- */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-emerald-800 text-white flex flex-col lg:flex hidden`}
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-emerald-800 text-white flex-col lg:flex hidden`}
       >
         <div className="p-6 border-b border-emerald-700 flex items-center gap-3">
           <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-emerald-800 font-bold text-xl">
