@@ -30,6 +30,28 @@ const FormSpp = () => {
     "Desember",
   ];
 
+  // ✨ PENANGKAP STATUS REDIRECT MIDTRANS
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      const statusTransaksi = urlParams.get("transaction_status");
+
+      if (statusTransaksi === "pending") {
+        alert(
+          "⚠️ Transaksi Anda sedang menunggu pembayaran. Silakan lakukan transfer sesuai instruksi Bank.",
+        );
+        // Sapu bersih buntut URL-nya
+        window.history.replaceState(null, "", window.location.pathname);
+      } else if (
+        statusTransaksi === "settlement" ||
+        statusTransaksi === "capture"
+      ) {
+        alert("✅ Alhamdulillah, Pembayaran berhasil!");
+        window.history.replaceState(null, "", window.location.pathname);
+      }
+    }
+  }, []);
+
   // ✨ PERBAIKAN 1: useEffect HANYA bertugas menghitung mode SPP
   useEffect(() => {
     if (jenisSpp === "SPP") {
