@@ -30,34 +30,52 @@ const FormSpp = () => {
     "Desember",
   ];
 
-  // ✨ PENANGKAP STATUS REDIRECT MIDTRANS
+  // Kalkulator Otomatis (hanya jalan jika sedang tidak ada token pending)
   useEffect(() => {
+    if (jenisSpp === "SPP" && !snapToken) {
+      setNominal(bulanTagihan.length * HARGA_SPP_PER_BULAN);
+    }
+  }, [bulanTagihan, jenisSpp, snapToken]);
+
+  // ✨ PENANGKAP URL & INGATAN MEMORI SUPER (SIMPAN SEMUA DATA)
+  useEffect(() => {
+    // 1. Ambil paket data dari memori browser
+    const savedData = localStorage.getItem("pending_trx_spp");
+    if (savedData) {
+      try {
+        const parsedData = JSON.parse(savedData);
+        // Kembalikan semua data ke form
+        setSnapToken(parsedData.token);
+        setNamaSiswa(parsedData.nama);
+        setJenisSpp(parsedData.jenis);
+        setBulanTagihan(parsedData.bulan);
+        setNominal(parsedData.nominal);
+        setPesan(parsedData.pesan);
+        setIsPending(true);
+      } catch (error) {
+        console.error("Gagal membaca memori:", error);
+      }
+    }
+
+    // 2. Sapu bersih buntut URL dari Midtrans
     if (typeof window !== "undefined") {
       const urlParams = new URLSearchParams(window.location.search);
       const statusTransaksi = urlParams.get("transaction_status");
 
       if (statusTransaksi === "pending") {
-        alert(
-          "⚠️ Transaksi Anda sedang menunggu pembayaran. Silakan lakukan transfer sesuai instruksi Bank.",
-        );
-        // Sapu bersih buntut URL-nya
         window.history.replaceState(null, "", window.location.pathname);
       } else if (
         statusTransaksi === "settlement" ||
         statusTransaksi === "capture"
       ) {
-        alert("✅ Alhamdulillah, Pembayaran berhasil!");
+        alert("✅ Alhamdulillah, Pembayaran Tagihan berhasil!");
+        localStorage.removeItem("pending_trx_spp"); // Hapus memori jika sukses
+        setSnapToken(null);
+        setIsPending(false);
         window.history.replaceState(null, "", window.location.pathname);
       }
     }
   }, []);
-
-  // ✨ PERBAIKAN 1: useEffect HANYA bertugas menghitung mode SPP
-  useEffect(() => {
-    if (jenisSpp === "SPP") {
-      setNominal(bulanTagihan.length * HARGA_SPP_PER_BULAN);
-    }
-  }, [bulanTagihan, jenisSpp]);
 
   const handleToggleBulan = (bulan) => {
     if (bulanTagihan.includes(bulan)) {
@@ -71,6 +89,7 @@ const FormSpp = () => {
     window.snap.pay(tokenToUse, {
       onSuccess: function () {
         alert("Alhamdulillah, Pembayaran berhasil!");
+        localStorage.removeItem("pending_trx_spp"); // ✨ HAPUS MEMORI
         setSnapToken(null);
         setIsPending(false);
         window.location.reload();
@@ -80,6 +99,7 @@ const FormSpp = () => {
       },
       onError: function () {
         alert("Pembayaran gagal atau kadaluarsa!");
+        localStorage.removeItem("pending_trx_spp"); // ✨ HAPUS MEMORI
         setSnapToken(null);
         setIsPending(false);
         setIsLoading(false);
@@ -137,6 +157,18 @@ const FormSpp = () => {
       }
 
       setSnapToken(token);
+
+      // ✨ SIMPAN SEMUA DATA FORM KE DALAM MEMORI
+      const paketData = {
+        token: token,
+        nama: namaSiswa,
+        jenis: jenisSpp,
+        bulan: bulanTagihan,
+        nominal: nominal,
+        pesan: pesan,
+      };
+      localStorage.setItem("pending_trx_spp", JSON.stringify(paketData));
+
       triggerSnapPopup(token);
     } catch (error) {
       console.error("Error Checkout:", error);
@@ -180,8 +212,6 @@ const FormSpp = () => {
           onChange={(e) => {
             const pilihanBaru = e.target.value;
             setJenisSpp(pilihanBaru);
-
-            // ✨ PERBAIKAN 2: Reset nominal ditaruh di sini, bukan di useEffect
             if (pilihanBaru !== "SPP") {
               setNominal(0);
               setBulanTagihan([]);
@@ -314,6 +344,7 @@ const FormSpp = () => {
           <button
             type="button"
             onClick={() => {
+              localStorage.removeItem("pending_trx_spp"); // ✨ HAPUS MEMORI
               setSnapToken(null);
               setIsPending(false);
               window.location.reload();
