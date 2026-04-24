@@ -102,6 +102,9 @@ export async function POST(request) {
       customer_details: {
         first_name: dataBersih.nama,
       },
+      callbacks: {
+        finish: "https://yayasan-zakat.vercel.app",
+      },
     };
 
     const snapToken = await snap.createTransactionToken(parameter);
