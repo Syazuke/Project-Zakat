@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/app/libs/prisma"; // Sesuaikan path jika berbeda
+import { prisma } from "@/app/libs/prisma";
 import { cookies } from "next/headers";
 
 export const dynamic = "force-dynamic";
@@ -42,7 +42,7 @@ export async function GET() {
     });
 
     // ========================================================
-    // 2. HITUNG DATA SPP (TAMBAHAN BARU)
+    // 2. HITUNG DATA SPP
     // ========================================================
     const resultDanaSPP = await prisma.sppTransaction.aggregate({
       _sum: { amount: true },
@@ -68,13 +68,28 @@ export async function GET() {
     });
 
     // ========================================================
-    // 3. GABUNGKAN KEDUANYA & KIRIM KE DASHBOARD
+    // ✨ 3. HITUNG TOTAL PENARIKAN (WITHDRAWAL) ✨
     // ========================================================
+    const resultPenarikan = await prisma.withdrawal.aggregate({
+      _sum: { amount: true },
+      // Opsional: Jika ingin reset tiap bulan, hapus tanda komentar di bawah ini
+      // where: { createdAt: { gte: firstDayOfMonth } }
+    });
+    const totalPenarikan = resultPenarikan._sum.amount || 0;
+
+    // ========================================================
+    // 4. GABUNGKAN KEDUANYA & KIRIM KE DASHBOARD
+    // ========================================================
+    const totalPendapatanKotor = totalAmountZakat + totalAmountSPP;
+    const saldoBersih = totalPendapatanKotor - totalPenarikan;
+
     return NextResponse.json(
       {
-        totalZakat: totalAmountZakat + totalAmountSPP, // Total Uang Gabungan
-        totalMuzakki: totalMuzakkiZakat + totalSiswaSPP, // Total Orang Gabungan
-        pendingVerifikasi: pendingZakat + pendingSPP, // Total Pending Gabungan
+        totalZakat: saldoBersih, // 🎯 SEKARANG MENJADI SALDO BERSIH
+        totalKotor: totalPendapatanKotor, // Menyimpan total pendapatan asli
+        totalDitarik: totalPenarikan, // Menyimpan total yang sudah ditarik
+        totalMuzakki: totalMuzakkiZakat + totalSiswaSPP,
+        pendingVerifikasi: pendingZakat + pendingSPP,
         detailZakat: totalAmountZakat,
         detailSPP: totalAmountSPP,
       },

@@ -38,3 +38,13 @@ model SppTransaction {
   status        String   @default("PENDING")
   createdAt     DateTime @default(now())
 }
+
+// Tambahkan di baris paling bawah
+model Withdrawal {
+  id          String   @id @default(cuid())
+  amount      Float    // Nominal yang ditarik
+  source      String   // "ZAKAT" atau "SPP"
+  note        String?  // Keterangan penarikan
+  withdrawnBy String   // Nama admin yang menarik
+  createdAt   DateTime @default(now())
+}
