@@ -105,7 +105,7 @@ export async function POST(request) {
       // ✨ JURUS PAMUNGKAS: Paksa Midtrans kembali ke web Vercel Anda ✨
       // Ganti URL di bawah ini dengan URL Vercel web Anda yang asli
       callbacks: {
-        finish: "https://project-zakat.vercel.app",
+        finish: "https://yayasan-zakat.vercel.app",
       },
     };
 
