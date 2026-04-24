@@ -10,7 +10,6 @@ const Zakat = ({ nominalZakat, zakatType }) => {
   const [nominal, setZakat] = useState(nominalZakat || 0);
   const [jenisZakat, setJenisZakat] = useState(zakatType || "penghasilan");
 
-  // ✨ STATE BARU: Untuk melacak token dan status pending (Sama seperti SPP)
   const [snapToken, setSnapToken] = useState(null);
   const [isPending, setIsPending] = useState(false);
 
@@ -19,21 +18,50 @@ const Zakat = ({ nominalZakat, zakatType }) => {
     if (nominalZakat > 0) setZakat(nominalZakat);
   }, [zakatType, nominalZakat]);
 
-  // ✨ FUNGSI BARU: Pembungkus Snap Popup yang rapi
+  // ✨ PENANGKAP URL & INGATAN MEMORI UNTUK ZAKAT
+  useEffect(() => {
+    // 1. Cek apakah ada token zakat yang tersimpan di memori browser
+    const savedToken = localStorage.getItem("pending_snap_token_zakat");
+    if (savedToken) {
+      setSnapToken(savedToken);
+      setIsPending(true); // Langsung munculkan UI "Menunggu Pembayaran"
+    }
+
+    // 2. Sapu bersih buntut URL dari Midtrans
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      const statusTransaksi = urlParams.get("transaction_status");
+
+      if (statusTransaksi === "pending") {
+        window.history.replaceState(null, "", window.location.pathname);
+      } else if (
+        statusTransaksi === "settlement" ||
+        statusTransaksi === "capture"
+      ) {
+        alert("✅ Alhamdulillah, Zakat berhasil ditunaikan!");
+        localStorage.removeItem("pending_snap_token_zakat"); // Hapus ingatan jika sukses
+        setSnapToken(null);
+        setIsPending(false);
+        window.history.replaceState(null, "", window.location.pathname);
+      }
+    }
+  }, []);
+
   const triggerSnapPopup = (tokenToUse) => {
     window.snap.pay(tokenToUse, {
       onSuccess: function () {
         alert("Alhamdulillah, Zakat berhasil ditunaikan!");
+        localStorage.removeItem("pending_snap_token_zakat"); // ✨ HAPUS INGATAN
         setSnapToken(null);
         setIsPending(false);
         window.location.reload();
       },
       onPending: function () {
-        // Jangan reload jika user sudah dapat kode VA, ubah state saja
         setIsPending(true);
       },
       onError: function () {
         alert("Pembayaran gagal atau kadaluarsa!");
+        localStorage.removeItem("pending_snap_token_zakat"); // ✨ HAPUS INGATAN
         setSnapToken(null);
         setIsPending(false);
         setIsLoading(false);
@@ -74,13 +102,14 @@ const Zakat = ({ nominalZakat, zakatType }) => {
 
       const { token, clientKey } = await response.json();
 
-      // ✨ SUNTIKKAN CLIENT KEY SECARA DINAMIS
       const scriptTag = document.querySelector('script[src*="snap.js"]');
       if (scriptTag && clientKey) {
         scriptTag.setAttribute("data-client-key", clientKey);
       }
 
       setSnapToken(token);
+      // ✨ SIMPAN TOKEN ZAKAT KE DALAM MEMORI BROWSER
+      localStorage.setItem("pending_snap_token_zakat", token);
       triggerSnapPopup(token);
     } catch (error) {
       console.error("Error Checkout:", error);
@@ -141,7 +170,9 @@ const Zakat = ({ nominalZakat, zakatType }) => {
           Nominal Zakat (Rp)
         </label>
         <div
-          className={`flex items-center border border-gray-300 rounded-lg px-3 py-3 focus-within:ring-2 focus-within:ring-[#10B981] focus-within:border-transparent bg-white ${snapToken ? "bg-gray-100" : ""}`}
+          className={`flex items-center border border-gray-300 rounded-lg px-3 py-3 focus-within:ring-2 focus-within:ring-[#10B981] focus-within:border-transparent bg-white ${
+            snapToken ? "bg-gray-100" : ""
+          }`}
         >
           <span className="text-gray-500 font-semibold mr-2">Rp.</span>
           <input
@@ -150,7 +181,9 @@ const Zakat = ({ nominalZakat, zakatType }) => {
             onChange={handleFormatRupiah}
             readOnly={snapToken !== null}
             placeholder="Minimal Rp 10.000"
-            className={`w-full focus:outline-none bg-transparent text-black font-medium ${snapToken ? "cursor-not-allowed opacity-70" : ""}`}
+            className={`w-full focus:outline-none bg-transparent text-black font-medium ${
+              snapToken ? "cursor-not-allowed opacity-70" : ""
+            }`}
           />
         </div>
       </div>
@@ -169,20 +202,27 @@ const Zakat = ({ nominalZakat, zakatType }) => {
         ></textarea>
       </div>
 
-      {/* ✨ LOGIKA TOMBOL PINTAR SEPERTI SPP ✨ */}
       {snapToken ? (
         <div
-          className={`mt-4 p-5 border rounded-lg text-center shadow-inner ${isPending ? "bg-emerald-50 border-emerald-200" : "bg-orange-50 border-orange-200"}`}
+          className={`mt-4 p-5 border rounded-lg text-center shadow-inner ${
+            isPending
+              ? "bg-emerald-50 border-emerald-200"
+              : "bg-orange-50 border-orange-200"
+          }`}
         >
           <p
-            className={`text-sm font-bold mb-1 ${isPending ? "text-emerald-800" : "text-orange-800"}`}
+            className={`text-sm font-bold mb-1 ${
+              isPending ? "text-emerald-800" : "text-orange-800"
+            }`}
           >
             {isPending
               ? "⏳ Menunggu Pembayaran"
               : "⚠️ Transaksi Belum Selesai"}
           </p>
           <p
-            className={`text-sm mb-4 ${isPending ? "text-emerald-600" : "text-orange-600"}`}
+            className={`text-sm mb-4 ${
+              isPending ? "text-emerald-600" : "text-orange-600"
+            }`}
           >
             {isPending
               ? "Anda sudah memilih metode bayar. Klik tombol di bawah untuk melihat instruksi (VA/QRIS)."
@@ -202,6 +242,7 @@ const Zakat = ({ nominalZakat, zakatType }) => {
           <button
             type="button"
             onClick={() => {
+              localStorage.removeItem("pending_snap_token_zakat"); // ✨ HAPUS INGATAN
               setSnapToken(null);
               setIsPending(false);
               window.location.reload();
