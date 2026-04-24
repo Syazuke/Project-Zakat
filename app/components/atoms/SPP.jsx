@@ -11,8 +11,6 @@ const FormSpp = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const [snapToken, setSnapToken] = useState(null);
-
-  // ✨ STATE BARU: Untuk melacak apakah user sudah memilih bank/metode bayar
   const [isPending, setIsPending] = useState(false);
 
   const HARGA_SPP_PER_BULAN = 300000;
@@ -32,12 +30,10 @@ const FormSpp = () => {
     "Desember",
   ];
 
+  // ✨ PERBAIKAN 1: useEffect HANYA bertugas menghitung mode SPP
   useEffect(() => {
     if (jenisSpp === "SPP") {
       setNominal(bulanTagihan.length * HARGA_SPP_PER_BULAN);
-    } else {
-      setNominal(0);
-      setBulanTagihan([]);
     }
   }, [bulanTagihan, jenisSpp]);
 
@@ -58,8 +54,6 @@ const FormSpp = () => {
         window.location.reload();
       },
       onPending: function () {
-        // ✨ PERBAIKAN: Jika user sudah dapat kode VA, jangan reload & jangan hapus token.
-        // Ubah saja statusnya jadi isPending = true
         setIsPending(true);
       },
       onError: function () {
@@ -69,7 +63,6 @@ const FormSpp = () => {
         setIsLoading(false);
       },
       onClose: function () {
-        // Memicu saat user menekan tanda silang (X)
         setIsLoading(false);
       },
     });
@@ -114,10 +107,8 @@ const FormSpp = () => {
 
       if (!response.ok) throw new Error("Gagal memanggil API Midtrans");
 
-      // ✨ TANGKAP TOKEN DAN CLIENT KEY DARI BACKEND
       const { token, clientKey } = await response.json();
 
-      // ✨ SUNTIKKAN CLIENT KEY YANG BENAR KE SCRIPT MIDTRANS SECARA DINAMIS
       const scriptTag = document.querySelector('script[src*="snap.js"]');
       if (scriptTag && clientKey) {
         scriptTag.setAttribute("data-client-key", clientKey);
@@ -164,7 +155,16 @@ const FormSpp = () => {
         </label>
         <select
           value={jenisSpp}
-          onChange={(e) => setJenisSpp(e.target.value)}
+          onChange={(e) => {
+            const pilihanBaru = e.target.value;
+            setJenisSpp(pilihanBaru);
+
+            // ✨ PERBAIKAN 2: Reset nominal ditaruh di sini, bukan di useEffect
+            if (pilihanBaru !== "SPP") {
+              setNominal(0);
+              setBulanTagihan([]);
+            }
+          }}
           disabled={snapToken !== null}
           className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none transition bg-white cursor-pointer disabled:bg-gray-100 disabled:text-gray-500"
         >
@@ -214,7 +214,9 @@ const FormSpp = () => {
           Total Nominal Pembayaran (Rp) <span className="text-red-500">*</span>
         </label>
         <div
-          className={`flex items-center border border-gray-300 rounded-lg px-3 py-3 focus-within:ring-2 focus-within:ring-blue-500 bg-white ${jenisSpp === "SPP" || snapToken ? "bg-gray-100" : ""}`}
+          className={`flex items-center border border-gray-300 rounded-lg px-3 py-3 focus-within:ring-2 focus-within:ring-blue-500 bg-white ${
+            jenisSpp === "SPP" || snapToken ? "bg-gray-100" : ""
+          }`}
         >
           <span className="text-gray-500 font-semibold mr-2">Rp.</span>
           <input
@@ -227,7 +229,11 @@ const FormSpp = () => {
                 ? "Pilih bulan tagihan di atas"
                 : "Ketik total yang harus dibayar"
             }
-            className={`w-full focus:outline-none bg-transparent text-black font-bold text-lg ${jenisSpp === "SPP" || snapToken ? "cursor-not-allowed opacity-70" : ""}`}
+            className={`w-full focus:outline-none bg-transparent text-black font-bold text-lg ${
+              jenisSpp === "SPP" || snapToken
+                ? "cursor-not-allowed opacity-70"
+                : ""
+            }`}
           />
         </div>
       </div>
@@ -246,20 +252,27 @@ const FormSpp = () => {
         ></textarea>
       </div>
 
-      {/* ✨ LOGIKA TOMBOL PINTAR BERDASARKAN STATUS ✨ */}
       {snapToken ? (
         <div
-          className={`mt-4 p-5 border rounded-lg text-center shadow-inner ${isPending ? "bg-blue-50 border-blue-200" : "bg-orange-50 border-orange-200"}`}
+          className={`mt-4 p-5 border rounded-lg text-center shadow-inner ${
+            isPending
+              ? "bg-blue-50 border-blue-200"
+              : "bg-orange-50 border-orange-200"
+          }`}
         >
           <p
-            className={`text-sm font-bold mb-1 ${isPending ? "text-blue-800" : "text-orange-800"}`}
+            className={`text-sm font-bold mb-1 ${
+              isPending ? "text-blue-800" : "text-orange-800"
+            }`}
           >
             {isPending
               ? "⏳ Menunggu Pembayaran"
               : "⚠️ Transaksi Belum Selesai"}
           </p>
           <p
-            className={`text-sm mb-4 ${isPending ? "text-blue-600" : "text-orange-600"}`}
+            className={`text-sm mb-4 ${
+              isPending ? "text-blue-600" : "text-orange-600"
+            }`}
           >
             {isPending
               ? "Anda sudah memilih metode bayar. Klik tombol di bawah untuk melihat instruksi atau Nomor Virtual Account (VA)."
