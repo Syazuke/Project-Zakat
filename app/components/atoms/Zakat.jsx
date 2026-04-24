@@ -2,26 +2,46 @@
 
 import React, { useState, useEffect } from "react";
 
-const Zakat = ({ nominalZakat, zakatType }) => {
-  const [nama, setNama] = useState("");
+const FormSpp = () => {
+  const [namaSiswa, setNamaSiswa] = useState("");
+  const [jenisSpp, setJenisSpp] = useState("SPP");
+  const [bulanTagihan, setBulanTagihan] = useState([]);
+  const [nominal, setNominal] = useState(0);
   const [pesan, setPesan] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const [nominal, setZakat] = useState(nominalZakat || 0);
-  const [jenisZakat, setJenisZakat] = useState(zakatType || "penghasilan");
-
+  // ✨ STATE BARU
   const [snapToken, setSnapToken] = useState(null);
   const [isPending, setIsPending] = useState(false);
 
-  useEffect(() => {
-    if (zakatType) setJenisZakat(zakatType);
-    if (nominalZakat > 0) setZakat(nominalZakat);
-  }, [zakatType, nominalZakat]);
+  const HARGA_SPP_PER_BULAN = 300000;
 
-  // ✨ PENANGKAP URL & INGATAN MEMORI UNTUK ZAKAT
+  const daftarBulan = [
+    "Januari",
+    "Februari",
+    "Maret",
+    "April",
+    "Mei",
+    "Juni",
+    "Juli",
+    "Agustus",
+    "September",
+    "Oktober",
+    "November",
+    "Desember",
+  ];
+
+  // Fungsi Kalkulator Otomatis hanya untuk mode SPP
   useEffect(() => {
-    // 1. Cek apakah ada token zakat yang tersimpan di memori browser
-    const savedToken = localStorage.getItem("pending_snap_token_zakat");
+    if (jenisSpp === "SPP") {
+      setNominal(bulanTagihan.length * HARGA_SPP_PER_BULAN);
+    }
+  }, [bulanTagihan, jenisSpp]);
+
+  // ✨ PENANGKAP URL & INGATAN MEMORI UNTUK SPP
+  useEffect(() => {
+    // 1. Cek apakah ada token SPP yang tersimpan di memori browser
+    const savedToken = localStorage.getItem("pending_snap_token_spp");
     if (savedToken) {
       setSnapToken(savedToken);
       setIsPending(true); // Langsung munculkan UI "Menunggu Pembayaran"
@@ -38,8 +58,8 @@ const Zakat = ({ nominalZakat, zakatType }) => {
         statusTransaksi === "settlement" ||
         statusTransaksi === "capture"
       ) {
-        alert("✅ Alhamdulillah, Zakat berhasil ditunaikan!");
-        localStorage.removeItem("pending_snap_token_zakat"); // Hapus ingatan jika sukses
+        alert("✅ Alhamdulillah, Pembayaran Tagihan berhasil!");
+        localStorage.removeItem("pending_snap_token_spp"); // Hapus ingatan jika sukses
         setSnapToken(null);
         setIsPending(false);
         window.history.replaceState(null, "", window.location.pathname);
@@ -47,11 +67,19 @@ const Zakat = ({ nominalZakat, zakatType }) => {
     }
   }, []);
 
+  const handleToggleBulan = (bulan) => {
+    if (bulanTagihan.includes(bulan)) {
+      setBulanTagihan(bulanTagihan.filter((b) => b !== bulan));
+    } else {
+      setBulanTagihan([...bulanTagihan, bulan]);
+    }
+  };
+
   const triggerSnapPopup = (tokenToUse) => {
     window.snap.pay(tokenToUse, {
       onSuccess: function () {
-        alert("Alhamdulillah, Zakat berhasil ditunaikan!");
-        localStorage.removeItem("pending_snap_token_zakat"); // ✨ HAPUS INGATAN
+        alert("Alhamdulillah, Pembayaran berhasil!");
+        localStorage.removeItem("pending_snap_token_spp"); // ✨ HAPUS INGATAN
         setSnapToken(null);
         setIsPending(false);
         window.location.reload();
@@ -61,7 +89,7 @@ const Zakat = ({ nominalZakat, zakatType }) => {
       },
       onError: function () {
         alert("Pembayaran gagal atau kadaluarsa!");
-        localStorage.removeItem("pending_snap_token_zakat"); // ✨ HAPUS INGATAN
+        localStorage.removeItem("pending_snap_token_spp"); // ✨ HAPUS INGATAN
         setSnapToken(null);
         setIsPending(false);
         setIsLoading(false);
@@ -72,20 +100,31 @@ const Zakat = ({ nominalZakat, zakatType }) => {
     });
   };
 
-  const checkoutZakat = async () => {
+  const checkoutSPP = async () => {
     if (nominal < 10000) {
-      alert("Minimal pembayaran zakat adalah Rp 10.000.");
+      alert("Minimal pembayaran adalah Rp 10.000");
+      return;
+    }
+    if (namaSiswa.trim() === "") {
+      alert("Mohon isi Nama Lengkap Siswa.");
+      return;
+    }
+    if (jenisSpp === "SPP" && bulanTagihan.length === 0) {
+      alert("Mohon centang minimal 1 bulan tagihan.");
       return;
     }
 
     setIsLoading(true);
-    const namaValid = nama.trim() === "" ? "Hamba Allah" : nama;
+
+    const bulanFinal =
+      jenisSpp === "SPP" ? bulanTagihan.join(", ") : "Bukan Tagihan Bulanan";
 
     const dataTransaksi = {
-      nama: namaValid,
-      pesan: pesan,
+      nama: namaSiswa,
+      pesan: pesan || "-",
       nominal: nominal,
-      zakatType: jenisZakat,
+      zakatType: jenisSpp,
+      paymentMonth: bulanFinal,
     };
 
     try {
@@ -108,8 +147,8 @@ const Zakat = ({ nominalZakat, zakatType }) => {
       }
 
       setSnapToken(token);
-      // ✨ SIMPAN TOKEN ZAKAT KE DALAM MEMORI BROWSER
-      localStorage.setItem("pending_snap_token_zakat", token);
+      // ✨ SIMPAN TOKEN SPP KE DALAM MEMORI BROWSER
+      localStorage.setItem("pending_snap_token_spp", token);
       triggerSnapPopup(token);
     } catch (error) {
       console.error("Error Checkout:", error);
@@ -119,59 +158,98 @@ const Zakat = ({ nominalZakat, zakatType }) => {
   };
 
   const handleFormatRupiah = (e) => {
+    if (jenisSpp === "SPP") return;
     let rawValue = e.target.value.replace(/\D/g, "");
-    if (rawValue === "") {
-      setZakat(0);
-    } else {
-      setZakat(Number(rawValue));
-    }
+    setNominal(rawValue === "" ? 0 : Number(rawValue));
   };
 
   return (
-    <div className="bg-emerald-50 p-6 rounded-xl border border-emerald-100 mt-6 space-y-4 text-left">
-      <h3 className="font-bold text-emerald-800 text-lg border-b border-emerald-200 pb-2">
-        Lengkapi Data Muzakki
+    <div className="bg-blue-50 p-6 rounded-xl border border-blue-100 mt-6 space-y-5 text-left max-w-2xl mx-auto">
+      <h3 className="font-bold text-blue-800 text-lg border-b border-blue-200 pb-2">
+        Formulir Pembayaran Sekolah
       </h3>
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          Nama Lengkap (Opsional)
+          Nama Lengkap Siswa <span className="text-red-500">*</span>
         </label>
         <input
           type="text"
-          value={nama}
-          onChange={(e) => setNama(e.target.value)}
+          value={namaSiswa}
+          onChange={(e) => setNamaSiswa(e.target.value)}
           disabled={snapToken !== null}
-          placeholder="Kosongkan untuk Hamba Allah"
-          className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-500 outline-none transition bg-white disabled:bg-gray-100 disabled:text-gray-500"
+          placeholder="Masukkan nama siswa"
+          className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none transition bg-white disabled:bg-gray-100 disabled:text-gray-500"
         />
       </div>
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          Jenis Zakat
+          Jenis Tagihan
         </label>
         <select
-          value={jenisZakat}
-          onChange={(e) => setJenisZakat(e.target.value)}
+          value={jenisSpp}
+          onChange={(e) => {
+            const pilihanBaru = e.target.value;
+            setJenisSpp(pilihanBaru);
+
+            // Mengosongkan nominal jika memilih selain SPP agar bisa diketik
+            if (pilihanBaru !== "SPP") {
+              setNominal(0);
+              setBulanTagihan([]);
+            }
+          }}
           disabled={snapToken !== null}
-          className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-500 outline-none transition bg-white cursor-pointer disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed"
+          className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none transition bg-white cursor-pointer disabled:bg-gray-100 disabled:text-gray-500"
         >
-          <option value="penghasilan">Zakat Penghasilan</option>
-          <option value="maal">Zakat Maal</option>
-          <option value="fitrah">Zakat Fitrah</option>
-          <option value="fidyah">Fidyah</option>
-          <option value="sedekah">Sedekah / Infaq</option>
+          <option value="SPP">Bulanan (SPP)</option>
+          <option value="Biaya Sekolah">
+            Biaya Tahunan / Bangunan / Lainnya
+          </option>
         </select>
       </div>
 
+      {jenisSpp === "SPP" && (
+        <div className="bg-white p-4 rounded-lg border border-gray-200">
+          <label className="block text-sm font-bold text-gray-800 mb-3">
+            Pilih Bulan Tagihan <span className="text-red-500">*</span>
+            <span className="block text-xs text-gray-500 font-normal mt-0.5">
+              Tarif: Rp {HARGA_SPP_PER_BULAN.toLocaleString("id-ID")} / bulan
+            </span>
+          </label>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+            {daftarBulan.map((bulan) => (
+              <label
+                key={bulan}
+                className={`flex items-center gap-2 p-2 rounded border transition ${
+                  snapToken ? "cursor-not-allowed opacity-60" : "cursor-pointer"
+                } ${
+                  bulanTagihan.includes(bulan)
+                    ? "bg-blue-50 border-blue-500 text-blue-700 font-medium"
+                    : "border-gray-200 hover:bg-gray-50 text-gray-600"
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  checked={bulanTagihan.includes(bulan)}
+                  onChange={() => handleToggleBulan(bulan)}
+                  disabled={snapToken !== null}
+                  className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500 disabled:cursor-not-allowed"
+                />
+                <span className="text-sm">{bulan}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          Nominal Zakat (Rp)
+          Total Nominal Pembayaran (Rp) <span className="text-red-500">*</span>
         </label>
         <div
-          className={`flex items-center border border-gray-300 rounded-lg px-3 py-3 focus-within:ring-2 focus-within:ring-[#10B981] focus-within:border-transparent bg-white ${
-            snapToken ? "bg-gray-100" : ""
+          className={`flex items-center border border-gray-300 rounded-lg px-3 py-3 focus-within:ring-2 focus-within:ring-blue-500 bg-white ${
+            jenisSpp === "SPP" || snapToken ? "bg-gray-100" : ""
           }`}
         >
           <span className="text-gray-500 font-semibold mr-2">Rp.</span>
@@ -179,10 +257,16 @@ const Zakat = ({ nominalZakat, zakatType }) => {
             type="text"
             value={nominal === 0 ? "" : nominal.toLocaleString("id-ID")}
             onChange={handleFormatRupiah}
-            readOnly={snapToken !== null}
-            placeholder="Minimal Rp 10.000"
-            className={`w-full focus:outline-none bg-transparent text-black font-medium ${
-              snapToken ? "cursor-not-allowed opacity-70" : ""
+            readOnly={jenisSpp === "SPP" || snapToken !== null}
+            placeholder={
+              jenisSpp === "SPP"
+                ? "Pilih bulan tagihan di atas"
+                : "Ketik total yang harus dibayar"
+            }
+            className={`w-full focus:outline-none bg-transparent text-black font-bold text-lg ${
+              jenisSpp === "SPP" || snapToken
+                ? "cursor-not-allowed opacity-70"
+                : ""
             }`}
           />
         </div>
@@ -190,15 +274,15 @@ const Zakat = ({ nominalZakat, zakatType }) => {
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          Pesan / Doa (Opsional)
+          Keterangan Tambahan (Opsional)
         </label>
         <textarea
           value={pesan}
           onChange={(e) => setPesan(e.target.value)}
           disabled={snapToken !== null}
-          placeholder="Tuliskan doa atau niat zakat Anda di sini..."
-          rows="3"
-          className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-500 outline-none resize-none transition bg-white disabled:bg-gray-100 disabled:text-gray-500"
+          placeholder="Misal: Pembayaran SPP bulan lalu yang tertunda..."
+          rows="2"
+          className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none resize-none transition bg-white disabled:bg-gray-100 disabled:text-gray-500"
         ></textarea>
       </div>
 
@@ -206,13 +290,13 @@ const Zakat = ({ nominalZakat, zakatType }) => {
         <div
           className={`mt-4 p-5 border rounded-lg text-center shadow-inner ${
             isPending
-              ? "bg-emerald-50 border-emerald-200"
+              ? "bg-blue-50 border-blue-200"
               : "bg-orange-50 border-orange-200"
           }`}
         >
           <p
             className={`text-sm font-bold mb-1 ${
-              isPending ? "text-emerald-800" : "text-orange-800"
+              isPending ? "text-blue-800" : "text-orange-800"
             }`}
           >
             {isPending
@@ -221,11 +305,11 @@ const Zakat = ({ nominalZakat, zakatType }) => {
           </p>
           <p
             className={`text-sm mb-4 ${
-              isPending ? "text-emerald-600" : "text-orange-600"
+              isPending ? "text-blue-600" : "text-orange-600"
             }`}
           >
             {isPending
-              ? "Anda sudah memilih metode bayar. Klik tombol di bawah untuk melihat instruksi (VA/QRIS)."
+              ? "Anda sudah memilih metode bayar. Klik tombol di bawah untuk melihat instruksi atau Nomor Virtual Account (VA)."
               : "Anda memiliki transaksi yang belum diselesaikan."}
           </p>
           <button
@@ -233,16 +317,16 @@ const Zakat = ({ nominalZakat, zakatType }) => {
             onClick={() => triggerSnapPopup(snapToken)}
             className={`w-full font-bold py-3.5 rounded-lg transition-all shadow-md text-white hover:-translate-y-0.5 ${
               isPending
-                ? "bg-emerald-600 hover:bg-emerald-700"
+                ? "bg-blue-600 hover:bg-blue-700"
                 : "bg-orange-500 hover:bg-orange-600"
             }`}
           >
-            {isPending ? "Lihat Kode Pembayaran" : "Lanjutkan Pembayaran"}
+            {isPending ? "Lihat Kode Pembayaran (VA)" : "Lanjutkan Pembayaran"}
           </button>
           <button
             type="button"
             onClick={() => {
-              localStorage.removeItem("pending_snap_token_zakat"); // ✨ HAPUS INGATAN
+              localStorage.removeItem("pending_snap_token_spp"); // ✨ HAPUS INGATAN
               setSnapToken(null);
               setIsPending(false);
               window.location.reload();
@@ -255,21 +339,21 @@ const Zakat = ({ nominalZakat, zakatType }) => {
       ) : (
         <button
           type="button"
-          onClick={checkoutZakat}
-          disabled={isLoading || nominal < 10000}
+          onClick={checkoutSPP}
+          disabled={isLoading || nominal < 10000 || namaSiswa.trim() === ""}
           className={`w-full font-bold py-3.5 rounded-lg transition-all shadow-md mt-4 ${
-            isLoading || nominal < 10000
+            isLoading || nominal < 10000 || namaSiswa.trim() === ""
               ? "bg-gray-400 text-gray-100 cursor-not-allowed shadow-none"
-              : "bg-[#10B981] text-white hover:bg-emerald-600 hover:-translate-y-0.5"
+              : "bg-blue-600 text-white hover:bg-blue-700 hover:-translate-y-0.5"
           }`}
         >
           {isLoading
             ? "Memproses..."
-            : `Tunaikan Zakat (Rp ${nominal.toLocaleString("id-ID")})`}
+            : `Bayar Tagihan (Rp ${nominal.toLocaleString("id-ID")})`}
         </button>
       )}
     </div>
   );
 };
 
-export default Zakat;
+export default FormSpp;
