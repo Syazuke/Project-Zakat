@@ -90,8 +90,8 @@ export async function POST(request) {
     // ✨ 3. BANGUNKAN MIDTRANS DENGAN KUNCI YANG TERPILIH
     let snap = new Midtrans.Snap({
       isProduction: false,
-      serverKey: serverKey, // Kunci dinamis
-      clientKey: clientKey, // Kunci dinamis
+      serverKey: serverKey,
+      clientKey: clientKey,
     });
 
     let parameter = {
@@ -101,6 +101,11 @@ export async function POST(request) {
       },
       customer_details: {
         first_name: dataBersih.nama,
+      },
+      // ✨ JURUS PAMUNGKAS: Paksa Midtrans kembali ke web Vercel Anda ✨
+      // Ganti URL di bawah ini dengan URL Vercel web Anda yang asli
+      callbacks: {
+        finish: "https://project-zakat.vercel.app",
       },
     };
 
