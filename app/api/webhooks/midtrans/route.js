@@ -24,16 +24,15 @@ export async function POST(request) {
           data: { status: "SUCCESS" },
         });
 
-        // 📦 HANYA 6 DATA
         dataExcel = {
           tanggal: new Date().toLocaleString("id-ID", {
             timeZone: "Asia/Jakarta",
           }),
           nama: trx.name || "Hamba Allah",
           jenis: `Zakat ${trx.zakatType}`,
-          tagihan: "-",
           keterangan: trx.message || "-",
           nominal: `Rp ${parseInt(grossAmount).toLocaleString("id-ID")}`,
+          status: trx.status,
         };
         targetSheetUrl = GOOGLE_SHEET_URL_ZAKAT;
       } else if (orderId.startsWith("SPP-")) {
@@ -52,14 +51,12 @@ export async function POST(request) {
           tagihan: `Bulan: ${trx.paymentMonth}`,
           keterangan: trx.message || "-",
           nominal: `Rp ${parseInt(grossAmount).toLocaleString("id-ID")}`,
+          status: trx.status,
         };
         targetSheetUrl = GOOGLE_SHEET_URL_SPP;
       }
 
       if (targetSheetUrl !== "" && dataExcel) {
-        console.log("=== DATA YANG MAU DIKIRIM KE EXCEL ===");
-        console.log(dataExcel);
-        console.log("======================================");
         await fetch(targetSheetUrl, {
           method: "POST",
           headers: { "Content-Type": "text/plain;charset=utf-8" },

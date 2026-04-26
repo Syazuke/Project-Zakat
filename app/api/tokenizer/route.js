@@ -87,7 +87,6 @@ export async function POST(request) {
           "https://script.google.com/macros/s/AKfycbwRabFBQg5xrhmG6wwdUrorCd2jAAMNAR2Tfi4ew7HSFnJ8F4QOoi_Se5-lrpugCGlJFw/exec";
         const GOOGLE_SHEET_URL_ZAKAT =
           "https://script.google.com/macros/s/AKfycbwEcV1fRA0xe_pCHd0lnEZGI5rbYZfXGw-LtKnX-xdRSV7lAPZbnIeYOrRWWOXl3hg/exec";
-
         const targetUrl = isSPP ? GOOGLE_SHEET_URL_SPP : GOOGLE_SHEET_URL_ZAKAT;
 
         // 📦 PASTIKAN HANYA 6 DATA (Persis seperti format Webhook)
@@ -100,6 +99,7 @@ export async function POST(request) {
           tagihan: isSPP ? `Bulan: ${dataBersih.paymentMonth || "-"}` : "-",
           keterangan: dataBersih.pesan || "-",
           nominal: `Rp ${dataBersih.nominal.toLocaleString("id-ID")}`,
+          status: "SUCCESS",
         };
 
         await fetch(targetUrl, {
