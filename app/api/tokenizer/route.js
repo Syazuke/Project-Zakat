@@ -11,7 +11,7 @@ const PembayaranSchema = z.object({
     .default("Hamba Allah"),
   pesan: z.string().max(500, "Pesan kepanjangan!").optional(),
   nominal: z.number().min(10000, "Minimal pembayaran Rp 10.000"),
-  zakatType: z.enum([
+  Type: z.enum([
     "penghasilan",
     "maal",
     "fitrah",
@@ -22,7 +22,7 @@ const PembayaranSchema = z.object({
     "Biaya Sekolah",
   ]),
   paymentMonth: z.string().optional(),
-  metode: z.string().optional(), // ✨ TAMBAHAN: Untuk menangkap metode (online/tunai)
+  metode: z.string().optional(),
 });
 
 export async function POST(request) {
@@ -40,12 +40,9 @@ export async function POST(request) {
 
     const dataBersih = validasi.data;
 
-    // ✨ 1. DETEKSI JENIS TRANSAKSI (SPP atau Zakat?)
     const isSPP =
-      dataBersih.zakatType === "SPP" ||
-      dataBersih.zakatType === "Biaya Sekolah";
+      dataBersih.Type === "SPP" || dataBersih.Type === "Biaya Sekolah";
 
-    // ✨ 2. TENTUKAN STATUS BERDASARKAN METODE BAYAR
     const statusTransaksi =
       dataBersih.metode === "tunai" ? "PENDING_TUNAI" : "PENDING";
 
@@ -68,8 +65,8 @@ export async function POST(request) {
       newTransaction = await prisma.sppTransaction.create({
         data: {
           studentName: dataBersih.nama,
-          message: dataBersih.pesan || "-",
-          sppType: dataBersih.zakatType,
+          message: dataBersih.message || "-",
+          sppType: dataBersih.jenisSPP,
           paymentMonth: dataBersih.paymentMonth || "Bulan Ini",
           amount: dataBersih.nominal,
           status: statusTransaksi,
@@ -81,7 +78,7 @@ export async function POST(request) {
         data: {
           name: dataBersih.nama,
           message: dataBersih.pesan || "",
-          zakatType: dataBersih.zakatType,
+          zakatType: dataBersih.jenisZakat,
           amount: dataBersih.nominal,
           paymentMethod:
             dataBersih.metode === "tunai"
@@ -93,12 +90,6 @@ export async function POST(request) {
       orderIdMidtrans = `ZAKAT-${newTransaction.id}`;
     }
 
-    // ========================================================
-    // ✨ JEMBATAN KE GOOGLE SPREADSHEET (PISAH JALUR) ✨
-    // ========================================================
-    // ========================================================
-    // ✨ JEMBATAN KE GOOGLE SPREADSHEET (PISAH JALUR) ✨
-    // ========================================================
     try {
       const SPREADSHEET_URL_SPP =
         "https://script.google.com/macros/s/AKfycbxcidZsQJSK356GVZcHQf-ScLNlpFTFZ0uTHevlo2YUJnZXzaNWnkOuwSPJl5_ta703KA/exec";
@@ -119,8 +110,8 @@ export async function POST(request) {
             metode: dataBersih.metode === "tunai" ? "Tunai" : "Online",
             status: statusTransaksi,
             keterangan: dataBersih.message,
-            bulan: dataBersih.paymentMonth || "-", // Khusus SPP
-            pesan: dataBersih.pesan || "-", // Khusus Zakat
+            bulan: dataBersih.paymentMonth || "-",
+            pesan: dataBersih.pesan || "-",
           }),
         });
       }
