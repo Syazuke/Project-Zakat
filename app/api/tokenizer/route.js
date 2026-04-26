@@ -11,7 +11,7 @@ const PembayaranSchema = z.object({
     .default("Hamba Allah"),
   pesan: z.string().max(500, "Pesan kepanjangan!").optional(),
   nominal: z.number().min(10000, "Minimal pembayaran Rp 10.000"),
-  Type: z.enum([
+  zakatType: z.enum([
     "penghasilan",
     "maal",
     "fitrah",
@@ -22,7 +22,6 @@ const PembayaranSchema = z.object({
     "Biaya Sekolah",
   ]),
   paymentMonth: z.string().optional(),
-  metode: z.string().optional(),
 });
 
 export async function POST(request) {
@@ -40,13 +39,12 @@ export async function POST(request) {
 
     const dataBersih = validasi.data;
 
+    // ✨ 1. DETEKSI JENIS TRANSAKSI (SPP atau Zakat?)
     const isSPP =
-      dataBersih.Type === "SPP" || dataBersih.Type === "Biaya Sekolah";
+      dataBersih.zakatType === "SPP" ||
+      dataBersih.zakatType === "Biaya Sekolah";
 
-    const statusTransaksi =
-      dataBersih.metode === "tunai" ? "PENDING_TUNAI" : "PENDING";
-
-    // ✨ 3. PILIH KUNCI MIDTRANS YANG TEPAT DARI .ENV
+    // ✨ 2. PILIH KUNCI MIDTRANS YANG TEPAT DARI .ENV
     const serverKey = isSPP
       ? process.env.MIDTRANS_SERVER_KEY_SPP
       : process.env.MIDTRANS_SERVER_KEY_Zakat;
@@ -65,11 +63,11 @@ export async function POST(request) {
       newTransaction = await prisma.sppTransaction.create({
         data: {
           studentName: dataBersih.nama,
-          message: dataBersih.message || "-",
-          sppType: dataBersih.Type,
+          message: dataBersih.pesan || "-",
+          sppType: dataBersih.zakatType,
           paymentMonth: dataBersih.paymentMonth || "Bulan Ini",
           amount: dataBersih.nominal,
-          status: statusTransaksi,
+          status: "PENDING",
         },
       });
       orderIdMidtrans = `SPP-${newTransaction.id}`;
@@ -78,60 +76,18 @@ export async function POST(request) {
         data: {
           name: dataBersih.nama,
           message: dataBersih.pesan || "",
-          zakatType: dataBersih.jenisZakat,
+          zakatType: dataBersih.zakatType,
           amount: dataBersih.nominal,
-          paymentMethod:
-            dataBersih.metode === "tunai"
-              ? "Tunai (Ke Admin)"
-              : "Midtrans (Virtual Account / QRIS)",
-          status: statusTransaksi,
+          paymentMethod: "Midtrans (Virtual Account / QRIS)",
+          status: "PENDING",
         },
       });
+      // PERHATIAN: Diubah menjadi ZAKAT- agar sinkron dengan file Webhook
       orderIdMidtrans = `ZAKAT-${newTransaction.id}`;
     }
-
-    try {
-      const SPREADSHEET_URL_SPP =
-        "https://script.google.com/macros/s/AKfycbxcidZsQJSK356GVZcHQf-ScLNlpFTFZ0uTHevlo2YUJnZXzaNWnkOuwSPJl5_ta703KA/exec";
-      const SPREADSHEET_URL_ZAKAT =
-        "https://script.google.com/macros/s/AKfycbwEcV1fRA0xe_pCHd0lnEZGI5rbYZfXGw-LtKnX-xdRSV7lAPZbnIeYOrRWWOXl3hg/exec";
-
-      const targetUrl = isSPP ? SPREADSHEET_URL_SPP : SPREADSHEET_URL_ZAKAT;
-
-      if (targetUrl) {
-        await fetch(targetUrl, {
-          method: "POST",
-          body: JSON.stringify({
-            order_id: orderIdMidtrans,
-            nama: dataBersih.nama,
-            jenisZakat: dataBersih.Type,
-            jenisSPP: dataBersih.Type,
-            nominal: dataBersih.nominal,
-            metode: dataBersih.metode === "tunai" ? "Tunai" : "Online",
-            status: statusTransaksi,
-            keterangan: dataBersih.message,
-            bulan: dataBersih.paymentMonth || "-",
-            pesan: dataBersih.pesan || "-",
-          }),
-        });
-      }
-    } catch (sheetError) {
-      console.error("Gagal mengirim ke Spreadsheet:", sheetError);
-    }
-
     // ========================================================
-    // ✨ LOGIKA POTONG JALAN UNTUK TUNAI ✨
-    // ========================================================
-    if (dataBersih.metode === "tunai") {
-      return NextResponse.json(
-        { isTunai: true, message: "Berhasil dicatat sebagai Tunai" },
-        { status: 200 },
-      );
-    }
 
-    // ========================================================
-    // ✨ 4. BANGUNKAN MIDTRANS JIKA ONLINE
-    // ========================================================
+    // ✨ 3. BANGUNKAN MIDTRANS DENGAN KUNCI YANG TERPILIH
     let snap = new Midtrans.Snap({
       isProduction: false,
       serverKey: serverKey,
@@ -150,11 +106,11 @@ export async function POST(request) {
 
     const snapToken = await snap.createTransactionToken(parameter);
 
-    // ✨ 5. KIRIM TOKEN DAN CLIENT_KEY KE FRONTEND
+    // ✨ 4. KIRIM TOKEN DAN CLIENT_KEY KE FRONTEND
     return NextResponse.json(
       {
         token: snapToken,
-        clientKey: clientKey,
+        clientKey: clientKey, // Wajib dikirim agar UI Frontend bisa menyesuaikan!
       },
       { status: 200 },
     );
