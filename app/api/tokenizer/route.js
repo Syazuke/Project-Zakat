@@ -95,6 +95,32 @@ export async function POST(request) {
     }
 
     // ========================================================
+    // ✨ JEMBATAN KE GOOGLE SPREADSHEET (UNTUK KEDUANYA) ✨
+    // ========================================================
+    try {
+      // ⚠️ GANTI STRING DI BAWAH DENGAN URL WEB APP GOOGLE SCRIPT ANDA
+      const SPREADSHEET_URL =
+        "URL_WEB_APP_GOOGLE_SCRIPT_ANDA_YANG_PANJANG_DI_SINI";
+
+      // Kita jalankan fetch tanpa await di depan jika tidak ingin proses loading bayar terlalu lama,
+      // tapi pakai await juga aman.
+      await fetch(SPREADSHEET_URL, {
+        method: "POST",
+        body: JSON.stringify({
+          order_id: orderIdMidtrans,
+          nama: dataBersih.nama,
+          jenis: dataBersih.zakatType,
+          nominal: dataBersih.nominal,
+          metode: dataBersih.metode === "tunai" ? "Tunai" : "Online",
+          status: statusTransaksi,
+        }),
+      });
+    } catch (sheetError) {
+      console.error("Gagal mengirim ke Spreadsheet:", sheetError);
+      // Kita abaikan error ini agar gagalnya spreadsheet tidak menggagalkan proses pembayaran
+    }
+
+    // ========================================================
     // ✨ LOGIKA POTONG JALAN UNTUK TUNAI ✨
     // ========================================================
     if (dataBersih.metode === "tunai") {
