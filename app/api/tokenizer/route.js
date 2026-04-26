@@ -100,7 +100,7 @@ export async function POST(request) {
     try {
       // ⚠️ GANTI STRING DI BAWAH DENGAN URL WEB APP GOOGLE SCRIPT ANDA
       const SPREADSHEET_URL =
-        "URL_WEB_APP_GOOGLE_SCRIPT_ANDA_YANG_PANJANG_DI_SINI";
+        "https://script.google.com/macros/s/AKfycbwKmv9IrID6lU4iTWLg1EsKteYXtNKKGi7NjQ398hrW0PDkAlyvPi-gMXZpJO9G-SKTkw/exec";
 
       // Kita jalankan fetch tanpa await di depan jika tidak ingin proses loading bayar terlalu lama,
       // tapi pakai await juga aman.
