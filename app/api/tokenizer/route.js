@@ -46,7 +46,6 @@ export async function POST(request) {
       dataBersih.zakatType === "Biaya Sekolah";
 
     // ✨ 2. TENTUKAN STATUS BERDASARKAN METODE BAYAR
-    // Jika tunai, statusnya beda agar mudah difilter oleh Admin
     const statusTransaksi =
       dataBersih.metode === "tunai" ? "PENDING_TUNAI" : "PENDING";
 
@@ -73,7 +72,7 @@ export async function POST(request) {
           sppType: dataBersih.zakatType,
           paymentMonth: dataBersih.paymentMonth || "Bulan Ini",
           amount: dataBersih.nominal,
-          status: statusTransaksi, // ✨ Status Dinamis
+          status: statusTransaksi,
         },
       });
       orderIdMidtrans = `SPP-${newTransaction.id}`;
@@ -87,44 +86,52 @@ export async function POST(request) {
           paymentMethod:
             dataBersih.metode === "tunai"
               ? "Tunai (Ke Admin)"
-              : "Midtrans (Virtual Account / QRIS)", // ✨ Catat metode yang benar
-          status: statusTransaksi, // ✨ Status Dinamis
+              : "Midtrans (Virtual Account / QRIS)",
+          status: statusTransaksi,
         },
       });
       orderIdMidtrans = `ZAKAT-${newTransaction.id}`;
     }
 
     // ========================================================
-    // ✨ JEMBATAN KE GOOGLE SPREADSHEET (UNTUK KEDUANYA) ✨
+    // ✨ JEMBATAN KE GOOGLE SPREADSHEET (PISAH JALUR) ✨
+    // ========================================================
+    // ========================================================
+    // ✨ JEMBATAN KE GOOGLE SPREADSHEET (PISAH JALUR) ✨
     // ========================================================
     try {
-      // ⚠️ GANTI STRING DI BAWAH DENGAN URL WEB APP GOOGLE SCRIPT ANDA
-      const SPREADSHEET_URL =
-        "https://script.google.com/macros/s/AKfycbwKmv9IrID6lU4iTWLg1EsKteYXtNKKGi7NjQ398hrW0PDkAlyvPi-gMXZpJO9G-SKTkw/exec";
+      const SPREADSHEET_URL_SPP =
+        "https://script.google.com/macros/s/AKfycbxcidZsQJSK356GVZcHQf-ScLNlpFTFZ0uTHevlo2YUJnZXzaNWnkOuwSPJl5_ta703KA/exec";
+      const SPREADSHEET_URL_ZAKAT =
+        "https://script.google.com/macros/s/AKfycbwEcV1fRA0xe_pCHd0lnEZGI5rbYZfXGw-LtKnX-xdRSV7lAPZbnIeYOrRWWOXl3hg/exec";
 
-      // Kita jalankan fetch tanpa await di depan jika tidak ingin proses loading bayar terlalu lama,
-      // tapi pakai await juga aman.
-      await fetch(SPREADSHEET_URL, {
-        method: "POST",
-        body: JSON.stringify({
-          order_id: orderIdMidtrans,
-          nama: dataBersih.nama,
-          jenis: dataBersih.zakatType,
-          nominal: dataBersih.nominal,
-          metode: dataBersih.metode === "tunai" ? "Tunai" : "Online",
-          status: statusTransaksi,
-        }),
-      });
+      const targetUrl = isSPP ? SPREADSHEET_URL_SPP : SPREADSHEET_URL_ZAKAT;
+
+      if (targetUrl) {
+        await fetch(targetUrl, {
+          method: "POST",
+          body: JSON.stringify({
+            order_id: orderIdMidtrans,
+            nama: dataBersih.nama,
+            jenisZakat: dataBersih.zakatType,
+            jenisSPP: dataBersih.sppType,
+            nominal: dataBersih.nominal,
+            metode: dataBersih.metode === "tunai" ? "Tunai" : "Online",
+            status: statusTransaksi,
+            keterangan: dataBersih.message,
+            bulan: dataBersih.paymentMonth || "-", // Khusus SPP
+            pesan: dataBersih.pesan || "-", // Khusus Zakat
+          }),
+        });
+      }
     } catch (sheetError) {
       console.error("Gagal mengirim ke Spreadsheet:", sheetError);
-      // Kita abaikan error ini agar gagalnya spreadsheet tidak menggagalkan proses pembayaran
     }
 
     // ========================================================
     // ✨ LOGIKA POTONG JALAN UNTUK TUNAI ✨
     // ========================================================
     if (dataBersih.metode === "tunai") {
-      // Langsung kembalikan respon sukses, Midtrans tidak perlu dipanggil!
       return NextResponse.json(
         { isTunai: true, message: "Berhasil dicatat sebagai Tunai" },
         { status: 200 },
