@@ -6,11 +6,12 @@ const Zakat = ({ nominalZakat, Type }) => {
   const [nama, setNama] = useState("");
   const [pesan, setPesan] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-
   const [nominal, setZakat] = useState(nominalZakat || 0);
   const [jenisZakat, setJenisZakat] = useState(Type || "penghasilan");
 
-  // ✨ STATE BARU: Untuk melacak token dan status pending (Sama seperti SPP)
+  // ✨ STATE UNTUK METODE PEMBAYARAN
+  const [metodeBayar, setMetodeBayar] = useState("online");
+
   const [snapToken, setSnapToken] = useState(null);
   const [isPending, setIsPending] = useState(false);
 
@@ -19,7 +20,6 @@ const Zakat = ({ nominalZakat, Type }) => {
     if (nominalZakat > 0) setZakat(nominalZakat);
   }, [Type, nominalZakat]);
 
-  // ✨ FUNGSI BARU: Pembungkus Snap Popup yang rapi
   const triggerSnapPopup = (tokenToUse) => {
     window.snap.pay(tokenToUse, {
       onSuccess: function () {
@@ -29,7 +29,6 @@ const Zakat = ({ nominalZakat, Type }) => {
         window.location.reload();
       },
       onPending: function () {
-        // Jangan reload jika user sudah dapat kode VA, ubah state saja
         setIsPending(true);
       },
       onError: function () {
@@ -53,11 +52,13 @@ const Zakat = ({ nominalZakat, Type }) => {
     setIsLoading(true);
     const namaValid = nama.trim() === "" ? "Hamba Allah" : nama;
 
+    // ✨ TAMBAHKAN METODE KE DALAM DATA TRANSAKSI
     const dataTransaksi = {
       nama: namaValid,
       pesan: pesan,
       nominal: nominal,
       Type: jenisZakat,
+      metode: metodeBayar, // Dikirim ke backend
     };
 
     try {
@@ -70,11 +71,19 @@ const Zakat = ({ nominalZakat, Type }) => {
         body: JSON.stringify(dataTransaksi),
       });
 
-      if (!response.ok) throw new Error("Gagal memanggil API Midtrans");
+      if (!response.ok) throw new Error("Gagal memanggil API");
 
-      const { token, clientKey } = await response.json();
+      const result = await response.json();
 
-      // ✨ SUNTIKKAN CLIENT KEY SECARA DINAMIS
+      // ✨ LOGIKA JIKA TUNAI
+      if (result.isTunai) {
+        alert("Pencatatan Tunai Berhasil! Silakan serahkan zakat ke admin.");
+        window.location.reload();
+        return;
+      }
+
+      // ✨ LOGIKA JIKA ONLINE
+      const { token, clientKey } = result;
       const scriptTag = document.querySelector('script[src*="snap.js"]');
       if (scriptTag && clientKey) {
         scriptTag.setAttribute("data-client-key", clientKey);
@@ -84,18 +93,14 @@ const Zakat = ({ nominalZakat, Type }) => {
       triggerSnapPopup(token);
     } catch (error) {
       console.error("Error Checkout:", error);
-      alert("Terjadi kesalahan sistem pembayaran.");
+      alert("Terjadi kesalahan sistem.");
       setIsLoading(false);
     }
   };
 
   const handleFormatRupiah = (e) => {
     let rawValue = e.target.value.replace(/\D/g, "");
-    if (rawValue === "") {
-      setZakat(0);
-    } else {
-      setZakat(Number(rawValue));
-    }
+    setZakat(rawValue === "" ? 0 : Number(rawValue));
   };
 
   return (
@@ -104,9 +109,10 @@ const Zakat = ({ nominalZakat, Type }) => {
         Lengkapi Data Muzakki
       </h3>
 
+      {/* Input Nama */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          Nama Lengkap (Opsional)
+          Nama Lengkap
         </label>
         <input
           type="text"
@@ -114,10 +120,11 @@ const Zakat = ({ nominalZakat, Type }) => {
           onChange={(e) => setNama(e.target.value)}
           disabled={snapToken !== null}
           placeholder="Kosongkan untuk Hamba Allah"
-          className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-500 outline-none transition bg-white disabled:bg-gray-100 disabled:text-gray-500"
+          className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-500 outline-none bg-white disabled:bg-gray-100"
         />
       </div>
 
+      {/* Pilihan Jenis Zakat */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
           Jenis Zakat
@@ -126,7 +133,7 @@ const Zakat = ({ nominalZakat, Type }) => {
           value={jenisZakat}
           onChange={(e) => setJenisZakat(e.target.value)}
           disabled={snapToken !== null}
-          className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-500 outline-none transition bg-white cursor-pointer disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed"
+          className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-500 outline-none bg-white disabled:bg-gray-100"
         >
           <option value="penghasilan">Zakat Penghasilan</option>
           <option value="maal">Zakat Maal</option>
@@ -136,12 +143,48 @@ const Zakat = ({ nominalZakat, Type }) => {
         </select>
       </div>
 
+      {/* ✨ PILIHAN METODE PEMBAYARAN ✨ */}
+      <div className="bg-white p-4 rounded-lg border border-emerald-100">
+        <label className="block text-sm font-bold text-emerald-800 mb-3">
+          Pilih Metode Pembayaran
+        </label>
+        <div className="grid grid-cols-2 gap-3">
+          <label
+            className={`flex items-center justify-center p-3 rounded-xl border-2 cursor-pointer transition-all ${metodeBayar === "online" ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "border-gray-200 hover:bg-gray-50"}`}
+          >
+            <input
+              type="radio"
+              className="hidden"
+              name="payment"
+              value="online"
+              checked={metodeBayar === "online"}
+              onChange={() => setMetodeBayar("online")}
+            />
+            <span className="text-sm font-bold">💳 Online</span>
+          </label>
+          <label
+            className={`flex items-center justify-center p-3 rounded-xl border-2 cursor-pointer transition-all ${metodeBayar === "tunai" ? "border-emerald-500 bg-emerald-50 text-emerald-700" : "border-gray-200 hover:bg-gray-50"}`}
+          >
+            <input
+              type="radio"
+              className="hidden"
+              name="payment"
+              value="tunai"
+              checked={metodeBayar === "tunai"}
+              onChange={() => setMetodeBayar("tunai")}
+            />
+            <span className="text-sm font-bold">💵 Tunai</span>
+          </label>
+        </div>
+      </div>
+
+      {/* Input Nominal */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Nominal Zakat (Rp)
         </label>
         <div
-          className={`flex items-center border border-gray-300 rounded-lg px-3 py-3 focus-within:ring-2 focus-within:ring-[#10B981] focus-within:border-transparent bg-white ${snapToken ? "bg-gray-100" : ""}`}
+          className={`flex items-center border border-gray-300 rounded-lg px-3 py-3 bg-white focus-within:ring-2 focus-within:ring-emerald-500 ${snapToken ? "bg-gray-100" : ""}`}
         >
           <span className="text-gray-500 font-semibold mr-2">Rp.</span>
           <input
@@ -150,11 +193,12 @@ const Zakat = ({ nominalZakat, Type }) => {
             onChange={handleFormatRupiah}
             readOnly={snapToken !== null}
             placeholder="Minimal Rp 10.000"
-            className={`w-full focus:outline-none bg-transparent text-black font-medium ${snapToken ? "cursor-not-allowed opacity-70" : ""}`}
+            className="w-full focus:outline-none bg-transparent text-black font-medium"
           />
         </div>
       </div>
 
+      {/* Pesan Doa */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
           Pesan / Doa (Opsional)
@@ -165,11 +209,11 @@ const Zakat = ({ nominalZakat, Type }) => {
           disabled={snapToken !== null}
           placeholder="Tuliskan doa atau niat zakat Anda di sini..."
           rows="3"
-          className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-500 outline-none resize-none transition bg-white disabled:bg-gray-100 disabled:text-gray-500"
+          className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-500 outline-none resize-none bg-white disabled:bg-gray-100"
         ></textarea>
       </div>
 
-      {/* ✨ LOGIKA TOMBOL PINTAR SEPERTI SPP ✨ */}
+      {/* Logika Tombol */}
       {snapToken ? (
         <div
           className={`mt-4 p-5 border rounded-lg text-center shadow-inner ${isPending ? "bg-emerald-50 border-emerald-200" : "bg-orange-50 border-orange-200"}`}
@@ -181,21 +225,10 @@ const Zakat = ({ nominalZakat, Type }) => {
               ? "⏳ Menunggu Pembayaran"
               : "⚠️ Transaksi Belum Selesai"}
           </p>
-          <p
-            className={`text-sm mb-4 ${isPending ? "text-emerald-600" : "text-orange-600"}`}
-          >
-            {isPending
-              ? "Anda sudah memilih metode bayar. Klik tombol di bawah untuk melihat instruksi (VA/QRIS)."
-              : "Anda memiliki transaksi yang belum diselesaikan."}
-          </p>
           <button
             type="button"
             onClick={() => triggerSnapPopup(snapToken)}
-            className={`w-full font-bold py-3.5 rounded-lg transition-all shadow-md text-white hover:-translate-y-0.5 ${
-              isPending
-                ? "bg-emerald-600 hover:bg-emerald-700"
-                : "bg-orange-500 hover:bg-orange-600"
-            }`}
+            className={`w-full font-bold py-3.5 rounded-lg text-white ${isPending ? "bg-emerald-600 hover:bg-emerald-700" : "bg-orange-500 hover:bg-orange-600"}`}
           >
             {isPending ? "Lihat Kode Pembayaran" : "Lanjutkan Pembayaran"}
           </button>
@@ -206,9 +239,9 @@ const Zakat = ({ nominalZakat, Type }) => {
               setIsPending(false);
               window.location.reload();
             }}
-            className="w-full mt-3 text-sm text-gray-500 font-medium hover:text-red-500 underline"
+            className="w-full mt-3 text-sm text-gray-500 underline"
           >
-            Batalkan dan Buat Transaksi Baru
+            Batalkan dan Buat Baru
           </button>
         </div>
       ) : (
@@ -216,15 +249,13 @@ const Zakat = ({ nominalZakat, Type }) => {
           type="button"
           onClick={checkoutZakat}
           disabled={isLoading || nominal < 10000}
-          className={`w-full font-bold py-3.5 rounded-lg transition-all shadow-md mt-4 ${
-            isLoading || nominal < 10000
-              ? "bg-gray-400 text-gray-100 cursor-not-allowed shadow-none"
-              : "bg-[#10B981] text-white hover:bg-emerald-600 hover:-translate-y-0.5"
-          }`}
+          className={`w-full font-bold py-3.5 rounded-lg transition-all mt-4 ${isLoading || nominal < 10000 ? "bg-gray-400 text-gray-100 cursor-not-allowed" : "bg-[#10B981] text-white hover:bg-emerald-600"}`}
         >
           {isLoading
             ? "Memproses..."
-            : `Tunaikan Zakat (Rp ${nominal.toLocaleString("id-ID")})`}
+            : metodeBayar === "tunai"
+              ? "Catat Pembayaran Tunai"
+              : `Bayar Online (Rp ${nominal.toLocaleString("id-ID")})`}
         </button>
       )}
     </div>
