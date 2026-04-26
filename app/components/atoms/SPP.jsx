@@ -8,6 +8,7 @@ const FormSpp = () => {
   const [bulanTagihan, setBulanTagihan] = useState([]);
   const [nominal, setNominal] = useState(0);
   const [pesan, setPesan] = useState("");
+  const [metodeBayar, setMetodeBayar] = useState("online"); // ✨ STATE BARU
   const [isLoading, setIsLoading] = useState(false);
 
   const [snapToken, setSnapToken] = useState(null);
@@ -30,34 +31,30 @@ const FormSpp = () => {
     "Desember",
   ];
 
-  // Kalkulator Otomatis (hanya jalan jika sedang tidak ada token pending)
   useEffect(() => {
     if (jenisSpp === "SPP" && !snapToken) {
       setNominal(bulanTagihan.length * HARGA_SPP_PER_BULAN);
     }
   }, [bulanTagihan, jenisSpp, snapToken]);
 
-  // ✨ PENANGKAP URL & INGATAN MEMORI SUPER (SIMPAN SEMUA DATA)
   useEffect(() => {
-    // 1. Ambil paket data dari memori browser
     const savedData = localStorage.getItem("pending_trx_spp");
     if (savedData) {
       try {
         const parsedData = JSON.parse(savedData);
-        // Kembalikan semua data ke form
         setSnapToken(parsedData.token);
         setNamaSiswa(parsedData.nama);
         setJenisSpp(parsedData.jenis);
         setBulanTagihan(parsedData.bulan);
         setNominal(parsedData.nominal);
         setPesan(parsedData.pesan);
+        setMetodeBayar(parsedData.metode || "online");
         setIsPending(true);
       } catch (error) {
         console.error("Gagal membaca memori:", error);
       }
     }
 
-    // 2. Sapu bersih buntut URL dari Midtrans
     if (typeof window !== "undefined") {
       const urlParams = new URLSearchParams(window.location.search);
       const statusTransaksi = urlParams.get("transaction_status");
@@ -69,7 +66,7 @@ const FormSpp = () => {
         statusTransaksi === "capture"
       ) {
         alert("✅ Alhamdulillah, Pembayaran Tagihan berhasil!");
-        localStorage.removeItem("pending_trx_spp"); // Hapus memori jika sukses
+        localStorage.removeItem("pending_trx_spp");
         setSnapToken(null);
         setIsPending(false);
         window.history.replaceState(null, "", window.location.pathname);
@@ -89,7 +86,7 @@ const FormSpp = () => {
     window.snap.pay(tokenToUse, {
       onSuccess: function () {
         alert("Alhamdulillah, Pembayaran berhasil!");
-        localStorage.removeItem("pending_trx_spp"); // ✨ HAPUS MEMORI
+        localStorage.removeItem("pending_trx_spp");
         setSnapToken(null);
         setIsPending(false);
         window.location.reload();
@@ -99,7 +96,7 @@ const FormSpp = () => {
       },
       onError: function () {
         alert("Pembayaran gagal atau kadaluarsa!");
-        localStorage.removeItem("pending_trx_spp"); // ✨ HAPUS MEMORI
+        localStorage.removeItem("pending_trx_spp");
         setSnapToken(null);
         setIsPending(false);
         setIsLoading(false);
@@ -135,6 +132,7 @@ const FormSpp = () => {
       nominal: nominal,
       zakatType: jenisSpp,
       paymentMonth: bulanFinal,
+      metode: metodeBayar, // ✨ KIRIM METODE KE BACKEND
     };
 
     try {
@@ -147,10 +145,21 @@ const FormSpp = () => {
         body: JSON.stringify(dataTransaksi),
       });
 
-      if (!response.ok) throw new Error("Gagal memanggil API Midtrans");
+      if (!response.ok) throw new Error("Gagal memanggil API");
 
-      const { token, clientKey } = await response.json();
+      const responseData = await response.json();
 
+      // ✨ LOGIKA BARU: JIKA BAYAR TUNAI, JANGAN PANGGIL MIDTRANS
+      if (responseData.isTunai) {
+        alert(
+          "✅ Pengajuan berhasil! Silakan serahkan uang tunai ke Admin / Tata Usaha.",
+        );
+        window.location.reload();
+        return;
+      }
+
+      // Jika Online, panggil Midtrans seperti biasa
+      const { token, clientKey } = responseData;
       const scriptTag = document.querySelector('script[src*="snap.js"]');
       if (scriptTag && clientKey) {
         scriptTag.setAttribute("data-client-key", clientKey);
@@ -158,7 +167,6 @@ const FormSpp = () => {
 
       setSnapToken(token);
 
-      // ✨ SIMPAN SEMUA DATA FORM KE DALAM MEMORI
       const paketData = {
         token: token,
         nama: namaSiswa,
@@ -166,13 +174,14 @@ const FormSpp = () => {
         bulan: bulanTagihan,
         nominal: nominal,
         pesan: pesan,
+        metode: metodeBayar,
       };
       localStorage.setItem("pending_trx_spp", JSON.stringify(paketData));
 
       triggerSnapPopup(token);
     } catch (error) {
       console.error("Error Checkout:", error);
-      alert("Terjadi kesalahan sistem pembayaran.");
+      alert("Terjadi kesalahan sistem.");
       setIsLoading(false);
     }
   };
@@ -203,28 +212,46 @@ const FormSpp = () => {
         />
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Jenis Tagihan
-        </label>
-        <select
-          value={jenisSpp}
-          onChange={(e) => {
-            const pilihanBaru = e.target.value;
-            setJenisSpp(pilihanBaru);
-            if (pilihanBaru !== "SPP") {
-              setNominal(0);
-              setBulanTagihan([]);
-            }
-          }}
-          disabled={snapToken !== null}
-          className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none transition bg-white cursor-pointer disabled:bg-gray-100 disabled:text-gray-500"
-        >
-          <option value="SPP">Bulanan (SPP)</option>
-          <option value="Biaya Sekolah">
-            Biaya Tahunan / Bangunan / Lainnya
-          </option>
-        </select>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Jenis Tagihan
+          </label>
+          <select
+            value={jenisSpp}
+            onChange={(e) => {
+              const pilihanBaru = e.target.value;
+              setJenisSpp(pilihanBaru);
+              if (pilihanBaru !== "SPP") {
+                setNominal(0);
+                setBulanTagihan([]);
+              }
+            }}
+            disabled={snapToken !== null}
+            className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none transition bg-white cursor-pointer disabled:bg-gray-100 disabled:text-gray-500"
+          >
+            <option value="SPP">Bulanan (SPP)</option>
+            <option value="Biaya Sekolah">
+              Biaya Tahunan / Bangunan / Lainnya
+            </option>
+          </select>
+        </div>
+
+        {/* ✨ INPUT METODE PEMBAYARAN BARU */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Metode Pembayaran
+          </label>
+          <select
+            value={metodeBayar}
+            onChange={(e) => setMetodeBayar(e.target.value)}
+            disabled={snapToken !== null}
+            className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none transition bg-white cursor-pointer disabled:bg-gray-100 disabled:text-gray-500"
+          >
+            <option value="online">Transfer Online (VA / QRIS)</option>
+            <option value="tunai">Bayar Tunai (Ke Admin)</option>
+          </select>
+        </div>
       </div>
 
       {jenisSpp === "SPP" && (
@@ -306,52 +333,39 @@ const FormSpp = () => {
 
       {snapToken ? (
         <div
-          className={`mt-4 p-5 border rounded-lg text-center shadow-inner ${
-            isPending
-              ? "bg-blue-50 border-blue-200"
-              : "bg-orange-50 border-orange-200"
-          }`}
+          className={`mt-4 p-5 border rounded-lg text-center shadow-inner ${isPending ? "bg-blue-50 border-blue-200" : "bg-orange-50 border-orange-200"}`}
         >
           <p
-            className={`text-sm font-bold mb-1 ${
-              isPending ? "text-blue-800" : "text-orange-800"
-            }`}
+            className={`text-sm font-bold mb-1 ${isPending ? "text-blue-800" : "text-orange-800"}`}
           >
             {isPending
               ? "⏳ Menunggu Pembayaran"
               : "⚠️ Transaksi Belum Selesai"}
           </p>
           <p
-            className={`text-sm mb-4 ${
-              isPending ? "text-blue-600" : "text-orange-600"
-            }`}
+            className={`text-sm mb-4 ${isPending ? "text-blue-600" : "text-orange-600"}`}
           >
-            {isPending
-              ? "Anda sudah memilih metode bayar. Klik tombol di bawah untuk melihat instruksi atau Nomor Virtual Account (VA)."
-              : "Anda memiliki transaksi yang belum diselesaikan."}
+            Anda sudah memilih metode bayar Online. Klik tombol di bawah untuk
+            melihat Nomor Virtual Account (VA).
           </p>
           <button
             type="button"
             onClick={() => triggerSnapPopup(snapToken)}
-            className={`w-full font-bold py-3.5 rounded-lg transition-all shadow-md text-white hover:-translate-y-0.5 ${
-              isPending
-                ? "bg-blue-600 hover:bg-blue-700"
-                : "bg-orange-500 hover:bg-orange-600"
-            }`}
+            className="w-full font-bold py-3.5 rounded-lg transition-all shadow-md text-white hover:-translate-y-0.5 bg-blue-600 hover:bg-blue-700"
           >
-            {isPending ? "Lihat Kode Pembayaran (VA)" : "Lanjutkan Pembayaran"}
+            Lihat Kode Pembayaran (VA)
           </button>
           <button
             type="button"
             onClick={() => {
-              localStorage.removeItem("pending_trx_spp"); // ✨ HAPUS MEMORI
+              localStorage.removeItem("pending_trx_spp");
               setSnapToken(null);
               setIsPending(false);
               window.location.reload();
             }}
             className="w-full mt-3 text-sm text-gray-500 font-medium hover:text-red-500 underline"
           >
-            Batalkan dan Buat Transaksi Baru
+            Batalkan Transaksi
           </button>
         </div>
       ) : (
@@ -362,12 +376,16 @@ const FormSpp = () => {
           className={`w-full font-bold py-3.5 rounded-lg transition-all shadow-md mt-4 ${
             isLoading || nominal < 10000 || namaSiswa.trim() === ""
               ? "bg-gray-400 text-gray-100 cursor-not-allowed shadow-none"
-              : "bg-blue-600 text-white hover:bg-blue-700 hover:-translate-y-0.5"
+              : metodeBayar === "tunai"
+                ? "bg-amber-500 text-white hover:bg-amber-600 hover:-translate-y-0.5"
+                : "bg-blue-600 text-white hover:bg-blue-700 hover:-translate-y-0.5"
           }`}
         >
           {isLoading
             ? "Memproses..."
-            : `Bayar Tagihan (Rp ${nominal.toLocaleString("id-ID")})`}
+            : metodeBayar === "tunai"
+              ? `Catat Tagihan Tunai (Rp ${nominal.toLocaleString("id-ID")})`
+              : `Bayar Online (Rp ${nominal.toLocaleString("id-ID")})`}
         </button>
       )}
     </div>

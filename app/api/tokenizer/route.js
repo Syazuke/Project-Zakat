@@ -22,6 +22,7 @@ const PembayaranSchema = z.object({
     "Biaya Sekolah",
   ]),
   paymentMonth: z.string().optional(),
+  metode: z.string().optional(), // ✨ TAMBAHAN: Untuk menangkap metode (online/tunai)
 });
 
 export async function POST(request) {
@@ -44,7 +45,12 @@ export async function POST(request) {
       dataBersih.zakatType === "SPP" ||
       dataBersih.zakatType === "Biaya Sekolah";
 
-    // ✨ 2. PILIH KUNCI MIDTRANS YANG TEPAT DARI .ENV
+    // ✨ 2. TENTUKAN STATUS BERDASARKAN METODE BAYAR
+    // Jika tunai, statusnya beda agar mudah difilter oleh Admin
+    const statusTransaksi =
+      dataBersih.metode === "tunai" ? "PENDING_TUNAI" : "PENDING";
+
+    // ✨ 3. PILIH KUNCI MIDTRANS YANG TEPAT DARI .ENV
     const serverKey = isSPP
       ? process.env.MIDTRANS_SERVER_KEY_SPP
       : process.env.MIDTRANS_SERVER_KEY_Zakat;
@@ -67,7 +73,7 @@ export async function POST(request) {
           sppType: dataBersih.zakatType,
           paymentMonth: dataBersih.paymentMonth || "Bulan Ini",
           amount: dataBersih.nominal,
-          status: "PENDING",
+          status: statusTransaksi, // ✨ Status Dinamis
         },
       });
       orderIdMidtrans = `SPP-${newTransaction.id}`;
@@ -78,16 +84,30 @@ export async function POST(request) {
           message: dataBersih.pesan || "",
           zakatType: dataBersih.zakatType,
           amount: dataBersih.nominal,
-          paymentMethod: "Midtrans (Virtual Account / QRIS)",
-          status: "PENDING",
+          paymentMethod:
+            dataBersih.metode === "tunai"
+              ? "Tunai (Ke Admin)"
+              : "Midtrans (Virtual Account / QRIS)", // ✨ Catat metode yang benar
+          status: statusTransaksi, // ✨ Status Dinamis
         },
       });
-      // PERHATIAN: Diubah menjadi ZAKAT- agar sinkron dengan file Webhook
       orderIdMidtrans = `ZAKAT-${newTransaction.id}`;
     }
-    // ========================================================
 
-    // ✨ 3. BANGUNKAN MIDTRANS DENGAN KUNCI YANG TERPILIH
+    // ========================================================
+    // ✨ LOGIKA POTONG JALAN UNTUK TUNAI ✨
+    // ========================================================
+    if (dataBersih.metode === "tunai") {
+      // Langsung kembalikan respon sukses, Midtrans tidak perlu dipanggil!
+      return NextResponse.json(
+        { isTunai: true, message: "Berhasil dicatat sebagai Tunai" },
+        { status: 200 },
+      );
+    }
+
+    // ========================================================
+    // ✨ 4. BANGUNKAN MIDTRANS JIKA ONLINE
+    // ========================================================
     let snap = new Midtrans.Snap({
       isProduction: false,
       serverKey: serverKey,
@@ -106,11 +126,11 @@ export async function POST(request) {
 
     const snapToken = await snap.createTransactionToken(parameter);
 
-    // ✨ 4. KIRIM TOKEN DAN CLIENT_KEY KE FRONTEND
+    // ✨ 5. KIRIM TOKEN DAN CLIENT_KEY KE FRONTEND
     return NextResponse.json(
       {
         token: snapToken,
-        clientKey: clientKey, // Wajib dikirim agar UI Frontend bisa menyesuaikan!
+        clientKey: clientKey,
       },
       { status: 200 },
     );

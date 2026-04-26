@@ -9,7 +9,7 @@ export default function AdminDashboard() {
   const [isLoading, setIsLoading] = useState(true);
 
   // ==========================================
-  // ✨ LINK SPREADSHEET (GANTI DENGAN LINK ANDA)
+  // ✨ LINK SPREADSHEET
   // ==========================================
   const SPREADSHEET_URL_ZAKAT =
     "https://docs.google.com/spreadsheets/d/1iQLKVV6n_rC7297fcF7adkSfcY-PNYSNdjy-zrfp9r4/edit?usp=sharing";
@@ -19,9 +19,9 @@ export default function AdminDashboard() {
   // ==========================================
   // ✨ STATE STATISTIK
   // ==========================================
-  const [totalSaldoBersih, setTotalSaldoBersih] = useState(0); // Uang yang tersisa
-  const [totalKotor, setTotalKotor] = useState(0); // Semua uang yang pernah masuk
-  const [totalDitarik, setTotalDitarik] = useState(0); // Semua uang yang sudah ditarik
+  const [totalSaldoBersih, setTotalSaldoBersih] = useState(0);
+  const [totalKotor, setTotalKotor] = useState(0);
+  const [totalDitarik, setTotalDitarik] = useState(0);
   const [detailPendapatan, setDetailPendapatan] = useState({
     zakat: 0,
     spp: 0,
@@ -67,7 +67,7 @@ export default function AdminDashboard() {
       const response = await fetch("/api/admin/stats");
       const data = await response.json();
       if (response.ok) {
-        setTotalSaldoBersih(data.totalZakat || 0); // Di backend sudah diubah jadi saldo bersih
+        setTotalSaldoBersih(data.totalZakat || 0);
         setTotalKotor(data.totalKotor || 0);
         setTotalDitarik(data.totalDitarik || 0);
         setTotalOrang(data.totalMuzakki || 0);
@@ -86,7 +86,9 @@ export default function AdminDashboard() {
     try {
       const response = await fetch("/api/admin/transactions");
       const data = await response.json();
-      if (response.ok) setRiwayatTransaksi(data.transactions);
+      // Mengatasi perbedaan format return API (jika dari API baru formatnya {spp: [], zakat: []})
+      if (response.ok)
+        setRiwayatTransaksi(data.transactions || data.zakat || []);
     } catch (error) {
       console.error("Gagal memuat riwayat zakat");
     } finally {
@@ -142,7 +144,7 @@ export default function AdminDashboard() {
         alert("Pencatatan penarikan berhasil disimpan!");
         setIsWithdrawModalOpen(false);
         setWithdrawForm({ amount: "", source: "ZAKAT", note: "" });
-        fetchDashboardStats(); // Refresh saldo
+        fetchDashboardStats();
       } else {
         alert("Gagal mencatat penarikan.");
       }
@@ -150,6 +152,34 @@ export default function AdminDashboard() {
       alert("Terjadi kesalahan jaringan saat menarik dana.");
     } finally {
       setIsWithdrawing(false);
+    }
+  };
+
+  // ✨ FUNGSI BARU: KONFIRMASI TUNAI
+  const handleKonfirmasi = async (id, type) => {
+    const confirm = window.confirm(
+      "Apakah uang tunai sudah Anda terima dan ingin mengesahkan transaksi ini menjadi LUNAS?",
+    );
+    if (!confirm) return;
+
+    try {
+      // Menembak API khusus update status (PATCH)
+      const response = await fetch("/api/admin/transactions", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, type }),
+      });
+
+      if (response.ok) {
+        alert("✅ Transaksi berhasil disahkan menjadi LUNAS!");
+        if (type === "SPP") fetchRiwayatSPP();
+        if (type === "ZAKAT") fetchRiwayatTransaksi();
+        fetchDashboardStats(); // Update saldo di atas
+      } else {
+        alert("❌ Gagal mengonfirmasi transaksi.");
+      }
+    } catch (error) {
+      alert("Terjadi kesalahan sistem saat konfirmasi.");
     }
   };
 
@@ -227,6 +257,7 @@ export default function AdminDashboard() {
 
   // --- FILTER LOGIC ---
   const filterData = (data, filterStatus) => {
+    if (!Array.isArray(data)) return [];
     return data.filter((trx) => {
       if (filterStatus === "semua") return true;
       const trxDate = new Date(trx.createdAt);
@@ -247,6 +278,41 @@ export default function AdminDashboard() {
 
   const dataTampilZakat = filterData(riwayatTransaksi, filterBulanZakat);
   const dataTampilSPP = filterData(riwayatSPP, filterBulanSPP);
+
+  // ✨ KOMPONEN BARU: Label Status Dinamis
+  const StatusBadge = ({ status }) => {
+    if (
+      status === "settlement" ||
+      status === "capture" ||
+      status === "SUCCESS" ||
+      status === "PAID"
+    ) {
+      return (
+        <span className="px-2 py-1 bg-emerald-100 text-emerald-700 rounded text-xs font-bold">
+          LUNAS
+        </span>
+      );
+    }
+    if (status === "PENDING_TUNAI") {
+      return (
+        <span className="px-2 py-1 bg-amber-100 text-amber-800 rounded text-xs font-bold animate-pulse">
+          ⏳ TUNGGU TUNAI
+        </span>
+      );
+    }
+    if (status === "PENDING") {
+      return (
+        <span className="px-2 py-1 bg-yellow-100 text-yellow-700 rounded text-xs font-bold">
+          PENDING (VA)
+        </span>
+      );
+    }
+    return (
+      <span className="px-2 py-1 bg-red-100 text-red-700 rounded text-xs font-bold">
+        {status}
+      </span>
+    );
+  };
 
   if (isLoading)
     return (
@@ -375,7 +441,6 @@ export default function AdminDashboard() {
         <header className="bg-white shadow-sm p-4 md:p-6 flex justify-between items-center sticky top-0 z-10">
           <h1 className="text-2xl font-bold text-gray-800">Dashboard Utama</h1>
           <div className="flex items-center gap-4">
-            {/* Tombol Tarik Dana untuk Mobile */}
             <button
               onClick={() => setIsWithdrawModalOpen(true)}
               className="lg:hidden bg-amber-500 text-white px-3 py-1.5 rounded-lg text-sm font-bold"
@@ -392,7 +457,6 @@ export default function AdminDashboard() {
         <div className="p-4 md:p-6 space-y-6">
           {/* ✨ KARTU STATISTIK ✨ */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6">
-            {/* Kartu Saldo Bersih */}
             <div className="bg-emerald-600 text-white p-6 rounded-2xl shadow-md border border-emerald-700 flex flex-col col-span-1 md:col-span-2">
               <p className="text-emerald-100 text-sm font-medium mb-1">
                 Total Saldo Bersih Saat Ini
@@ -405,8 +469,6 @@ export default function AdminDashboard() {
                 {totalDitarik.toLocaleString("id-ID")}
               </p>
             </div>
-
-            {/* Kartu Rincian Kas */}
             <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-center">
               <p className="text-gray-500 text-xs font-bold mb-2 uppercase tracking-wider">
                 Pemasukan Kotor
@@ -424,8 +486,6 @@ export default function AdminDashboard() {
                 </span>
               </p>
             </div>
-
-            {/* Kartu Pending */}
             <div className="bg-orange-50 p-5 rounded-2xl shadow-sm border border-orange-100 flex flex-col justify-center">
               <p className="text-orange-800 text-sm font-bold mb-1">
                 Menunggu Verifikasi
@@ -532,13 +592,21 @@ export default function AdminDashboard() {
                               Rp {trx.amount.toLocaleString("id-ID")}
                             </td>
                             <td className="px-6 py-4">
-                              <span
-                                className={`px-2 py-1 rounded text-xs font-bold ${trx.status === "SUCCESS" || trx.status === "PAID" ? "bg-emerald-100 text-emerald-700" : trx.status === "PENDING" ? "bg-yellow-100 text-yellow-700" : "bg-red-100 text-red-700"}`}
-                              >
-                                {trx.status}
-                              </span>
+                              {/* ✨ MENGGUNAKAN STATUS BADGE ✨ */}
+                              <StatusBadge status={trx.status} />
                             </td>
-                            <td className="px-6 py-4 text-center">
+                            <td className="px-6 py-4 text-center flex items-center justify-center gap-2">
+                              {/* ✨ TOMBOL KONFIRMASI (MUNCUL JIKA TUNAI) ✨ */}
+                              {trx.status === "PENDING_TUNAI" && (
+                                <button
+                                  onClick={() =>
+                                    handleKonfirmasi(trx.id, "ZAKAT")
+                                  }
+                                  className="bg-amber-500 hover:bg-amber-600 text-white px-3 py-1.5 rounded-md text-xs font-bold transition-all shadow-sm"
+                                >
+                                  ✅ Terima Tunai
+                                </button>
+                              )}
                               <button
                                 onClick={() => handleDeleteSingle(trx.id)}
                                 className="text-red-500 hover:bg-red-50 p-2 rounded-full"
@@ -629,13 +697,21 @@ export default function AdminDashboard() {
                               Rp {spp.amount.toLocaleString("id-ID")}
                             </td>
                             <td className="px-6 py-4">
-                              <span
-                                className={`px-2 py-1 rounded text-xs font-bold ${spp.status === "SUCCESS" || spp.status === "PAID" ? "bg-blue-100 text-blue-700" : spp.status === "PENDING" ? "bg-yellow-100 text-yellow-700" : "bg-red-100 text-red-700"}`}
-                              >
-                                {spp.status}
-                              </span>
+                              {/* ✨ MENGGUNAKAN STATUS BADGE ✨ */}
+                              <StatusBadge status={spp.status} />
                             </td>
-                            <td className="px-6 py-4 text-center">
+                            <td className="px-6 py-4 text-center flex items-center justify-center gap-2">
+                              {/* ✨ TOMBOL KONFIRMASI (MUNCUL JIKA TUNAI) ✨ */}
+                              {spp.status === "PENDING_TUNAI" && (
+                                <button
+                                  onClick={() =>
+                                    handleKonfirmasi(spp.id, "SPP")
+                                  }
+                                  className="bg-amber-500 hover:bg-amber-600 text-white px-3 py-1.5 rounded-md text-xs font-bold transition-all shadow-sm"
+                                >
+                                  ✅ Terima Tunai
+                                </button>
+                              )}
                               <button
                                 onClick={() => handleDeleteSingleSPP(spp.id)}
                                 className="text-red-500 hover:bg-red-50 p-2 rounded-full"
