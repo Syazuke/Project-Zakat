@@ -66,7 +66,7 @@ export async function POST(request) {
         data: {
           studentName: dataBersih.nama,
           message: dataBersih.message || "-",
-          sppType: dataBersih.jenisSPP,
+          sppType: dataBersih.Type,
           paymentMonth: dataBersih.paymentMonth || "Bulan Ini",
           amount: dataBersih.nominal,
           status: statusTransaksi,
@@ -104,8 +104,8 @@ export async function POST(request) {
           body: JSON.stringify({
             order_id: orderIdMidtrans,
             nama: dataBersih.nama,
-            jenisZakat: dataBersih.zakatType,
-            jenisSPP: dataBersih.sppType,
+            jenisZakat: dataBersih.Type,
+            jenisSPP: dataBersih.Type,
             nominal: dataBersih.nominal,
             metode: dataBersih.metode === "tunai" ? "Tunai" : "Online",
             status: statusTransaksi,

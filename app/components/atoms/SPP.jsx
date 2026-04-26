@@ -130,7 +130,7 @@ const FormSpp = () => {
       nama: namaSiswa,
       pesan: pesan || "-",
       nominal: nominal,
-      zakatType: jenisSpp,
+      Type: jenisSpp,
       paymentMonth: bulanFinal,
       metode: metodeBayar, // ✨ KIRIM METODE KE BACKEND
     };

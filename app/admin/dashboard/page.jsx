@@ -279,7 +279,6 @@ export default function AdminDashboard() {
   const dataTampilZakat = filterData(riwayatTransaksi, filterBulanZakat);
   const dataTampilSPP = filterData(riwayatSPP, filterBulanSPP);
 
-  // ✨ KOMPONEN BARU: Label Status Dinamis
   const StatusBadge = ({ status }) => {
     if (
       status === "settlement" ||

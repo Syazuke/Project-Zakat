@@ -2,22 +2,22 @@
 
 import React, { useState, useEffect } from "react";
 
-const Zakat = ({ nominalZakat, zakatType }) => {
+const Zakat = ({ nominalZakat, Type }) => {
   const [nama, setNama] = useState("");
   const [pesan, setPesan] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const [nominal, setZakat] = useState(nominalZakat || 0);
-  const [jenisZakat, setJenisZakat] = useState(zakatType || "penghasilan");
+  const [jenisZakat, setJenisZakat] = useState(Type || "penghasilan");
 
   // ✨ STATE BARU: Untuk melacak token dan status pending (Sama seperti SPP)
   const [snapToken, setSnapToken] = useState(null);
   const [isPending, setIsPending] = useState(false);
 
   useEffect(() => {
-    if (zakatType) setJenisZakat(zakatType);
+    if (Type) setJenisZakat(Type);
     if (nominalZakat > 0) setZakat(nominalZakat);
-  }, [zakatType, nominalZakat]);
+  }, [Type, nominalZakat]);
 
   // ✨ FUNGSI BARU: Pembungkus Snap Popup yang rapi
   const triggerSnapPopup = (tokenToUse) => {
@@ -57,7 +57,7 @@ const Zakat = ({ nominalZakat, zakatType }) => {
       nama: namaValid,
       pesan: pesan,
       nominal: nominal,
-      zakatType: jenisZakat,
+      Type: jenisZakat,
     };
 
     try {

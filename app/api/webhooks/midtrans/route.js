@@ -11,15 +11,10 @@ export async function POST(request) {
     const grossAmount = data.gross_amount;
 
     if (transactionStatus === "settlement" || transactionStatus === "capture") {
-      let namaPembayar = "Hamba Allah";
-      let keteranganTambahan = orderId;
-
       // ✨ 1. SIAPKAN 2 ALAMAT GOOGLE SHEETS BERBEDA
-      // Masukkan URL Google Sheets lama Anda di sini
       const GOOGLE_SHEET_URL_ZAKAT =
         "https://script.google.com/macros/s/AKfycbwEcV1fRA0xe_pCHd0lnEZGI5rbYZfXGw-LtKnX-xdRSV7lAPZbnIeYOrRWWOXl3hg/exec";
 
-      // Masukkan URL Google Sheets SPP yang BARU di sini
       const GOOGLE_SHEET_URL_SPP =
         "https://script.google.com/macros/s/AKfycbwevzDVjL_8pG-FRntzXxDDfhJdAM622flsKDpEDwv08wD97rwotvYqeIvauRiRtUs3IQ/exec";
 
@@ -43,7 +38,8 @@ export async function POST(request) {
           }),
           nama: trx.name || "Hamba Allah",
           jenis: `Zakat ${trx.zakatType}`,
-          keterangan: trx.message,
+          tagihan: "-", // ✨ TAMBAHAN: Zakat tidak ada tagihan, kita isi strip agar rapi
+          keterangan: trx.message || "-", // ✨ Menangkap keterangan/pesan
           nominal: `Rp ${parseInt(grossAmount).toLocaleString("id-ID")}`,
           status: "SUCCESS",
         };
@@ -61,10 +57,9 @@ export async function POST(request) {
           }),
           nama: trx.studentName,
           jenis: trx.sppType,
-          tagihan: `Bulan: ${trx.paymentMonth}`,
-          keterangan: trx.message,
+          tagihan: `Bulan: ${trx.paymentMonth}`, // ✨ Menangkap bulan tagihan
+          keterangan: trx.message || "-", // ✨ Menangkap keterangan
           nominal: `Rp ${parseInt(grossAmount).toLocaleString("id-ID")}`,
-          status: "SUCCESS",
         };
         targetSheetUrl = GOOGLE_SHEET_URL_SPP;
       }
