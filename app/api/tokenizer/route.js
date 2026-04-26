@@ -84,7 +84,7 @@ export async function POST(request) {
       try {
         // ⚠️ MASUKKAN URL SPREADSHEET ANDA DI SINI
         const GOOGLE_SHEET_URL_SPP =
-          "https://script.google.com/macros/s/AKfycbwevzDVjL_8pG-FRntzXxDDfhJdAM622flsKDpEDwv08wD97rwotvYqeIvauRiRtUs3IQ/exec";
+          "https://script.google.com/macros/s/AKfycbwRabFBQg5xrhmG6wwdUrorCd2jAAMNAR2Tfi4ew7HSFnJ8F4QOoi_Se5-lrpugCGlJFw/exec";
         const GOOGLE_SHEET_URL_ZAKAT =
           "https://script.google.com/macros/s/AKfycbwEcV1fRA0xe_pCHd0lnEZGI5rbYZfXGw-LtKnX-xdRSV7lAPZbnIeYOrRWWOXl3hg/exec";
 
