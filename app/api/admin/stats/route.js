@@ -68,30 +68,31 @@ export async function GET() {
     });
 
     // ========================================================
-    // ✨ 3. HITUNG TOTAL PENARIKAN (WITHDRAWAL) ✨
+    // ✨ 3. HITUNG PENARIKAN (DIPISAH ZAKAT & SPP) ✨
     // ========================================================
-    const resultPenarikan = await prisma.withdrawal.aggregate({
+    const resultPenarikanZakat = await prisma.withdrawal.aggregate({
       _sum: { amount: true },
-      // Opsional: Jika ingin reset tiap bulan, hapus tanda komentar di bawah ini
-      // where: { createdAt: { gte: firstDayOfMonth } }
+      where: { source: "ZAKAT" }, // Tarik total pengeluaran khusus Zakat
     });
-    const totalPenarikan = resultPenarikan._sum.amount || 0;
+    const zakatDitarik = resultPenarikanZakat._sum.amount || 0;
+
+    const resultPenarikanSPP = await prisma.withdrawal.aggregate({
+      _sum: { amount: true },
+      where: { source: "SPP" }, // Tarik total pengeluaran khusus SPP
+    });
+    const sppDitarik = resultPenarikanSPP._sum.amount || 0;
 
     // ========================================================
-    // 4. GABUNGKAN KEDUANYA & KIRIM KE DASHBOARD
+    // ✨ 4. KIRIM DATA KE DASHBOARD (SUDAH DIPISAH) ✨
     // ========================================================
-    const totalPendapatanKotor = totalAmountZakat + totalAmountSPP;
-    const saldoBersih = totalPendapatanKotor - totalPenarikan;
-
     return NextResponse.json(
       {
-        totalZakat: saldoBersih, // 🎯 SEKARANG MENJADI SALDO BERSIH
-        totalKotor: totalPendapatanKotor, // Menyimpan total pendapatan asli
-        totalDitarik: totalPenarikan, // Menyimpan total yang sudah ditarik
+        detailZakat: totalAmountZakat,
+        zakatDitarik: zakatDitarik, // 👈 Frontend sekarang bisa membaca ini!
+        detailSPP: totalAmountSPP,
+        sppDitarik: sppDitarik, // 👈 Frontend sekarang bisa membaca ini!
         totalMuzakki: totalMuzakkiZakat + totalSiswaSPP,
         pendingVerifikasi: pendingZakat + pendingSPP,
-        detailZakat: totalAmountZakat,
-        detailSPP: totalAmountSPP,
       },
       { status: 200 },
     );

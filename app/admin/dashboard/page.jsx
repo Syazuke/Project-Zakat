@@ -2,45 +2,40 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import TarikDana from "@/app/components/atoms/tarikDana";
+import Sidebar from "@/app/components/atoms/sidebar";
+import NavDashboard from "@/app/components/atoms/NavDashboard";
+import Card from "@/app/components/atoms/Card";
+import TableZakat from "@/app/components/atoms/TableZakat";
+import TableSPP from "@/app/components/atoms/TableSPP";
 
 export default function AdminDashboard() {
-  const router = useRouter();
-  const [adminName, setAdminName] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
-
-  // ==========================================
-  // ✨ LINK SPREADSHEET
-  // ==========================================
   const SPREADSHEET_URL_ZAKAT =
     "https://docs.google.com/spreadsheets/d/1iQLKVV6n_rC7297fcF7adkSfcY-PNYSNdjy-zrfp9r4/edit?usp=sharing";
   const SPREADSHEET_URL_SPP =
     "https://docs.google.com/spreadsheets/d/16jwSK4uiDIPqTKcEElfzfwZj-RXJ2Y2dYjyYvPRWNhI/edit?usp=sharing";
 
-  // ==========================================
-  // ✨ STATE STATISTIK
-  // ==========================================
-  const [totalSaldoBersih, setTotalSaldoBersih] = useState(0);
-  const [totalKotor, setTotalKotor] = useState(0);
-  const [totalDitarik, setTotalDitarik] = useState(0);
-  const [detailPendapatan, setDetailPendapatan] = useState({
-    zakat: 0,
-    spp: 0,
+  const router = useRouter();
+  const [adminName, setAdminName] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+
+  // ✨ STATE BARU: SALDO DIPISAH TOTAL ✨
+  const [saldoZakat, setSaldoZakat] = useState({
+    kotor: 0,
+    ditarik: 0,
+    bersih: 0,
   });
+  const [saldoSPP, setSaldoSPP] = useState({ kotor: 0, ditarik: 0, bersih: 0 });
+
   const [totalOrang, setTotalOrang] = useState(0);
   const [pendingVerifikasi, setPendingVerifikasi] = useState(0);
 
-  // ==========================================
-  // ✨ STATE TRANSAKSI & TAB
-  // ==========================================
   const [riwayatTransaksi, setRiwayatTransaksi] = useState([]);
   const [filterBulanZakat, setFilterBulanZakat] = useState("semua");
   const [riwayatSPP, setRiwayatSPP] = useState([]);
   const [filterBulanSPP, setFilterBulanSPP] = useState("semua");
   const [activeTab, setActiveTab] = useState("zakat");
 
-  // ==========================================
-  // ✨ STATE MODAL TARIK DANA
-  // ==========================================
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
   const [isWithdrawing, setIsWithdrawing] = useState(false);
   const [withdrawForm, setWithdrawForm] = useState({
@@ -61,21 +56,32 @@ export default function AdminDashboard() {
     }
   }, [router]);
 
-  // --- FETCH DATA FUNCTIONS ---
   const fetchDashboardStats = async () => {
     try {
       const response = await fetch("/api/admin/stats");
       const data = await response.json();
       if (response.ok) {
-        setTotalSaldoBersih(data.totalZakat || 0);
-        setTotalKotor(data.totalKotor || 0);
-        setTotalDitarik(data.totalDitarik || 0);
+        // ✨ LOGIKA PEMISAHAN SALDO ✨
+        const zakatMasuk = data.detailZakat || 0;
+        const zakatKeluar = data.zakatDitarik || 0; // Pastikan API mengirim data ini
+
+        const sppMasuk = data.detailSPP || 0;
+        const sppKeluar = data.sppDitarik || 0; // Pastikan API mengirim data ini
+
+        setSaldoZakat({
+          kotor: zakatMasuk,
+          ditarik: zakatKeluar,
+          bersih: zakatMasuk - zakatKeluar,
+        });
+
+        setSaldoSPP({
+          kotor: sppMasuk,
+          ditarik: sppKeluar,
+          bersih: sppMasuk - sppKeluar,
+        });
+
         setTotalOrang(data.totalMuzakki || 0);
         setPendingVerifikasi(data.pendingVerifikasi || 0);
-        setDetailPendapatan({
-          zakat: data.detailZakat || 0,
-          spp: data.detailSPP || 0,
-        });
       }
     } catch (error) {
       console.error("Gagal memuat statistik", error);
@@ -86,7 +92,6 @@ export default function AdminDashboard() {
     try {
       const response = await fetch("/api/admin/transactions");
       const data = await response.json();
-      // Mengatasi perbedaan format return API (jika dari API baru formatnya {spp: [], zakat: []})
       if (response.ok)
         setRiwayatTransaksi(data.transactions || data.zakat || []);
     } catch (error) {
@@ -106,7 +111,6 @@ export default function AdminDashboard() {
     }
   };
 
-  // --- ACTION FUNCTIONS ---
   const handleOpenSpreadsheet = (url) => {
     if (url.includes("LINK_SPREADSHEET")) {
       alert("Admin belum memasukkan link Google Sheets di kodingan.");
@@ -126,7 +130,6 @@ export default function AdminDashboard() {
       )
     )
       return;
-
     setIsWithdrawing(true);
     try {
       const res = await fetch("/api/admin/withdraw", {
@@ -155,7 +158,6 @@ export default function AdminDashboard() {
     }
   };
 
-  // ✨ FUNGSI BARU: KONFIRMASI TUNAI
   const handleKonfirmasi = async (id, type) => {
     const confirm = window.confirm(
       "Apakah uang tunai sudah Anda terima dan ingin mengesahkan transaksi ini menjadi LUNAS?",
@@ -163,7 +165,6 @@ export default function AdminDashboard() {
     if (!confirm) return;
 
     try {
-      // Menembak API khusus update status (PATCH)
       const response = await fetch("/api/admin/transactions", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -174,7 +175,7 @@ export default function AdminDashboard() {
         alert("✅ Transaksi berhasil disahkan menjadi LUNAS!");
         if (type === "SPP") fetchRiwayatSPP();
         if (type === "ZAKAT") fetchRiwayatTransaksi();
-        fetchDashboardStats(); // Update saldo di atas
+        fetchDashboardStats();
       } else {
         alert("❌ Gagal mengonfirmasi transaksi.");
       }
@@ -183,7 +184,6 @@ export default function AdminDashboard() {
     }
   };
 
-  // --- DELETE FUNCTIONS ---
   const handleDeleteSingle = async (id) => {
     if (!window.confirm("Yakin ingin menghapus transaksi Zakat ini?")) return;
     try {
@@ -255,7 +255,6 @@ export default function AdminDashboard() {
     }
   };
 
-  // --- FILTER LOGIC ---
   const filterData = (data, filterStatus) => {
     if (!Array.isArray(data)) return [];
     return data.filter((trx) => {
@@ -322,181 +321,33 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex font-sans overflow-hidden relative">
-      {/* --- POPUP MODAL TARIK DANA --- */}
-      {isWithdrawModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
-          <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl animate-fade-in-up">
-            <div className="flex justify-between items-center mb-4 border-b pb-3">
-              <h3 className="text-xl font-bold text-gray-800">
-                💸 Tarik Dana Ke Rekening
-              </h3>
-              <button
-                onClick={() => setIsWithdrawModalOpen(false)}
-                className="text-gray-400 hover:text-red-500 font-bold text-xl"
-              >
-                &times;
-              </button>
-            </div>
-            <form onSubmit={handleWithdraw} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Sumber Kas
-                </label>
-                <select
-                  value={withdrawForm.source}
-                  onChange={(e) =>
-                    setWithdrawForm({ ...withdrawForm, source: e.target.value })
-                  }
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
-                >
-                  <option value="ZAKAT">Kas Zakat</option>
-                  <option value="SPP">Kas SPP / Operasional</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nominal (Rp)
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Contoh: 1000000"
-                  value={withdrawForm.amount}
-                  onChange={(e) => {
-                    let val = e.target.value.replace(/\D/g, "");
-                    setWithdrawForm({
-                      ...withdrawForm,
-                      amount: val ? Number(val).toLocaleString("id-ID") : "",
-                    });
-                  }}
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Keterangan / Keperluan
-                </label>
-                <textarea
-                  placeholder="Misal: Ditarik ke rekening BCA Yayasan"
-                  value={withdrawForm.note}
-                  onChange={(e) =>
-                    setWithdrawForm({ ...withdrawForm, note: e.target.value })
-                  }
-                  className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none resize-none"
-                  rows="2"
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={isWithdrawing}
-                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-lg transition disabled:bg-gray-400"
-              >
-                {isWithdrawing ? "Mencatat..." : "Catat Penarikan"}
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
+      <TarikDana
+        isWithdrawModalOpen={isWithdrawModalOpen}
+        setIsWithdrawModalOpen={setIsWithdrawModalOpen}
+        handleWithdraw={handleWithdraw}
+        withdrawForm={withdrawForm}
+        setWithdrawForm={setWithdrawForm}
+        isWithdrawing={isWithdrawing}
+      />
 
-      {/* --- SIDEBAR --- */}
-      <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-emerald-800 text-white flex-col lg:flex hidden`}
-      >
-        <div className="p-6 border-b border-emerald-700 flex items-center gap-3">
-          <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-emerald-800 font-bold text-xl">
-            Z
-          </div>
-          <div>
-            <h2 className="font-bold text-lg leading-tight">AdminPanel</h2>
-            <p className="text-xs text-emerald-300">ZakatKu & SPP</p>
-          </div>
-        </div>
-        <nav className="flex-1 p-4 space-y-2">
-          <a
-            href="#"
-            className="flex items-center gap-3 p-3 bg-emerald-700 rounded-lg text-white font-medium"
-          >
-            <span className="text-xl">📊</span> Dashboard
-          </a>
-        </nav>
-        <div className="p-4 border-t border-emerald-700 space-y-2">
-          <button
-            onClick={() => setIsWithdrawModalOpen(true)}
-            className="w-full flex items-center justify-center gap-2 p-3 bg-amber-500 hover:bg-amber-600 rounded-lg text-white font-bold transition"
-          >
-            💸 Tarik Dana
-          </button>
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 p-3 bg-red-500 hover:bg-red-600 rounded-lg text-white font-bold transition"
-          >
-            Keluar
-          </button>
-        </div>
-      </aside>
+      <Sidebar
+        setIsWithdrawModalOpen={setIsWithdrawModalOpen}
+        handleLogout={handleLogout}
+      />
 
-      {/* --- MAIN CONTENT --- */}
       <main className="flex flex-col h-screen overflow-y-auto w-full lg:ml-64">
-        <header className="bg-white shadow-sm p-4 md:p-6 flex justify-between items-center sticky top-0 z-10">
-          <h1 className="text-2xl font-bold text-gray-800">Dashboard Utama</h1>
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => setIsWithdrawModalOpen(true)}
-              className="lg:hidden bg-amber-500 text-white px-3 py-1.5 rounded-lg text-sm font-bold"
-            >
-              💸 Tarik
-            </button>
-            <div className="text-right hidden sm:block">
-              <p className="text-sm font-bold text-gray-800">{adminName}</p>
-              <p className="text-xs text-gray-500">Administrator</p>
-            </div>
-          </div>
-        </header>
+        <NavDashboard
+          setIsWithdrawModalOpen={setIsWithdrawModalOpen}
+          adminName={adminName}
+        />
 
         <div className="p-4 md:p-6 space-y-6">
-          {/* ✨ KARTU STATISTIK ✨ */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6">
-            <div className="bg-emerald-600 text-white p-6 rounded-2xl shadow-md border border-emerald-700 flex flex-col col-span-1 md:col-span-2">
-              <p className="text-emerald-100 text-sm font-medium mb-1">
-                Total Saldo Bersih Saat Ini
-              </p>
-              <h3 className="text-4xl font-bold">
-                Rp {totalSaldoBersih.toLocaleString("id-ID")}
-              </h3>
-              <p className="text-emerald-200 text-xs mt-3 font-medium">
-                Pemasukan: Rp {totalKotor.toLocaleString("id-ID")} | Ditarik: Rp{" "}
-                {totalDitarik.toLocaleString("id-ID")}
-              </p>
-            </div>
-            <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col justify-center">
-              <p className="text-gray-500 text-xs font-bold mb-2 uppercase tracking-wider">
-                Pemasukan Kotor
-              </p>
-              <p className="text-sm text-gray-700 mb-1">
-                Kas Zakat:{" "}
-                <span className="font-bold text-emerald-600 ml-1">
-                  Rp {detailPendapatan.zakat.toLocaleString("id-ID")}
-                </span>
-              </p>
-              <p className="text-sm text-gray-700">
-                Kas SPP:{" "}
-                <span className="font-bold text-blue-600 ml-1">
-                  Rp {detailPendapatan.spp.toLocaleString("id-ID")}
-                </span>
-              </p>
-            </div>
-            <div className="bg-orange-50 p-5 rounded-2xl shadow-sm border border-orange-100 flex flex-col justify-center">
-              <p className="text-orange-800 text-sm font-bold mb-1">
-                Menunggu Verifikasi
-              </p>
-              <h3 className="text-3xl font-bold text-orange-600">
-                {pendingVerifikasi} TRX
-              </h3>
-              <p className="text-orange-600/70 text-xs mt-1 font-medium">
-                {totalOrang} Pembayar Aktif
-              </p>
-            </div>
-          </div>
+          {/* ✨ KARTU STATISTIK YANG SUDAH DIPISAH ✨ */}
+          <Card
+            saldoSPP={saldoSPP}
+            saldoZakat={saldoZakat}
+            totalOrang={totalOrang}
+          />
 
           {/* TAB TRANSAKSI */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mt-4">
@@ -516,216 +367,31 @@ export default function AdminDashboard() {
             </div>
 
             {/* KONTEN TAB ZAKAT */}
-            {activeTab === "zakat" && (
-              <div>
-                <div className="p-6 border-b border-gray-100 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
-                  <h3 className="text-lg font-bold text-gray-900">
-                    Riwayat Kas Zakat
-                  </h3>
-                  <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
-                    <select
-                      value={filterBulanZakat}
-                      onChange={(e) => setFilterBulanZakat(e.target.value)}
-                      className="border rounded-lg px-3 py-2 text-sm outline-none focus:border-emerald-500"
-                    >
-                      <option value="semua">Semua Waktu</option>
-                      <option value="bulan_ini">Bulan Ini</option>
-                      <option value="bulan_lalu">Bulan Lalu</option>
-                    </select>
-                    <button
-                      onClick={handleDeleteLama}
-                      className="bg-red-50 text-red-600 px-4 py-2 rounded-lg text-sm font-bold hover:bg-red-100"
-                    >
-                      Bersihkan Lama
-                    </button>
-                    <button
-                      onClick={() =>
-                        handleOpenSpreadsheet(SPREADSHEET_URL_ZAKAT)
-                      }
-                      className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-emerald-700 transition"
-                    >
-                      📄 Buka Spreadsheet Zakat
-                    </button>
-                  </div>
-                </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-sm text-gray-600">
-                    <thead className="bg-emerald-50 text-emerald-800 font-semibold">
-                      <tr>
-                        <th className="px-6 py-4">Tanggal</th>
-                        <th className="px-6 py-4">Nama</th>
-                        <th className="px-6 py-4">Jenis</th>
-                        <th className="px-6 py-4">Nominal</th>
-                        <th className="px-6 py-4">Status</th>
-                        <th className="px-6 py-4 text-center">Aksi</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-50">
-                      {dataTampilZakat.length === 0 ? (
-                        <tr>
-                          <td
-                            colSpan="6"
-                            className="px-6 py-8 text-center text-gray-400"
-                          >
-                            Belum ada data.
-                          </td>
-                        </tr>
-                      ) : (
-                        dataTampilZakat.map((trx) => (
-                          <tr
-                            key={trx.id}
-                            className="hover:bg-gray-50 transition"
-                          >
-                            <td className="px-6 py-4">
-                              {new Date(trx.createdAt).toLocaleDateString(
-                                "id-ID",
-                              )}
-                            </td>
-                            <td className="px-6 py-4 font-medium text-gray-900">
-                              {trx.name}
-                            </td>
-                            <td className="px-6 py-4 capitalize">
-                              Zakat {trx.zakatType}
-                            </td>
-                            <td className="px-6 py-4 font-bold text-emerald-600">
-                              Rp {trx.amount.toLocaleString("id-ID")}
-                            </td>
-                            <td className="px-6 py-4">
-                              {/* ✨ MENGGUNAKAN STATUS BADGE ✨ */}
-                              <StatusBadge status={trx.status} />
-                            </td>
-                            <td className="px-6 py-4 text-center flex items-center justify-center gap-2">
-                              {/* ✨ TOMBOL KONFIRMASI (MUNCUL JIKA TUNAI) ✨ */}
-                              {trx.status === "PENDING_TUNAI" && (
-                                <button
-                                  onClick={() =>
-                                    handleKonfirmasi(trx.id, "ZAKAT")
-                                  }
-                                  className="bg-amber-500 hover:bg-amber-600 text-white px-3 py-1.5 rounded-md text-xs font-bold transition-all shadow-sm"
-                                >
-                                  ✅ Terima Tunai
-                                </button>
-                              )}
-                              <button
-                                onClick={() => handleDeleteSingle(trx.id)}
-                                className="text-red-500 hover:bg-red-50 p-2 rounded-full"
-                              >
-                                🗑️
-                              </button>
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
-
+            <TableZakat
+              filterBulanZakat={filterBulanZakat}
+              setFilterBulanZakat={setFilterBulanZakat}
+              handleDeleteLama={handleDeleteLama}
+              handleOpenSpreadsheet={handleOpenSpreadsheet}
+              handleDeleteSingle={handleDeleteSingle}
+              activeTab={activeTab}
+              dataTampilZakat={dataTampilZakat}
+              StatusBadge={StatusBadge}
+              SPREADSHEET_URL_ZAKAT={SPREADSHEET_URL_ZAKAT}
+              handleKonfirmasi={handleKonfirmasi}
+            />
             {/* KONTEN TAB SPP */}
-            {activeTab === "spp" && (
-              <div>
-                <div className="p-6 border-b border-gray-100 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
-                  <h3 className="text-lg font-bold text-gray-900">
-                    Riwayat Kas SPP
-                  </h3>
-                  <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
-                    <select
-                      value={filterBulanSPP}
-                      onChange={(e) => setFilterBulanSPP(e.target.value)}
-                      className="border rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-500"
-                    >
-                      <option value="semua">Semua Waktu</option>
-                      <option value="bulan_ini">Bulan Ini</option>
-                      <option value="bulan_lalu">Bulan Lalu</option>
-                    </select>
-                    <button
-                      onClick={handleDeleteLamaSPP}
-                      className="bg-red-50 text-red-600 px-4 py-2 rounded-lg text-sm font-bold hover:bg-red-100"
-                    >
-                      Bersihkan Lama
-                    </button>
-                    <button
-                      onClick={() => handleOpenSpreadsheet(SPREADSHEET_URL_SPP)}
-                      className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 transition"
-                    >
-                      📄 Buka Spreadsheet SPP
-                    </button>
-                  </div>
-                </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-sm text-gray-600">
-                    <thead className="bg-blue-50 text-blue-800 font-semibold">
-                      <tr>
-                        <th className="px-6 py-4">Tanggal</th>
-                        <th className="px-6 py-4">Nama Siswa</th>
-                        <th className="px-6 py-4">Tagihan</th>
-                        <th className="px-6 py-4">Nominal</th>
-                        <th className="px-6 py-4">Status</th>
-                        <th className="px-6 py-4 text-center">Aksi</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-50">
-                      {dataTampilSPP.length === 0 ? (
-                        <tr>
-                          <td
-                            colSpan="6"
-                            className="px-6 py-8 text-center text-gray-400"
-                          >
-                            Belum ada data.
-                          </td>
-                        </tr>
-                      ) : (
-                        dataTampilSPP.map((spp) => (
-                          <tr
-                            key={spp.id}
-                            className="hover:bg-gray-50 transition"
-                          >
-                            <td className="px-6 py-4">
-                              {new Date(spp.createdAt).toLocaleDateString(
-                                "id-ID",
-                              )}
-                            </td>
-                            <td className="px-6 py-4 font-medium text-gray-900">
-                              {spp.studentName}
-                            </td>
-                            <td className="px-6 py-4 capitalize">
-                              {spp.sppType} ({spp.paymentMonth})
-                            </td>
-                            <td className="px-6 py-4 font-bold text-blue-600">
-                              Rp {spp.amount.toLocaleString("id-ID")}
-                            </td>
-                            <td className="px-6 py-4">
-                              {/* ✨ MENGGUNAKAN STATUS BADGE ✨ */}
-                              <StatusBadge status={spp.status} />
-                            </td>
-                            <td className="px-6 py-4 text-center flex items-center justify-center gap-2">
-                              {/* ✨ TOMBOL KONFIRMASI (MUNCUL JIKA TUNAI) ✨ */}
-                              {spp.status === "PENDING_TUNAI" && (
-                                <button
-                                  onClick={() =>
-                                    handleKonfirmasi(spp.id, "SPP")
-                                  }
-                                  className="bg-amber-500 hover:bg-amber-600 text-white px-3 py-1.5 rounded-md text-xs font-bold transition-all shadow-sm"
-                                >
-                                  ✅ Terima Tunai
-                                </button>
-                              )}
-                              <button
-                                onClick={() => handleDeleteSingleSPP(spp.id)}
-                                className="text-red-500 hover:bg-red-50 p-2 rounded-full"
-                              >
-                                🗑️
-                              </button>
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
+            <TableSPP
+              activeTab={activeTab}
+              filterBulanSPP={filterBulanSPP}
+              setFilterBulanSPP={setFilterBulanSPP}
+              handleDeleteLamaSPP={handleDeleteLamaSPP}
+              handleOpenSpreadsheet={handleOpenSpreadsheet}
+              handleDeleteSingleSPP={handleDeleteSingleSPP}
+              dataTampilSPP={dataTampilSPP}
+              StatusBadge={StatusBadge}
+              SPREADSHEET_URL_SPP={SPREADSHEET_URL_SPP}
+              handleKonfirmasi={handleKonfirmasi}
+            />
           </div>
         </div>
       </main>

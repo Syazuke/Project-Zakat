@@ -20,7 +20,7 @@ export async function POST(request) {
       { status: 200 },
     );
   } catch (error) {
-    console.error("Gagal mencatat penarikan:", error);
+    console.error("Gagal mencatat penyaluran:", error);
     return NextResponse.json(
       { message: "Terjadi kesalahan server" },
       { status: 500 },
