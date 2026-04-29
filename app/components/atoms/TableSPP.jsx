@@ -14,6 +14,8 @@ const TableSPP = ({
   SPREADSHEET_URL_SPP,
   handleKonfirmasi,
 }) => {
+  const SPREADSHEET_URL_Penggunaan_SPP =
+    "https://docs.google.com/spreadsheets/d/15UptL0nXC3c-BPoMH4QoWxSebbFfHVDAb3C6ghzwEiA/edit?usp=sharing";
   return (
     <div>
       {" "}
@@ -25,7 +27,7 @@ const TableSPP = ({
               <select
                 value={filterBulanSPP}
                 onChange={(e) => setFilterBulanSPP(e.target.value)}
-                className="border rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-500"
+                className="border rounded-lg px-2 py-2 text-xs outline-none focus:border-blue-500"
               >
                 <option value="semua">Semua Waktu</option>
                 <option value="bulan_ini">Bulan Ini</option>
@@ -33,15 +35,23 @@ const TableSPP = ({
               </select>
               <button
                 onClick={handleDeleteLamaSPP}
-                className="bg-red-50 text-red-600 px-4 py-2 rounded-lg text-sm font-bold hover:bg-red-100"
+                className="bg-red-50 text-red-600 px-2 py-2 rounded-lg text-xs font-semibold hover:bg-red-100"
               >
                 Bersihkan Lama
               </button>
               <button
                 onClick={() => handleOpenSpreadsheet(SPREADSHEET_URL_SPP)}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 transition"
+                className="bg-blue-600 text-white px-2 py-2 rounded-lg text-xs font-semibold hover:bg-blue-700 transition"
               >
-                📄 Buka Spreadsheet SPP
+                📄 Laporan Pemasukan SPP
+              </button>
+              <button
+                onClick={() =>
+                  handleOpenSpreadsheet(SPREADSHEET_URL_Penggunaan_SPP)
+                }
+                className="bg-blue-600 text-white px-2 py-2 rounded-lg text-xs font-semibold hover:bg-blue-700 transition"
+              >
+                📄 Laporan Penggunaan SPP
               </button>
             </div>
           </div>
@@ -53,6 +63,7 @@ const TableSPP = ({
                   <th className="px-6 py-4">Nama Siswa</th>
                   <th className="px-6 py-4">Tagihan</th>
                   <th className="px-6 py-4">Nominal</th>
+                  <th className="px-6 py-4">Keterangan</th>
                   <th className="px-6 py-4">Status</th>
                   <th className="px-6 py-4 text-center">Aksi</th>
                 </tr>
@@ -82,6 +93,7 @@ const TableSPP = ({
                       <td className="px-6 py-4 font-bold text-blue-600">
                         Rp {spp.amount.toLocaleString("id-ID")}
                       </td>
+                      <td className="px-6 py-4">{spp.message}</td>
                       <td className="px-6 py-4">
                         <StatusBadge status={spp.status} />
                       </td>

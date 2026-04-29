@@ -41,7 +41,6 @@ export async function POST(request) {
           data: { status: "SUCCESS" },
         });
 
-        // 📦 HANYA 6 DATA
         dataExcel = {
           tanggal: new Date().toLocaleString("id-ID", {
             timeZone: "Asia/Jakarta",

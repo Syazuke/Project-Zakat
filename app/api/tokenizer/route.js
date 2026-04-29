@@ -45,9 +45,6 @@ export async function POST(request) {
     let newTransaction;
     let orderIdMidtrans = "";
 
-    // ========================================================
-    // ✨ PERCABANGAN GUDANG (ZAKAT vs SPP)
-    // ========================================================
     if (isSPP) {
       newTransaction = await prisma.sppTransaction.create({
         data: {
@@ -77,19 +74,14 @@ export async function POST(request) {
       orderIdMidtrans = `ZAKAT-${newTransaction.id}`;
     }
 
-    // ========================================================
-    // ✨ JIKA TUNAI: LANGSUNG KIRIM KE GOOGLE SHEETS & POTONG JALAN
-    // ========================================================
     if (dataBersih.metode === "tunai") {
       try {
-        // ⚠️ MASUKKAN URL SPREADSHEET ANDA DI SINI
         const GOOGLE_SHEET_URL_SPP =
           "https://script.google.com/macros/s/AKfycbwRabFBQg5xrhmG6wwdUrorCd2jAAMNAR2Tfi4ew7HSFnJ8F4QOoi_Se5-lrpugCGlJFw/exec";
         const GOOGLE_SHEET_URL_ZAKAT =
           "https://script.google.com/macros/s/AKfycbwEcV1fRA0xe_pCHd0lnEZGI5rbYZfXGw-LtKnX-xdRSV7lAPZbnIeYOrRWWOXl3hg/exec";
         const targetUrl = isSPP ? GOOGLE_SHEET_URL_SPP : GOOGLE_SHEET_URL_ZAKAT;
 
-        // 📦 PASTIKAN HANYA 6 DATA (Persis seperti format Webhook)
         const dataExcel = {
           tanggal: new Date().toLocaleString("id-ID", {
             timeZone: "Asia/Jakarta",
@@ -111,16 +103,12 @@ export async function POST(request) {
         console.error("Gagal kirim sheet tunai", err);
       }
 
-      // Bypass Midtrans (Langsung sukses)
       return NextResponse.json(
         { isTunai: true, message: "Berhasil dicatat sebagai Tunai" },
         { status: 200 },
       );
     }
 
-    // ========================================================
-    // ✨ JIKA ONLINE: BANGUNKAN MIDTRANS
-    // ========================================================
     const serverKey = isSPP
       ? process.env.MIDTRANS_SERVER_KEY_SPP
       : process.env.MIDTRANS_SERVER_KEY_Zakat;

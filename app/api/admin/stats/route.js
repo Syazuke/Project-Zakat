@@ -88,9 +88,9 @@ export async function GET() {
     return NextResponse.json(
       {
         detailZakat: totalAmountZakat,
-        zakatDitarik: zakatDitarik, // 👈 Frontend sekarang bisa membaca ini!
+        zakatDitarik: zakatDitarik,
         detailSPP: totalAmountSPP,
-        sppDitarik: sppDitarik, // 👈 Frontend sekarang bisa membaca ini!
+        sppDitarik: sppDitarik,
         totalMuzakki: totalMuzakkiZakat + totalSiswaSPP,
         pendingVerifikasi: pendingZakat + pendingSPP,
       },

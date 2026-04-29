@@ -14,6 +14,8 @@ const TableZakat = ({
   SPREADSHEET_URL_ZAKAT,
   handleKonfirmasi,
 }) => {
+  const SPREADSHEET_URL_Penyaluran_ZAKAT =
+    "https://docs.google.com/spreadsheets/d/1q0Inp0UdRk_aQbQqa0Hj7bRE52crtFKEGcxQljcHGyU/edit?usp=sharing";
   return (
     <div>
       {activeTab === "zakat" && (
@@ -26,7 +28,7 @@ const TableZakat = ({
               <select
                 value={filterBulanZakat}
                 onChange={(e) => setFilterBulanZakat(e.target.value)}
-                className="border rounded-lg px-3 py-2 text-sm outline-none focus:border-emerald-500"
+                className="border rounded-lg px-2 py-2 text-xs outline-none focus:border-emerald-500"
               >
                 <option value="semua">Semua Waktu</option>
                 <option value="bulan_ini">Bulan Ini</option>
@@ -34,15 +36,23 @@ const TableZakat = ({
               </select>
               <button
                 onClick={handleDeleteLama}
-                className="bg-red-50 text-red-600 px-4 py-2 rounded-lg text-sm font-bold hover:bg-red-100"
+                className="bg-red-50 text-red-600 px-2 py-2 rounded-lg text-xs font-semibold hover:bg-red-100"
               >
-                Bersihkan Lama
+                Bersihkan 1 bulan lalu
               </button>
               <button
                 onClick={() => handleOpenSpreadsheet(SPREADSHEET_URL_ZAKAT)}
-                className="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-emerald-700 transition"
+                className="bg-emerald-600 text-white px-2 py-2 rounded-lg text-xs font-semibold hover:bg-emerald-700 transition"
               >
-                📄 Buka Spreadsheet Zakat
+                📄 Laporan Pemasukkan Zakat
+              </button>
+              <button
+                onClick={() =>
+                  handleOpenSpreadsheet(SPREADSHEET_URL_Penyaluran_ZAKAT)
+                }
+                className="bg-emerald-600 text-white px-2 py-2 rounded-lg text-xs font-semibold hover:bg-emerald-700 transition"
+              >
+                📄 Laporan Penyaluran Zakat
               </button>
             </div>
           </div>
@@ -54,6 +64,7 @@ const TableZakat = ({
                   <th className="px-6 py-4">Nama</th>
                   <th className="px-6 py-4">Jenis</th>
                   <th className="px-6 py-4">Nominal</th>
+                  <th className="px-6 py-4">Keterangan</th>
                   <th className="px-6 py-4">Status</th>
                   <th className="px-6 py-4 text-center">Aksi</th>
                 </tr>
@@ -83,6 +94,7 @@ const TableZakat = ({
                       <td className="px-6 py-4 font-bold text-emerald-600">
                         Rp {trx.amount.toLocaleString("id-ID")}
                       </td>
+                      <td className="px-6 py-4">{trx.message}</td>
                       <td className="px-6 py-4">
                         <StatusBadge status={trx.status} />
                       </td>
