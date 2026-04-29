@@ -2,8 +2,8 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import TarikDana from "@/app/components/atoms/tarikDana";
-import Sidebar from "@/app/components/atoms/sidebar";
+import TarikDana from "@/app/components/atoms/TarikDana";
+import Sidebar from "@/app/components/atoms/Sidebar";
 import NavDashboard from "@/app/components/atoms/NavDashboard";
 import Card from "@/app/components/atoms/Card";
 import TableZakat from "@/app/components/atoms/TableZakat";
