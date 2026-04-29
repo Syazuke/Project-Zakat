@@ -19,7 +19,6 @@ export default function AdminDashboard() {
   const [adminName, setAdminName] = useState("");
   const [isLoading, setIsLoading] = useState(true);
 
-  // ✨ STATE BARU: SALDO DIPISAH TOTAL ✨
   const [saldoZakat, setSaldoZakat] = useState({
     kotor: 0,
     ditarik: 0,

@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 
 const Navigation = () => {
   const pathname = usePathname();
-
   if (pathname.startsWith("/admin" || "/login")) {
     return null;
   }
