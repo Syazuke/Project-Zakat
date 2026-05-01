@@ -42,6 +42,12 @@ const Zakat = ({ nominalZakat, Type }) => {
       onClose: function () {
         setIsLoading(false);
       },
+      onCancel: function () {
+        alert("Pembayaran di cancel!");
+        setSnapToken(null);
+        setIsLoading(false);
+        setIsPending(false);
+      },
     });
   };
 

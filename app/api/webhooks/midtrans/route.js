@@ -48,7 +48,6 @@ export async function POST(request) {
           nama: trx.name || "Hamba Allah",
           jenis: `Zakat ${trx.zakatType}`,
           keterangan: trx.message || "-",
-          // ✨ UPDATE FORMAT LAPORAN KEUANGAN
           nominalKotor: `Rp ${grossAmount.toLocaleString("id-ID")}`,
           biayaAdmin: `- Rp ${biayaAdminGateway.toLocaleString("id-ID")}`,
           nominalBersih: `Rp ${nominalBersihKeBank.toLocaleString("id-ID")}`,
@@ -69,7 +68,6 @@ export async function POST(request) {
           jenis: trx.sppType,
           tagihan: `Bulan: ${trx.paymentMonth}`,
           keterangan: trx.message || "-",
-          // ✨ UPDATE FORMAT LAPORAN KEUANGAN
           nominalKotor: `Rp ${grossAmount.toLocaleString("id-ID")}`,
           biayaAdmin: `- Rp ${biayaAdminGateway.toLocaleString("id-ID")}`,
           nominalBersih: `Rp ${nominalBersihKeBank.toLocaleString("id-ID")}`,
