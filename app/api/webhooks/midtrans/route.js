@@ -87,7 +87,9 @@ export async function POST(request) {
       }
     } else if (
       transactionStatus === "expire" ||
-      transactionStatus === "cancel"
+      transactionStatus === "cancel" ||
+      transactionStatus === "deny" ||
+      transactionStatus === "failure"
     ) {
       if (orderId.startsWith("ZAKAT-")) {
         await prisma.zakatTransaction.update({
