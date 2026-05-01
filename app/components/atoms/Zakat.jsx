@@ -9,8 +9,10 @@ const Zakat = ({ nominalZakat, Type }) => {
   const [nominal, setZakat] = useState(nominalZakat || 0);
   const [jenisZakat, setJenisZakat] = useState(Type || "penghasilan");
 
-  // ✨ STATE UNTUK METODE PEMBAYARAN
+  // STATE METODE PEMBAYARAN
   const [metodeBayar, setMetodeBayar] = useState("online");
+  // ✨ STATE BARU: Untuk menyimpan pilihan spesifik bank/e-wallet
+  const [pilihanBank, setPilihanBank] = useState("qris");
 
   const [snapToken, setSnapToken] = useState(null);
   const [isPending, setIsPending] = useState(false);
@@ -52,13 +54,14 @@ const Zakat = ({ nominalZakat, Type }) => {
     setIsLoading(true);
     const namaValid = nama.trim() === "" ? "Hamba Allah" : nama;
 
-    // ✨ TAMBAHKAN METODE KE DALAM DATA TRANSAKSI
+    // ✨ TAMBAHKAN PILIHAN_METODE KE DALAM DATA TRANSAKSI
     const dataTransaksi = {
       nama: namaValid,
       pesan: pesan,
       nominal: nominal,
       Type: jenisZakat,
-      metode: metodeBayar, // Dikirim ke backend
+      metode: metodeBayar,
+      pilihan_metode: metodeBayar === "online" ? pilihanBank : "", // 👈 Dikirim ke Tokenizer
     };
 
     try {
@@ -75,14 +78,14 @@ const Zakat = ({ nominalZakat, Type }) => {
 
       const result = await response.json();
 
-      // ✨ LOGIKA JIKA TUNAI
+      // LOGIKA JIKA TUNAI
       if (result.isTunai) {
         alert("Pencatatan Tunai Berhasil! Silakan serahkan zakat ke admin.");
         window.location.reload();
         return;
       }
 
-      // ✨ LOGIKA JIKA ONLINE
+      // LOGIKA JIKA ONLINE
       const { token, clientKey } = result;
       const scriptTag = document.querySelector('script[src*="snap.js"]');
       if (scriptTag && clientKey) {
@@ -143,7 +146,7 @@ const Zakat = ({ nominalZakat, Type }) => {
         </select>
       </div>
 
-      {/* ✨ PILIHAN METODE PEMBAYARAN ✨ */}
+      {/* METODE PEMBAYARAN */}
       <div className="bg-white p-4 rounded-lg border border-emerald-100">
         <label className="block text-sm font-bold text-emerald-800 mb-3">
           Pilih Metode Pembayaran
@@ -176,6 +179,41 @@ const Zakat = ({ nominalZakat, Type }) => {
             <span className="text-sm font-bold">💵 Tunai</span>
           </label>
         </div>
+
+        {/* ✨ MUNCUL JIKA PILIH ONLINE SAJA ✨ */}
+        {metodeBayar === "online" && (
+          <div className="mt-4 pt-4 border-t border-emerald-100 animate-fade-in">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Pilih Pembayaran Online:
+            </label>
+            <select
+              value={pilihanBank}
+              onChange={(e) => setPilihanBank(e.target.value)}
+              disabled={snapToken !== null}
+              className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-500 outline-none bg-white text-sm"
+            >
+              <option value="qris">QRIS (Biaya 0.7%)</option>
+              <option value="gopay">GoPay (Biaya 2%)</option>
+              <option value="dana">DANA (Biaya 1.5%)</option>
+              <option value="bca_va">
+                Virtual Account BCA (Biaya Rp 4.000)
+              </option>
+              <option value="bni_va">
+                Virtual Account BNI (Biaya Rp 4.000)
+              </option>
+              <option value="bri_va">
+                Virtual Account BRI (Biaya Rp 4.000)
+              </option>
+              <option value="mandiri_va">
+                Virtual Account Mandiri (Biaya Rp 4.000)
+              </option>
+            </select>
+            <p className="text-xs text-gray-500 mt-2">
+              *Biaya layanan gateway akan ditambahkan secara otomatis pada total
+              tagihan.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Input Nominal */}
@@ -255,7 +293,7 @@ const Zakat = ({ nominalZakat, Type }) => {
             ? "Memproses..."
             : metodeBayar === "tunai"
               ? "Catat Pembayaran Tunai"
-              : `Bayar Online (Rp ${nominal.toLocaleString("id-ID")})`}
+              : `Lanjut Pembayaran`}
         </button>
       )}
     </div>

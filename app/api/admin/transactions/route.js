@@ -56,16 +56,14 @@ export async function PATCH(request) {
     const GOOGLE_SHEET_URL_ZAKAT_MASUK =
       "https://script.google.com/macros/s/AKfycbwEcV1fRA0xe_pCHd0lnEZGI5rbYZfXGw-LtKnX-xdRSV7lAPZbnIeYOrRWWOXl3hg/exec";
     const GOOGLE_SHEET_URL_SPP_MASUK =
-      "https://script.google.com/macros/s/AKfycbwevzDVjL_8pG-FRntzXxDDfhJdAM622flsKDpEDwv08wD97rwotvYqeIvauRiRtUs3IQ/exec";
+      "https://script.google.com/macros/s/AKfycbwRabFBQg5xrhmG6wwdUrorCd2jAAMNAR2Tfi4ew7HSFnJ8F4QOoi_Se5-lrpugCGlJFw/exec";
 
     if (type === "SPP") {
-      // 1. Update ke Database & ambil data terbarunya (trx)
       const trx = await prisma.sppTransaction.update({
         where: { id: id },
         data: { status: "settlement" },
       });
 
-      // 2. Susun Data untuk dikirim ke Excel Pemasukan SPP
       const dataExcel = {
         tanggal: new Date().toLocaleString("id-ID", {
           timeZone: "Asia/Jakarta",
@@ -74,8 +72,8 @@ export async function PATCH(request) {
         jenis: trx.sppType,
         tagihan: `Bulan: ${trx.paymentMonth}`,
         keterangan: trx.message || "TUNAI",
-        nominalKotor: `Rp ${trx.amount.toLocaleString("id-ID")}`,
-        biayaAdmin: `Rp 0`, // Tunai potongannya nol
+        nominal: `Rp ${trx.amount.toLocaleString("id-ID")}`,
+        biayaAdmin: `Rp 0`,
         nominalBersih: `Rp ${trx.amount.toLocaleString("id-ID")}`,
       };
 
@@ -86,13 +84,11 @@ export async function PATCH(request) {
         body: JSON.stringify(dataExcel),
       }).catch((err) => console.error("Gagal kirim ke Sheets SPP:", err));
     } else if (type === "ZAKAT") {
-      // 1. Update ke Database & ambil data terbarunya (trx)
       const trx = await prisma.zakatTransaction.update({
         where: { id: id },
         data: { status: "settlement" },
       });
 
-      // 2. Susun Data untuk dikirim ke Excel Pemasukan Zakat
       const dataExcel = {
         tanggal: new Date().toLocaleString("id-ID", {
           timeZone: "Asia/Jakarta",
@@ -106,7 +102,6 @@ export async function PATCH(request) {
         nominalBersih: `Rp ${trx.amount.toLocaleString("id-ID")}`,
       };
 
-      // 3. Eksekusi pengiriman
       await fetch(GOOGLE_SHEET_URL_ZAKAT_MASUK, {
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" },

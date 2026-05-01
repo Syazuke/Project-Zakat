@@ -8,8 +8,11 @@ const FormSpp = () => {
   const [bulanTagihan, setBulanTagihan] = useState([]);
   const [nominal, setNominal] = useState(0);
   const [pesan, setPesan] = useState("");
-  const [metodeBayar, setMetodeBayar] = useState("online"); // ✨ STATE BARU
   const [isLoading, setIsLoading] = useState(false);
+
+  // ✨ STATE METODE PEMBAYARAN
+  const [metodeBayar, setMetodeBayar] = useState("online");
+  const [pilihanBank, setPilihanBank] = useState("qris"); // STATE BARU
 
   const [snapToken, setSnapToken] = useState(null);
   const [isPending, setIsPending] = useState(false);
@@ -49,6 +52,7 @@ const FormSpp = () => {
         setNominal(parsedData.nominal);
         setPesan(parsedData.pesan);
         setMetodeBayar(parsedData.metode || "online");
+        setPilihanBank(parsedData.pilihanBank || "qris"); // Muat pilihan bank
         setIsPending(true);
       } catch (error) {
         console.error("Gagal membaca memori:", error);
@@ -126,13 +130,15 @@ const FormSpp = () => {
     const bulanFinal =
       jenisSpp === "SPP" ? bulanTagihan.join(", ") : "Bukan Tagihan Bulanan";
 
+    // ✨ TAMBAHKAN PILIHAN BANK KE PAYLOAD
     const dataTransaksi = {
       nama: namaSiswa,
       pesan: pesan || "-",
       nominal: nominal,
-      zakatType: jenisSpp,
+      zakatType: jenisSpp, // Tokenizer Anda membaca variabel ini juga untuk SPP
       paymentMonth: bulanFinal,
-      metode: metodeBayar, // ✨ KIRIM METODE KE BACKEND
+      metode: metodeBayar,
+      pilihan_metode: metodeBayar === "online" ? pilihanBank : "", // 👈 Kunci utamanya
     };
 
     try {
@@ -149,7 +155,7 @@ const FormSpp = () => {
 
       const responseData = await response.json();
 
-      // ✨ LOGIKA BARU: JIKA BAYAR TUNAI, JANGAN PANGGIL MIDTRANS
+      // LOGIKA JIKA TUNAI
       if (responseData.isTunai) {
         alert(
           "✅ Pengajuan berhasil! Silakan serahkan uang tunai ke Admin / Tata Usaha.",
@@ -158,7 +164,7 @@ const FormSpp = () => {
         return;
       }
 
-      // Jika Online, panggil Midtrans seperti biasa
+      // LOGIKA JIKA ONLINE
       const { token, clientKey } = responseData;
       const scriptTag = document.querySelector('script[src*="snap.js"]');
       if (scriptTag && clientKey) {
@@ -175,6 +181,7 @@ const FormSpp = () => {
         nominal: nominal,
         pesan: pesan,
         metode: metodeBayar,
+        pilihanBank: pilihanBank, // Simpan juga pilihan banknya
       };
       localStorage.setItem("pending_trx_spp", JSON.stringify(paketData));
 
@@ -212,46 +219,98 @@ const FormSpp = () => {
         />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Jenis Tagihan
-          </label>
-          <select
-            value={jenisSpp}
-            onChange={(e) => {
-              const pilihanBaru = e.target.value;
-              setJenisSpp(pilihanBaru);
-              if (pilihanBaru !== "SPP") {
-                setNominal(0);
-                setBulanTagihan([]);
-              }
-            }}
-            disabled={snapToken !== null}
-            className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none transition bg-white cursor-pointer disabled:bg-gray-100 disabled:text-gray-500"
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Jenis Tagihan
+        </label>
+        <select
+          value={jenisSpp}
+          onChange={(e) => {
+            const pilihanBaru = e.target.value;
+            setJenisSpp(pilihanBaru);
+            if (pilihanBaru !== "SPP") {
+              setNominal(0);
+              setBulanTagihan([]);
+            }
+          }}
+          disabled={snapToken !== null}
+          className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none transition bg-white cursor-pointer disabled:bg-gray-100 disabled:text-gray-500"
+        >
+          <option value="SPP">Bulanan (SPP)</option>
+          <option value="Biaya Sekolah">
+            Biaya Tahunan / Bangunan / Lainnya
+          </option>
+        </select>
+      </div>
+
+      {/* ✨ METODE PEMBAYARAN BARU DENGAN TEMA BIRU ✨ */}
+      <div className="bg-white p-4 rounded-lg border border-blue-100">
+        <label className="block text-sm font-bold text-blue-800 mb-3">
+          Pilih Metode Pembayaran
+        </label>
+        <div className="grid grid-cols-2 gap-3">
+          <label
+            className={`flex items-center justify-center p-3 rounded-xl border-2 cursor-pointer transition-all ${metodeBayar === "online" ? "border-blue-500 bg-blue-50 text-blue-700" : "border-gray-200 hover:bg-gray-50"}`}
           >
-            <option value="SPP">Bulanan (SPP)</option>
-            <option value="Biaya Sekolah">
-              Biaya Tahunan / Bangunan / Lainnya
-            </option>
-          </select>
+            <input
+              type="radio"
+              className="hidden"
+              name="payment"
+              value="online"
+              checked={metodeBayar === "online"}
+              onChange={() => setMetodeBayar("online")}
+            />
+            <span className="text-sm font-bold">💳 Online</span>
+          </label>
+          <label
+            className={`flex items-center justify-center p-3 rounded-xl border-2 cursor-pointer transition-all ${metodeBayar === "tunai" ? "border-blue-500 bg-blue-50 text-blue-700" : "border-gray-200 hover:bg-gray-50"}`}
+          >
+            <input
+              type="radio"
+              className="hidden"
+              name="payment"
+              value="tunai"
+              checked={metodeBayar === "tunai"}
+              onChange={() => setMetodeBayar("tunai")}
+            />
+            <span className="text-sm font-bold">💵 Tunai</span>
+          </label>
         </div>
 
-        {/* ✨ INPUT METODE PEMBAYARAN BARU */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Metode Pembayaran
-          </label>
-          <select
-            value={metodeBayar}
-            onChange={(e) => setMetodeBayar(e.target.value)}
-            disabled={snapToken !== null}
-            className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none transition bg-white cursor-pointer disabled:bg-gray-100 disabled:text-gray-500"
-          >
-            <option value="online">Transfer Online (VA / QRIS)</option>
-            <option value="tunai">Bayar Tunai (Ke Admin)</option>
-          </select>
-        </div>
+        {/* MUNCUL JIKA PILIH ONLINE SAJA */}
+        {metodeBayar === "online" && (
+          <div className="mt-4 pt-4 border-t border-blue-100 animate-fade-in">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Pilih Pembayaran Online:
+            </label>
+            <select
+              value={pilihanBank}
+              onChange={(e) => setPilihanBank(e.target.value)}
+              disabled={snapToken !== null}
+              className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none bg-white text-sm"
+            >
+              <option value="qris">QRIS (Biaya 0.7%)</option>
+              <option value="gopay">GoPay (Biaya 2%)</option>
+              <option value="dana">DANA (Biaya 1.5%)</option>
+              <option value="bca_va">
+                Virtual Account BCA (Biaya Rp 4.000)
+              </option>
+              <option value="bni_va">
+                Virtual Account BNI (Biaya Rp 4.000)
+              </option>
+              <option value="bri_va">
+                Virtual Account BRI (Biaya Rp 4.000)
+              </option>
+              <option value="mandiri_va">
+                Virtual Account Mandiri (Biaya Rp 4.000)
+              </option>
+            </select>
+            <p className="text-xs text-gray-500 mt-2">
+              *Biaya layanan gateway akan ditambahkan secara otomatis pada total
+              tagihan.
+            </p>
+          </div>
+        )}
       </div>
 
       {jenisSpp === "SPP" && (
@@ -346,14 +405,14 @@ const FormSpp = () => {
             className={`text-sm mb-4 ${isPending ? "text-blue-600" : "text-orange-600"}`}
           >
             Anda sudah memilih metode bayar Online. Klik tombol di bawah untuk
-            melihat Nomor Virtual Account (VA).
+            melanjutkan ke pembayaran.
           </p>
           <button
             type="button"
             onClick={() => triggerSnapPopup(snapToken)}
             className="w-full font-bold py-3.5 rounded-lg transition-all shadow-md text-white hover:-translate-y-0.5 bg-blue-600 hover:bg-blue-700"
           >
-            Lihat Kode Pembayaran (VA)
+            Lanjutkan Pembayaran
           </button>
           <button
             type="button"
@@ -384,8 +443,8 @@ const FormSpp = () => {
           {isLoading
             ? "Memproses..."
             : metodeBayar === "tunai"
-              ? `Catat Tagihan Tunai (Rp ${nominal.toLocaleString("id-ID")})`
-              : `Bayar Online (Rp ${nominal.toLocaleString("id-ID")})`}
+              ? "Catat Tagihan Tunai"
+              : "Lanjut Pembayaran"}
         </button>
       )}
     </div>
