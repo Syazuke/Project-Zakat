@@ -140,9 +140,7 @@ const Zakat = ({ nominalZakat, Type }) => {
         >
           <option value="penghasilan">Zakat Penghasilan</option>
           <option value="maal">Zakat Maal</option>
-          <option value="fitrah">Zakat Fitrah</option>
           <option value="fidyah">Fidyah</option>
-          <option value="sedekah">Sedekah / Infaq</option>
         </select>
       </div>
 
