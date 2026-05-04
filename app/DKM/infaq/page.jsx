@@ -1,10 +1,10 @@
+import PaymentInfaq from "@/app/components/moleculs/PaymentInfaq";
 import React from "react";
-import PaymentSPP from "../components/moleculs/PaymentSPP";
 
 const page = () => {
   return (
     <div>
-      <PaymentSPP />
+      <PaymentInfaq />
     </div>
   );
 };

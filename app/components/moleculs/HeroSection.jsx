@@ -3,14 +3,24 @@
 import React from "react";
 import Image from "next/image";
 import Masjid from "@/app/assets/images/masjid.webp";
+import { useRouter } from "next/navigation";
 
 const HeroSection = () => {
+  const navigate = useRouter("");
   return (
     <section
       id="beranda"
-      className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 flex flex-col md:flex-row items-center gap-12"
+      className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 md:py-8 flex flex-col md:flex-row items-center gap-12"
     >
+      {" "}
       <div className="w-full md:w-1/2 flex flex-col gap-6">
+        <buton
+          onClick={() => navigate.push("/")}
+          className="flex gap-2 items-center cursor-pointer opacity-60 transition-all hover:text-emerald-400 duration-300 w-fit mb-4"
+        >
+          <i class="fa-solid fa-angle-left"></i>
+          <span>kembali</span>
+        </buton>
         <p className="bg-emerald-100 p-3 rounded-full w-fit">
           🌙 Ramadan Kareem - Bersedekahlah dengan ikhlas
         </p>
@@ -24,16 +34,16 @@ const HeroSection = () => {
         </p>
         <div className="flex gap-2">
           <a
-            href="/zakat"
+            href="/DKM/zakat"
             className="bg-white border-2 border-emerald-600 text-emerald-600 self-center py-3 px-6 rounded-lg font-semibold hover:bg-emerald-50 transition"
           >
-            Bayar Zakat disini
+            Tunaikan Zakat disini
           </a>
           <a
-            href="/SPP"
+            href="/DKM/infaq"
             className="bg-white border-2 border-emerald-600 text-emerald-600 self-center py-3 px-6 rounded-lg font-semibold hover:bg-emerald-50 transition"
           >
-            Bayar SPP disini
+            Tunaikan Infaq/Sadaqah disini
           </a>
         </div>
         <div className="flex flex-row item-center gap-4 pt-10">
