@@ -1,10 +1,10 @@
-import PaymentSPP from "@/app/components/moleculs/PaymentSPP";
+import PaymentZakat from "@/app/components/moleculs/Payment";
 import React from "react";
 
 const page = () => {
   return (
     <div>
-      <PaymentSPP />
+      <PaymentZakat />
     </div>
   );
 };
