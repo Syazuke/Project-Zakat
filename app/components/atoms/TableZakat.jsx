@@ -13,6 +13,7 @@ const TableZakat = ({
   StatusBadge,
   SPREADSHEET_URL_ZAKAT,
   handleKonfirmasi,
+  SPREADSHEET_URL_INFAQ,
 }) => {
   const SPREADSHEET_URL_Penyaluran_ZAKAT =
     "https://docs.google.com/spreadsheets/d/1q0Inp0UdRk_aQbQqa0Hj7bRE52crtFKEGcxQljcHGyU/edit?usp=sharing";
@@ -40,20 +41,28 @@ const TableZakat = ({
               >
                 Bersihkan 1 bulan lalu
               </button>
-              <button
-                onClick={() => handleOpenSpreadsheet(SPREADSHEET_URL_ZAKAT)}
-                className="bg-emerald-600 text-white px-2 py-2 rounded-lg text-xs font-semibold hover:bg-emerald-700 transition"
-              >
-                📄 Laporan Pemasukkan Zakat
-              </button>
-              <button
-                onClick={() =>
-                  handleOpenSpreadsheet(SPREADSHEET_URL_Penyaluran_ZAKAT)
-                }
-                className="bg-emerald-600 text-white px-2 py-2 rounded-lg text-xs font-semibold hover:bg-emerald-700 transition"
-              >
-                📄 Laporan Penyaluran Zakat
-              </button>
+              <div className="flex gap-5">
+                <button
+                  onClick={() => handleOpenSpreadsheet(SPREADSHEET_URL_ZAKAT)}
+                  className="bg-emerald-600 text-white px-2 py-2 rounded-lg text-xs font-semibold hover:bg-emerald-700 transition"
+                >
+                  📄 Laporan Pemasukkan Zakat
+                </button>
+                <button
+                  onClick={() =>
+                    handleOpenSpreadsheet(SPREADSHEET_URL_Penyaluran_ZAKAT)
+                  }
+                  className="bg-emerald-600 text-white px-2 py-2 rounded-lg text-xs font-semibold hover:bg-emerald-700 transition"
+                >
+                  📄 Laporan Penyaluran Zakat
+                </button>
+                <button
+                  onClick={() => handleOpenSpreadsheet(SPREADSHEET_URL_INFAQ)}
+                  className="bg-emerald-600 text-white px-2 py-2 rounded-lg text-xs font-semibold hover:bg-emerald-700 transition"
+                >
+                  📄 Laporan Pemasukan INFAQ
+                </button>
+              </div>
             </div>
           </div>
           <div className="overflow-x-auto">

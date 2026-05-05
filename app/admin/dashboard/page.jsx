@@ -14,6 +14,8 @@ export default function AdminDashboard() {
     "https://docs.google.com/spreadsheets/d/1iQLKVV6n_rC7297fcF7adkSfcY-PNYSNdjy-zrfp9r4/edit?usp=sharing";
   const SPREADSHEET_URL_SPP =
     "https://docs.google.com/spreadsheets/d/16jwSK4uiDIPqTKcEElfzfwZj-RXJ2Y2dYjyYvPRWNhI/edit?usp=sharing";
+  const SPREADSHEET_URL_INFAQ =
+    "https://docs.google.com/spreadsheets/d/1y68xX4MeYvfASl_w0lQLphpXGFQORE0VYikw2cIyIA0/edit?usp=sharing";
 
   const router = useRouter();
   const [adminName, setAdminName] = useState("");
@@ -377,6 +379,7 @@ export default function AdminDashboard() {
               StatusBadge={StatusBadge}
               SPREADSHEET_URL_ZAKAT={SPREADSHEET_URL_ZAKAT}
               handleKonfirmasi={handleKonfirmasi}
+              SPREADSHEET_URL_INFAQ={SPREADSHEET_URL_INFAQ}
             />
             {/* KONTEN TAB SPP */}
             <TableSPP

@@ -3,7 +3,6 @@ import Midtrans from "midtrans-client";
 import { prisma } from "@/app/libs/prisma";
 import { z } from "zod";
 
-// 1. Buku Aturan Zod (Sudah Pintar & Fleksibel)
 const PembayaranSchema = z.object({
   nama: z
     .string()
@@ -11,15 +10,10 @@ const PembayaranSchema = z.object({
     .default("Hamba Allah"),
   pesan: z.string().max(500, "Pesan kepanjangan!").optional(),
   nominal: z.number().min(10000, "Minimal pembayaran Rp 10.000"),
-
-  // Bisa menerima 'zakatType' (dari Zakat) atau 'Type' (dari SPP)
   zakatType: z.string().optional(),
   Type: z.string().optional(),
-
   paymentMonth: z.string().optional(),
-  metode: z.string().optional(), // Wajib untuk membedakan Tunai / Online
-
-  // ✨ BARU: Menangkap pilihan bank/e-wallet dari frontend web Anda
+  metode: z.string().optional(),
   pilihan_metode: z.string().optional(),
 });
 
@@ -37,7 +31,6 @@ export async function POST(request) {
 
     const dataBersih = validasi.data;
 
-    // GABUNGKAN CERDAS: Pakai 'Type' kalau ada, kalau tidak pakai 'zakatType'
     const jenisTransaksi =
       dataBersih.Type || dataBersih.zakatType || "Tidak Diketahui";
     const isSPP =
@@ -48,7 +41,6 @@ export async function POST(request) {
     let newTransaction;
     let orderIdMidtrans = "";
 
-    // Simpan ke Database (Menyimpan nominal ASLI tanpa biaya admin)
     if (isSPP) {
       newTransaction = await prisma.sppTransaction.create({
         data: {
@@ -78,7 +70,6 @@ export async function POST(request) {
       orderIdMidtrans = `ZAKAT-${newTransaction.id}`;
     }
 
-    // Jika tunai, langsung selesai tanpa panggil Midtrans
     if (dataBersih.metode === "tunai") {
       return NextResponse.json(
         { isTunai: true, message: "Berhasil dicatat sebagai PENDING_TUNAI" },
@@ -86,12 +77,9 @@ export async function POST(request) {
       );
     }
 
-    // ========================================================
-    // ✨ LOGIKA MENGHITUNG BIAYA ADMIN & MENGUNCI MIDTRANS ✨
-    // ========================================================
     let biayaAdmin = 0;
-    let kodeMidtrans = []; // Array untuk mengunci popup Midtrans
-    const metodeDipilih = dataBersih.pilihan_metode || ""; // Contoh: "bca_va", "qris"
+    let kodeMidtrans = [];
+    const metodeDipilih = dataBersih.pilihan_metode || "";
 
     if (metodeDipilih === "qris") {
       biayaAdmin = Math.floor(dataBersih.nominal * 0.007);
@@ -114,10 +102,9 @@ export async function POST(request) {
       kodeMidtrans = [metodeDipilih];
     } else if (metodeDipilih === "mandiri_va") {
       biayaAdmin = 4000;
-      kodeMidtrans = ["echannel"]; // Sandi khusus Midtrans untuk Mandiri
+      kodeMidtrans = ["echannel"];
     }
 
-    // Total yang harus ditransfer user
     const totalBayar = dataBersih.nominal + biayaAdmin;
 
     const serverKey = isSPP
@@ -133,11 +120,10 @@ export async function POST(request) {
       clientKey: clientKey,
     });
 
-    // 📦 SUSUN PARAMETER RAPI UNTUK MIDTRANS
     const parameterMidtrans = {
       transaction_details: {
         order_id: orderIdMidtrans,
-        gross_amount: totalBayar, // Tagihan sudah + biaya admin
+        gross_amount: totalBayar,
       },
       item_details: [
         {
@@ -154,7 +140,6 @@ export async function POST(request) {
       },
     };
 
-    // Tambahkan rincian biaya layanan jika ada
     if (biayaAdmin > 0) {
       parameterMidtrans.item_details.push({
         id: "fee-01",
@@ -164,12 +149,10 @@ export async function POST(request) {
       });
     }
 
-    // Kunci popup hanya untuk metode yang dipilih
     if (kodeMidtrans.length > 0) {
       parameterMidtrans.enabled_payments = kodeMidtrans;
     }
 
-    // Buat token
     const snapToken = await snap.createTransactionToken(parameterMidtrans);
 
     return NextResponse.json(

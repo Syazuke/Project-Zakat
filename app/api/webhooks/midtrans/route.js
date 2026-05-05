@@ -15,8 +15,9 @@ export async function POST(request) {
         "https://script.google.com/macros/s/AKfycbwEcV1fRA0xe_pCHd0lnEZGI5rbYZfXGw-LtKnX-xdRSV7lAPZbnIeYOrRWWOXl3hg/exec";
       const GOOGLE_SHEET_URL_SPP =
         "https://script.google.com/macros/s/AKfycbwRabFBQg5xrhmG6wwdUrorCd2jAAMNAR2Tfi4ew7HSFnJ8F4QOoi_Se5-lrpugCGlJFw/exec";
+      const GOOGLE_SHEET_URL_INFAQ =
+        "https://script.google.com/macros/s/AKfycbwn4GyHoVPSyIeyxUz1kfWLD6yBC-Aw86c-P23uQ-V53RQLgfMXX3tgjLJal1RPzqvjCQ/exec";
 
-      // 🧮 KALKULATOR POTONGAN MIDTRANS
       let biayaAdminGateway = 0;
 
       if (paymentType === "qris") {
@@ -29,7 +30,6 @@ export async function POST(request) {
         biayaAdminGateway = 4000;
       }
 
-      // Uang yang benar-benar masuk ke rekening yayasan/sekolah
       const nominalBersihKeBank = grossAmount - biayaAdminGateway;
 
       let targetSheetUrl = "";
@@ -53,7 +53,7 @@ export async function POST(request) {
           nominalBersih: `Rp ${nominalBersihKeBank.toLocaleString("id-ID")}`,
           status: `${trx.status} (${paymentType.toUpperCase()})`,
         };
-        targetSheetUrl = GOOGLE_SHEET_URL_ZAKAT;
+        targetSheetUrl = GOOGLE_SHEET_URL_ZAKAT || GOOGLE_SHEET_URL_INFAQ;
       } else if (orderId.startsWith("SPP-")) {
         const trx = await prisma.sppTransaction.update({
           where: { id: orderId.replace("SPP-", "") },
