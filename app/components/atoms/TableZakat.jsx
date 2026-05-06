@@ -17,6 +17,7 @@ const TableZakat = ({
 }) => {
   const SPREADSHEET_URL_Penyaluran_ZAKAT =
     "https://docs.google.com/spreadsheets/d/1q0Inp0UdRk_aQbQqa0Hj7bRE52crtFKEGcxQljcHGyU/edit?usp=sharing";
+
   return (
     <div>
       {activeTab === "zakat" && (
@@ -82,7 +83,7 @@ const TableZakat = ({
                 {dataTampilZakat.length === 0 ? (
                   <tr>
                     <td
-                      colSpan="6"
+                      colSpan="7"
                       className="px-6 py-8 text-center text-gray-400"
                     >
                       Belum ada data.
@@ -97,7 +98,11 @@ const TableZakat = ({
                       <td className="px-6 py-4 font-medium text-gray-900">
                         {trx.name}
                       </td>
-                      {penghasilan || maal || fidyah ? (
+
+                      {/* ✨ PERBAIKAN LOGIKA DI SINI ✨ */}
+                      {["penghasilan", "maal", "fidyah", "fitrah"].includes(
+                        trx.zakatType?.toLowerCase(),
+                      ) ? (
                         <td className="px-6 py-4 capitalize">
                           Zakat {trx.zakatType}
                         </td>
@@ -106,6 +111,7 @@ const TableZakat = ({
                           {trx.zakatType}
                         </td>
                       )}
+
                       <td className="px-6 py-4 font-bold text-emerald-600">
                         Rp {trx.amount.toLocaleString("id-ID")}
                       </td>
