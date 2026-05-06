@@ -138,9 +138,9 @@ const Zakat = ({ nominalZakat, Type }) => {
           disabled={snapToken !== null}
           className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-500 outline-none bg-white disabled:bg-gray-100"
         >
-          <option value="zakat penghasilan">Zakat Penghasilan</option>
-          <option value="zakat maal">Zakat Maal</option>
-          <option value="zakat fidyah">Fidyah</option>
+          <option value="Zakat penghasilan">Zakat Penghasilan</option>
+          <option value="Zakat maal">Zakat Maal</option>
+          <option value="Zakat fidyah">Fidyah</option>
         </select>
       </div>
 

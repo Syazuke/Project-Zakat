@@ -97,7 +97,15 @@ const TableZakat = ({
                       <td className="px-6 py-4 font-medium text-gray-900">
                         {trx.name}
                       </td>
-                      <td className="px-6 py-4 capitalize">{trx.zakatType}</td>
+                      {penghasilan || maal || fidyah ? (
+                        <td className="px-6 py-4 capitalize">
+                          Zakat {trx.zakatType}
+                        </td>
+                      ) : (
+                        <td className="px-6 py-4 capitalize">
+                          {trx.zakatType}
+                        </td>
+                      )}
                       <td className="px-6 py-4 font-bold text-emerald-600">
                         Rp {trx.amount.toLocaleString("id-ID")}
                       </td>
