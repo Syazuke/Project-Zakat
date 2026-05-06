@@ -53,7 +53,13 @@ export async function POST(request) {
           nominalBersih: `Rp ${nominalBersihKeBank.toLocaleString("id-ID")}`,
           status: `${trx.status} (${paymentType.toUpperCase()})`,
         };
-        targetSheetUrl = GOOGLE_SHEET_URL_ZAKAT || GOOGLE_SHEET_URL_INFAQ;
+
+        // ✨ PERBAIKAN LOGIKA PEMBAGIAN SHEET ZAKAT vs INFAQ ✨
+        if (trx.zakatType === "sedekah") {
+          targetSheetUrl = GOOGLE_SHEET_URL_INFAQ;
+        } else {
+          targetSheetUrl = GOOGLE_SHEET_URL_ZAKAT;
+        }
       } else if (orderId.startsWith("SPP-")) {
         const trx = await prisma.sppTransaction.update({
           where: { id: orderId.replace("SPP-", "") },

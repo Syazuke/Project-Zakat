@@ -20,7 +20,6 @@ export async function GET() {
       take: 50,
     });
 
-    // Kirim datanya kembali dalam format JSON
     return NextResponse.json({ transactions }, { status: 200 });
   } catch (error) {
     console.error("Error ambil data transaksi:", error);
@@ -58,6 +57,10 @@ export async function PATCH(request) {
     const GOOGLE_SHEET_URL_SPP_MASUK =
       "https://script.google.com/macros/s/AKfycbwRabFBQg5xrhmG6wwdUrorCd2jAAMNAR2Tfi4ew7HSFnJ8F4QOoi_Se5-lrpugCGlJFw/exec";
 
+    // ✨ TAMBAHAN URL INFAQ
+    const GOOGLE_SHEET_URL_INFAQ_MASUK =
+      "https://script.google.com/macros/s/AKfycbwn4GyHoVPSyIeyxUz1kfWLD6yBC-Aw86c-P23uQ-V53RQLgfMXX3tgjLJal1RPzqvjCQ/exec";
+
     if (type === "SPP") {
       const trx = await prisma.sppTransaction.update({
         where: { id: id },
@@ -77,7 +80,6 @@ export async function PATCH(request) {
         nominalBersih: `Rp ${trx.amount.toLocaleString("id-ID")}`,
       };
 
-      // 3. Eksekusi pengiriman
       await fetch(GOOGLE_SHEET_URL_SPP_MASUK, {
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
@@ -102,11 +104,17 @@ export async function PATCH(request) {
         nominalBersih: `Rp ${trx.amount.toLocaleString("id-ID")}`,
       };
 
-      await fetch(GOOGLE_SHEET_URL_ZAKAT_MASUK, {
+      // ✨ LOGIKA PEMBAGIAN SHEET ZAKAT vs INFAQ
+      let targetSheetUrl = GOOGLE_SHEET_URL_ZAKAT_MASUK;
+      if (trx.zakatType === "sedekah") {
+        targetSheetUrl = GOOGLE_SHEET_URL_INFAQ_MASUK;
+      }
+
+      await fetch(targetSheetUrl, {
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify(dataExcel),
-      }).catch((err) => console.error("Gagal kirim ke Sheets Zakat:", err));
+      }).catch((err) => console.error("Gagal kirim ke Sheets:", err));
     }
 
     return NextResponse.json(
