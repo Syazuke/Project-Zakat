@@ -7,7 +7,7 @@ const PaymentZakat = () => {
   useEffect(() => {
     // Memastikan script Midtrans terpasang di halaman ini
     const snapScript = "https://app.sandbox.midtrans.com/snap/snap.js";
-    // ✨ PERBAIKAN: Sesuaikan nama variabel dengan file .env
+    // Biarkan tetap pakai env ini jika client key Infaq dan Zakat sama
     const clientKey = process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY_Zakat || "";
 
     // Cek apakah script sudah ada agar tidak ganda
@@ -28,7 +28,8 @@ const PaymentZakat = () => {
     };
   }, []);
 
-  const [nominalZakat, setNominalZakat] = useState(0);
+  // ✨ PERBAIKAN: Ubah nama state agar konsisten dengan Infaq
+  const [nominalInfaq, setNominalInfaq] = useState(0);
 
   return (
     <section
@@ -36,11 +37,13 @@ const PaymentZakat = () => {
       className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16"
     >
       <div className="text-center mb-10">
+        {/* ✨ PERBAIKAN: Ubah Judul Halaman */}
         <h2 className="text-3xl font-bold text-gray-900">
-          Form Pembayaran Zakat
+          Form Pembayaran Infaq / Sedekah
         </h2>
         <div className="pt-6">
-          <InfaqForm nominalZakat={nominalZakat} />
+          {/* ✨ PERBAIKAN: Sesuaikan nama props dengan yang diminta oleh InfaqForm */}
+          <InfaqForm nominalInfaq={nominalInfaq} />
         </div>
       </div>
     </section>
