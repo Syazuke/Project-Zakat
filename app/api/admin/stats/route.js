@@ -15,13 +15,18 @@ export async function GET() {
       return NextResponse.json({ message: "Akses Ditolak" }, { status: 401 });
     }
 
+    // ✨ KUMPULAN STATUS LUNAS (Transfer Midtrans & Cash Tunai)
+    const statusLunas = ["SUCCESS", "PAID", "settlement", "capture"];
+    // ✨ KUMPULAN STATUS PENDING (VA & Tunai)
+    const statusPending = ["PENDING", "PENDING_TUNAI"];
+
     // ========================================================
-    // 1. HITUNG DATA ZAKAT
+    // 1. HITUNG DATA ZAKAT (Cash + Transfer)
     // ========================================================
     const resultDanaZakat = await prisma.zakatTransaction.aggregate({
       _sum: { amount: true },
       where: {
-        status: "SUCCESS",
+        status: { in: statusLunas }, // 👈 Menghitung semua status Lunas
         createdAt: { gte: firstDayOfMonth },
       },
     });
@@ -29,7 +34,7 @@ export async function GET() {
 
     const muzakkiList = await prisma.zakatTransaction.findMany({
       where: {
-        status: "SUCCESS",
+        status: { in: statusLunas },
         createdAt: { gte: firstDayOfMonth },
       },
       select: { name: true },
@@ -38,16 +43,16 @@ export async function GET() {
     const totalMuzakkiZakat = muzakkiList.length;
 
     const pendingZakat = await prisma.zakatTransaction.count({
-      where: { status: "PENDING" },
+      where: { status: { in: statusPending } },
     });
 
     // ========================================================
-    // 2. HITUNG DATA SPP
+    // 2. HITUNG DATA SPP (Cash + Transfer)
     // ========================================================
     const resultDanaSPP = await prisma.sppTransaction.aggregate({
       _sum: { amount: true },
       where: {
-        status: "SUCCESS",
+        status: { in: statusLunas }, // 👈 Menghitung semua status Lunas
         createdAt: { gte: firstDayOfMonth },
       },
     });
@@ -55,7 +60,7 @@ export async function GET() {
 
     const siswaList = await prisma.sppTransaction.findMany({
       where: {
-        status: "SUCCESS",
+        status: { in: statusLunas },
         createdAt: { gte: firstDayOfMonth },
       },
       select: { studentName: true },
@@ -64,26 +69,26 @@ export async function GET() {
     const totalSiswaSPP = siswaList.length;
 
     const pendingSPP = await prisma.sppTransaction.count({
-      where: { status: "PENDING" },
+      where: { status: { in: statusPending } },
     });
 
     // ========================================================
-    // ✨ 3. HITUNG PENARIKAN (DIPISAH ZAKAT & SPP) ✨
+    // 3. HITUNG PENARIKAN (DIPISAH ZAKAT & SPP)
     // ========================================================
     const resultPenarikanZakat = await prisma.withdrawal.aggregate({
       _sum: { amount: true },
-      where: { source: "ZAKAT" }, // Tarik total pengeluaran khusus Zakat
+      where: { source: "ZAKAT" },
     });
     const zakatDitarik = resultPenarikanZakat._sum.amount || 0;
 
     const resultPenarikanSPP = await prisma.withdrawal.aggregate({
       _sum: { amount: true },
-      where: { source: "SPP" }, // Tarik total pengeluaran khusus SPP
+      where: { source: "SPP" },
     });
     const sppDitarik = resultPenarikanSPP._sum.amount || 0;
 
     // ========================================================
-    // ✨ 4. KIRIM DATA KE DASHBOARD (SUDAH DIPISAH) ✨
+    // 4. KIRIM DATA KE DASHBOARD
     // ========================================================
     return NextResponse.json(
       {

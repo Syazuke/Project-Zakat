@@ -37,7 +37,7 @@ const TableSPP = ({
                 onClick={handleDeleteLamaSPP}
                 className="bg-red-50 text-red-600 px-2 py-2 rounded-lg text-xs font-semibold hover:bg-red-100"
               >
-                Bersihkan Lama
+                Bersihkan 1 bulan lalu
               </button>
               <button
                 onClick={() => handleOpenSpreadsheet(SPREADSHEET_URL_SPP)}

@@ -8,6 +8,8 @@ import NavDashboard from "@/app/components/atoms/NavDashboard";
 import Card from "@/app/components/atoms/Card";
 import TableZakat from "@/app/components/atoms/TableZakat";
 import TableSPP from "@/app/components/atoms/TableSPP";
+// ✨ IMPORT KOMPONEN BARU
+import TablePenyaluran from "@/app/components/atoms/TablePenyaluran";
 
 export default function AdminDashboard() {
   const SPREADSHEET_URL_ZAKAT =
@@ -35,6 +37,10 @@ export default function AdminDashboard() {
   const [filterBulanZakat, setFilterBulanZakat] = useState("semua");
   const [riwayatSPP, setRiwayatSPP] = useState([]);
   const [filterBulanSPP, setFilterBulanSPP] = useState("semua");
+
+  // ✨ STATE BARU UNTUK PENYALURAN DANA
+  const [riwayatPenyaluran, setRiwayatPenyaluran] = useState([]);
+
   const [activeTab, setActiveTab] = useState("zakat");
 
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
@@ -54,6 +60,7 @@ export default function AdminDashboard() {
       fetchDashboardStats();
       fetchRiwayatTransaksi();
       fetchRiwayatSPP();
+      fetchRiwayatPenyaluran(); // ✨ PANGGIL API PENYALURAN SAAT LOAD
     }
   }, [router]);
 
@@ -62,12 +69,11 @@ export default function AdminDashboard() {
       const response = await fetch("/api/admin/stats");
       const data = await response.json();
       if (response.ok) {
-        // ✨ LOGIKA PEMISAHAN SALDO ✨
         const zakatMasuk = data.detailZakat || 0;
-        const zakatKeluar = data.zakatDitarik || 0; // Pastikan API mengirim data ini
+        const zakatKeluar = data.zakatDitarik || 0;
 
         const sppMasuk = data.detailSPP || 0;
-        const sppKeluar = data.sppDitarik || 0; // Pastikan API mengirim data ini
+        const sppKeluar = data.sppDitarik || 0;
 
         setSaldoZakat({
           kotor: zakatMasuk,
@@ -112,6 +118,17 @@ export default function AdminDashboard() {
     }
   };
 
+  // ✨ FUNGSI BARU UNTUK FETCH PENYALURAN
+  const fetchRiwayatPenyaluran = async () => {
+    try {
+      const response = await fetch("/api/admin/withdraw");
+      const data = await response.json();
+      if (response.ok) setRiwayatPenyaluran(data);
+    } catch (error) {
+      console.error("Gagal memuat riwayat penyaluran");
+    }
+  };
+
   const handleOpenSpreadsheet = (url) => {
     if (url.includes("LINK_SPREADSHEET")) {
       alert("Admin belum memasukkan link Google Sheets di kodingan.");
@@ -149,6 +166,7 @@ export default function AdminDashboard() {
         setIsWithdrawModalOpen(false);
         setWithdrawForm({ amount: "", source: "ZAKAT", note: "" });
         fetchDashboardStats();
+        fetchRiwayatPenyaluran(); // ✨ REFRESH TABEL PENYALURAN
       } else {
         alert("Gagal mencatat penarikan.");
       }
@@ -156,6 +174,32 @@ export default function AdminDashboard() {
       alert("Terjadi kesalahan jaringan saat menarik dana.");
     } finally {
       setIsWithdrawing(false);
+    }
+  };
+
+  // ✨ FUNGSI BARU UNTUK MENGHAPUS PENYALURAN (JIKA SALAH INPUT)
+  const handleDeletePenyaluran = async (id) => {
+    if (
+      !window.confirm(
+        "Yakin ingin menghapus riwayat penyaluran ini? Saldo utama akan otomatis bertambah kembali.",
+      )
+    )
+      return;
+    try {
+      const response = await fetch("/api/admin/withdraw", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      if (response.ok) {
+        alert("Riwayat penyaluran berhasil dihapus!");
+        setRiwayatPenyaluran(
+          riwayatPenyaluran.filter((item) => item.id !== id),
+        );
+        fetchDashboardStats(); // ✨ REFRESH SALDO CARD
+      }
+    } catch (error) {
+      alert("Gagal menghapus riwayat.");
     }
   };
 
@@ -343,57 +387,74 @@ export default function AdminDashboard() {
         />
 
         <div className="p-4 md:p-6 space-y-6">
-          {/* ✨ KARTU STATISTIK YANG SUDAH DIPISAH ✨ */}
           <Card
             saldoSPP={saldoSPP}
             saldoZakat={saldoZakat}
             totalOrang={totalOrang}
           />
 
-          {/* TAB TRANSAKSI */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mt-4">
-            <div className="flex border-b border-gray-200">
+            {/* ✨ MENU TAB BARU */}
+            <div className="flex border-b border-gray-200 overflow-x-auto">
               <button
                 onClick={() => setActiveTab("zakat")}
-                className={`flex-1 py-4 text-sm font-bold transition ${activeTab === "zakat" ? "bg-emerald-50 text-emerald-700 border-b-2 border-emerald-600" : "text-gray-500 hover:bg-gray-50 hover:text-emerald-600"}`}
+                className={`flex-1 py-4 px-4 text-sm font-bold transition whitespace-nowrap ${activeTab === "zakat" ? "bg-emerald-50 text-emerald-700 border-b-2 border-emerald-600" : "text-gray-500 hover:bg-gray-50 hover:text-emerald-600"}`}
               >
                 Data Kas Zakat
               </button>
               <button
                 onClick={() => setActiveTab("spp")}
-                className={`flex-1 py-4 text-sm font-bold transition ${activeTab === "spp" ? "bg-blue-50 text-blue-700 border-b-2 border-blue-600" : "text-gray-500 hover:bg-gray-50 hover:text-blue-600"}`}
+                className={`flex-1 py-4 px-4 text-sm font-bold transition whitespace-nowrap ${activeTab === "spp" ? "bg-blue-50 text-blue-700 border-b-2 border-blue-600" : "text-gray-500 hover:bg-gray-50 hover:text-blue-600"}`}
               >
                 Data Kas SPP / Operasional
+              </button>
+              <button
+                onClick={() => setActiveTab("penyaluran")}
+                className={`flex-1 py-4 px-4 text-sm font-bold transition whitespace-nowrap ${activeTab === "penyaluran" ? "bg-red-50 text-red-700 border-b-2 border-red-600" : "text-gray-500 hover:bg-gray-50 hover:text-red-600"}`}
+              >
+                Riwayat Penyaluran Dana
               </button>
             </div>
 
             {/* KONTEN TAB ZAKAT */}
-            <TableZakat
-              filterBulanZakat={filterBulanZakat}
-              setFilterBulanZakat={setFilterBulanZakat}
-              handleDeleteLama={handleDeleteLama}
-              handleOpenSpreadsheet={handleOpenSpreadsheet}
-              handleDeleteSingle={handleDeleteSingle}
-              activeTab={activeTab}
-              dataTampilZakat={dataTampilZakat}
-              StatusBadge={StatusBadge}
-              SPREADSHEET_URL_ZAKAT={SPREADSHEET_URL_ZAKAT}
-              handleKonfirmasi={handleKonfirmasi}
-              SPREADSHEET_URL_INFAQ={SPREADSHEET_URL_INFAQ}
-            />
+            {activeTab === "zakat" && (
+              <TableZakat
+                filterBulanZakat={filterBulanZakat}
+                setFilterBulanZakat={setFilterBulanZakat}
+                handleDeleteLama={handleDeleteLama}
+                handleOpenSpreadsheet={handleOpenSpreadsheet}
+                handleDeleteSingle={handleDeleteSingle}
+                activeTab={activeTab}
+                dataTampilZakat={dataTampilZakat}
+                StatusBadge={StatusBadge}
+                SPREADSHEET_URL_ZAKAT={SPREADSHEET_URL_ZAKAT}
+                handleKonfirmasi={handleKonfirmasi}
+                SPREADSHEET_URL_INFAQ={SPREADSHEET_URL_INFAQ}
+              />
+            )}
+
             {/* KONTEN TAB SPP */}
-            <TableSPP
-              activeTab={activeTab}
-              filterBulanSPP={filterBulanSPP}
-              setFilterBulanSPP={setFilterBulanSPP}
-              handleDeleteLamaSPP={handleDeleteLamaSPP}
-              handleOpenSpreadsheet={handleOpenSpreadsheet}
-              handleDeleteSingleSPP={handleDeleteSingleSPP}
-              dataTampilSPP={dataTampilSPP}
-              StatusBadge={StatusBadge}
-              SPREADSHEET_URL_SPP={SPREADSHEET_URL_SPP}
-              handleKonfirmasi={handleKonfirmasi}
-            />
+            {activeTab === "spp" && (
+              <TableSPP
+                activeTab={activeTab}
+                filterBulanSPP={filterBulanSPP}
+                setFilterBulanSPP={setFilterBulanSPP}
+                handleDeleteLamaSPP={handleDeleteLamaSPP}
+                handleOpenSpreadsheet={handleOpenSpreadsheet}
+                handleDeleteSingleSPP={handleDeleteSingleSPP}
+                dataTampilSPP={dataTampilSPP}
+                StatusBadge={StatusBadge}
+                SPREADSHEET_URL_SPP={SPREADSHEET_URL_SPP}
+                handleKonfirmasi={handleKonfirmasi}
+              />
+            )}
+
+            {activeTab === "penyaluran" && (
+              <TablePenyaluran
+                riwayat={riwayatPenyaluran}
+                handleDelete={handleDeletePenyaluran}
+              />
+            )}
           </div>
         </div>
       </main>
