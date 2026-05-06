@@ -97,7 +97,7 @@ export async function PATCH(request) {
           timeZone: "Asia/Jakarta",
         }),
         nama: trx.name || "Hamba Allah",
-        jenis: `Zakat ${trx.zakatType}`,
+        jenis: `${trx.zakatType}`,
         tagihan: "-",
         keterangan: trx.message || "TUNAI",
         nominalKotor: `Rp ${trx.amount.toLocaleString("id-ID")}`,

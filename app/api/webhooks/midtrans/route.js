@@ -46,7 +46,7 @@ export async function POST(request) {
             timeZone: "Asia/Jakarta",
           }),
           nama: trx.name || "Hamba Allah",
-          jenis: `Zakat ${trx.zakatType}`,
+          jenis: `${trx.zakatType}`,
           keterangan: trx.message || "-",
           nominalKotor: `Rp ${grossAmount.toLocaleString("id-ID")}`,
           biayaAdmin: `- Rp ${biayaAdminGateway.toLocaleString("id-ID")}`,
