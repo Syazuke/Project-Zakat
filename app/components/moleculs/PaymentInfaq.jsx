@@ -1,7 +1,7 @@
 "use client";
 
-import Infaq from "../atoms/Infaq";
 import { useEffect, useState } from "react";
+import InfaqForm from "../atoms/Infaq";
 
 const PaymentZakat = () => {
   useEffect(() => {
@@ -40,7 +40,7 @@ const PaymentZakat = () => {
           Form Pembayaran Zakat
         </h2>
         <div className="pt-6">
-          <Infaq nominalZakat={nominalZakat} />
+          <InfaqForm nominalZakat={nominalZakat} />
         </div>
       </div>
     </section>

@@ -2,12 +2,14 @@
 
 import React, { useState, useEffect } from "react";
 
-const Zakat = ({ nominalZakat, Type }) => {
+const InfaqForm = ({ nominalInfaq, Type }) => {
   const [nama, setNama] = useState("");
   const [pesan, setPesan] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [nominal, setZakat] = useState(nominalZakat || 0);
-  const [jenisZakat, setJenisZakat] = useState(Type || "penghasilan");
+
+  const [nominal, setNominal] = useState(nominalInfaq || 0);
+  // ✨ KUNCI DEFAULT STATE MENJADI "sedekah"
+  const [jenisTransaksi, setJenisTransaksi] = useState(Type || "sedekah");
 
   const [metodeBayar, setMetodeBayar] = useState("online");
   const [pilihanBank, setPilihanBank] = useState("qris");
@@ -16,14 +18,16 @@ const Zakat = ({ nominalZakat, Type }) => {
   const [isPending, setIsPending] = useState(false);
 
   useEffect(() => {
-    if (Type) setJenisZakat(Type);
-    if (nominalZakat > 0) setZakat(nominalZakat);
-  }, [Type, nominalZakat]);
+    if (Type) setJenisTransaksi(Type);
+    if (nominalInfaq > 0) setNominal(nominalInfaq);
+  }, [Type, nominalInfaq]);
 
   const triggerSnapPopup = (tokenToUse) => {
     window.snap.pay(tokenToUse, {
       onSuccess: function () {
-        alert("Alhamdulillah, Zakat berhasil ditunaikan!");
+        alert(
+          "Alhamdulillah, Infaq/Sedekah berhasil ditunaikan! Terima kasih.",
+        );
         setSnapToken(null);
         setIsPending(false);
         window.location.reload();
@@ -45,21 +49,20 @@ const Zakat = ({ nominalZakat, Type }) => {
 
   const checkoutZakat = async () => {
     if (nominal < 10000) {
-      alert("Minimal pembayaran zakat adalah Rp 10.000.");
+      alert("Minimal pembayaran Infaq/Sedekah adalah Rp 10.000.");
       return;
     }
 
     setIsLoading(true);
     const namaValid = nama.trim() === "" ? "Hamba Allah" : nama;
 
-    // ✨ TAMBAHKAN PILIHAN_METODE KE DALAM DATA TRANSAKSI
     const dataTransaksi = {
       nama: namaValid,
       pesan: pesan,
       nominal: nominal,
-      Type: jenisZakat,
+      Type: "sedekah", // ✨ KUNCI HARDCODE: Pasti selalu terkirim sebagai sedekah
       metode: metodeBayar,
-      pilihan_metode: metodeBayar === "online" ? pilihanBank : "", // 👈 Dikirim ke Tokenizer
+      pilihan_metode: metodeBayar === "online" ? pilihanBank : "",
     };
 
     try {
@@ -78,7 +81,7 @@ const Zakat = ({ nominalZakat, Type }) => {
 
       // LOGIKA JIKA TUNAI
       if (result.isTunai) {
-        alert("Pencatatan Tunai Berhasil! Silakan serahkan zakat ke admin.");
+        alert("Pencatatan Tunai Berhasil! Silakan serahkan infaq ke admin.");
         window.location.reload();
         return;
       }
@@ -101,13 +104,13 @@ const Zakat = ({ nominalZakat, Type }) => {
 
   const handleFormatRupiah = (e) => {
     let rawValue = e.target.value.replace(/\D/g, "");
-    setZakat(rawValue === "" ? 0 : Number(rawValue));
+    setNominal(rawValue === "" ? 0 : Number(rawValue));
   };
 
   return (
     <div className="bg-emerald-50 p-6 rounded-xl border border-emerald-100 mt-6 space-y-4 text-left">
       <h3 className="font-bold text-emerald-800 text-lg border-b border-emerald-200 pb-2">
-        Lengkapi Data Muzakki
+        Formulir Infaq / Sedekah
       </h3>
 
       {/* Input Nama */}
@@ -125,20 +128,7 @@ const Zakat = ({ nominalZakat, Type }) => {
         />
       </div>
 
-      {/* Pilihan Jenis Zakat */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Jenis Zakat
-        </label>
-        <select
-          value={jenisZakat}
-          onChange={(e) => setJenisZakat(e.target.value)}
-          disabled={snapToken !== null}
-          className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-500 outline-none bg-white disabled:bg-gray-100"
-        >
-          <option value="sedekah">Sedekah / Infaq</option>
-        </select>
-      </div>
+      {/* ✨ DROPDOWN JENIS ZAKAT DIHAPUS KARENA HANYA UNTUK INFAQ ✨ */}
 
       {/* METODE PEMBAYARAN */}
       <div className="bg-white p-4 rounded-lg border border-emerald-100">
@@ -174,7 +164,7 @@ const Zakat = ({ nominalZakat, Type }) => {
           </label>
         </div>
 
-        {/* ✨ MUNCUL JIKA PILIH ONLINE SAJA ✨ */}
+        {/* Opsi Bank Online */}
         {metodeBayar === "online" && (
           <div className="mt-4 pt-4 border-t border-emerald-100 animate-fade-in">
             <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -213,7 +203,7 @@ const Zakat = ({ nominalZakat, Type }) => {
       {/* Input Nominal */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          Nominal Zakat (Rp)
+          Nominal Infaq / Sedekah (Rp)
         </label>
         <div
           className={`flex items-center border border-gray-300 rounded-lg px-3 py-3 bg-white focus-within:ring-2 focus-within:ring-emerald-500 ${snapToken ? "bg-gray-100" : ""}`}
@@ -239,7 +229,7 @@ const Zakat = ({ nominalZakat, Type }) => {
           value={pesan}
           onChange={(e) => setPesan(e.target.value)}
           disabled={snapToken !== null}
-          placeholder="Tuliskan doa atau niat zakat Anda di sini..."
+          placeholder="Tuliskan doa atau niat sedekah Anda di sini..."
           rows="3"
           className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-500 outline-none resize-none bg-white disabled:bg-gray-100"
         ></textarea>
@@ -294,4 +284,4 @@ const Zakat = ({ nominalZakat, Type }) => {
   );
 };
 
-export default Zakat;
+export default InfaqForm;
