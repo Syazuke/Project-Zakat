@@ -35,6 +35,7 @@ export async function POST(request) {
       dataBersih.Type || dataBersih.zakatType || "Tidak Diketahui";
     const isSPP =
       jenisTransaksi === "SPP" || jenisTransaksi === "Biaya Sekolah";
+
     const statusTransaksi =
       dataBersih.metode === "tunai" ? "PENDING_TUNAI" : "PENDING";
 

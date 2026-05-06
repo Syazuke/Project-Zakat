@@ -50,7 +50,7 @@ export async function PATCH(request) {
     }
 
     // ========================================================
-    // ⚠️ MASUKKAN URL SPREADSHEET PEMASUKAN (8 KOLOM) DI SINI
+    // ⚠️ MASUKKAN URL SPREADSHEET PEMASUKAN DI SINI
     // ========================================================
     const GOOGLE_SHEET_URL_ZAKAT_MASUK =
       "https://script.google.com/macros/s/AKfycbwEcV1fRA0xe_pCHd0lnEZGI5rbYZfXGw-LtKnX-xdRSV7lAPZbnIeYOrRWWOXl3hg/exec";
@@ -64,7 +64,7 @@ export async function PATCH(request) {
     if (type === "SPP") {
       const trx = await prisma.sppTransaction.update({
         where: { id: id },
-        data: { status: "settlement" },
+        data: { status: "PAID" }, // ✨ UBAH KE PAID UNTUK TUNAI
       });
 
       const dataExcel = {
@@ -75,9 +75,10 @@ export async function PATCH(request) {
         jenis: trx.sppType,
         tagihan: `Bulan: ${trx.paymentMonth}`,
         keterangan: trx.message || "TUNAI",
-        nominal: `Rp ${trx.amount.toLocaleString("id-ID")}`,
+        nominalKotor: `Rp ${trx.amount.toLocaleString("id-ID")}`,
         biayaAdmin: `Rp 0`,
         nominalBersih: `Rp ${trx.amount.toLocaleString("id-ID")}`,
+        status: "LUNAS (CASH/TUNAI)", // ✨ TAMBAHAN STATUS KE EXCEL
       };
 
       await fetch(GOOGLE_SHEET_URL_SPP_MASUK, {
@@ -88,7 +89,7 @@ export async function PATCH(request) {
     } else if (type === "ZAKAT") {
       const trx = await prisma.zakatTransaction.update({
         where: { id: id },
-        data: { status: "settlement" },
+        data: { status: "PAID" }, // ✨ UBAH KE PAID UNTUK TUNAI
       });
 
       const dataExcel = {
@@ -102,6 +103,7 @@ export async function PATCH(request) {
         nominalKotor: `Rp ${trx.amount.toLocaleString("id-ID")}`,
         biayaAdmin: `Rp 0`, // Tunai potongannya nol
         nominalBersih: `Rp ${trx.amount.toLocaleString("id-ID")}`,
+        status: "LUNAS (CASH/TUNAI)", // ✨ TAMBAHAN STATUS KE EXCEL
       };
 
       // ✨ LOGIKA PEMBAGIAN SHEET ZAKAT vs INFAQ
