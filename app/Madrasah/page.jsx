@@ -31,7 +31,7 @@ export default function SppModern() {
           </h1>
           <p className="text-lg text-slate-600 mb-8 max-w-md">
             Portal resmi Administrasi Keuangan Paud Al-Fatah. Cek tagihan dan
-            bayar SPP langsung dari HP Anda tanpa perlu antre di Tata Usaha.
+            bayar SPP langsung dari HP dan laptop Anda tanpa perlu antre lagi.
           </p>
           <button
             className="p-4 rounded-2xl border bg-blue-500 text-white"
