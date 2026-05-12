@@ -30,7 +30,7 @@ export default function SppModern() {
             <span className="text-indigo-600">Lebih Mudah & Cepat</span>
           </h1>
           <p className="text-lg text-slate-600 mb-8 max-w-md">
-            Portal resmi Administrasi Keuangan SMA Cendekia. Cek tagihan dan
+            Portal resmi Administrasi Keuangan Paud Al-Fatah. Cek tagihan dan
             bayar SPP langsung dari HP Anda tanpa perlu antre di Tata Usaha.
           </p>
           <button
