@@ -2,8 +2,7 @@ import React from "react";
 
 const Card = ({ saldoZakat, saldoSPP, pendingVerifikasi, totalOrang }) => {
   return (
-    <div className="flex gap-10">
-      {/* KARTU KAS ZAKAT */}
+    <div className="flex flex-col md:flex-row gap-4">
       <div className="bg-emerald-600 text-white p-6 w-full rounded-2xl shadow-md border border-emerald-700 flex flex-col justify-between">
         <div>
           <p className="text-emerald-100 text-sm font-medium mb-1">
@@ -29,7 +28,7 @@ const Card = ({ saldoZakat, saldoSPP, pendingVerifikasi, totalOrang }) => {
       <div className="bg-blue-600 text-white p-6 w-full rounded-2xl shadow-md border border-blue-700 flex flex-col justify-between">
         <div>
           <p className="text-blue-100 text-sm font-medium mb-1">
-            Sisa Kas SPP (Tersedia)
+            Sisa Kas Madrasah (Tersedia)
           </p>
           <h3 className="text-3xl font-bold">
             Rp {saldoSPP.bersih.toLocaleString("id-ID")}

@@ -29,12 +29,12 @@ const Sidebar = ({ setIsWithdrawModalOpen, handleLogout }) => {
       {isOpen && (
         <div
           onClick={() => setIsOpen(false)}
-          className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm lg:hidden transition-opacity"
+          className="fixed inset-0 z-[999] bg-black/50 backdrop-blur-sm lg:hidden transition-opacity"
         />
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-emerald-800 text-white flex flex-col transition-transform duration-300 ease-in-out
+        className={`fixed inset-y-0 left-0 z-[999] w-64 bg-emerald-800 text-white flex flex-col transition-transform duration-300 ease-in-out
           ${isOpen ? "translate-x-0" : "-translate-x-full"} 
           lg:translate-x-0`}
       >

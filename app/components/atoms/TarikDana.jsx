@@ -16,15 +16,12 @@ export default function TarikDana({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
-        <div className="bg-red-600 px-6 py-4">
-          <h3 className="text-lg font-bold text-white">
+        <div className="bg-red-600 px-6 py-6">
+          <h3 className="text-lg text-center font-bold text-white">
             Catat Pengeluaran Kas
           </h3>
-          <p className="text-red-100 text-xs mt-1">
-            Gunakan form ini HANYA jika uang kas dibelanjakan atau disalurkan.
-          </p>
         </div>
 
         {/* Body Modal */}
@@ -51,7 +48,7 @@ export default function TarikDana({
               Nominal Pengeluaran (Rp)
             </label>
             <div className="flex items-center border border-gray-300 rounded-lg px-3 focus-within:ring-2 focus-within:ring-red-500 bg-white">
-              <span className="text-gray-500 font-bold mr-2">Rp</span>
+              <span className="text-black mr-2 font-semibold">Rp</span>
               <input
                 type="text"
                 value={
@@ -61,7 +58,7 @@ export default function TarikDana({
                 }
                 onChange={handleFormatRupiah}
                 placeholder="Contoh: 500.000"
-                className="w-full py-2 focus:outline-none text-gray-900 font-bold"
+                className="w-full py-2 focus:outline-none text-black"
                 required
               />
             </div>

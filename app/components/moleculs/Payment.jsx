@@ -4,30 +4,6 @@ import Zakat from "@/app/components/atoms/Zakat";
 import { useEffect, useState } from "react";
 
 const PaymentZakat = () => {
-  useEffect(() => {
-    // Memastikan script Midtrans terpasang di halaman ini
-    const snapScript = "https://app.sandbox.midtrans.com/snap/snap.js";
-    // ✨ PERBAIKAN: Sesuaikan nama variabel dengan file .env
-    const clientKey = process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY_Zakat || "";
-
-    // Cek apakah script sudah ada agar tidak ganda
-    let script = document.querySelector('script[src="' + snapScript + '"]');
-
-    if (!script) {
-      script = document.createElement("script");
-      script.src = snapScript;
-      script.setAttribute("data-client-key", clientKey);
-      script.async = true;
-      document.body.appendChild(script);
-    }
-
-    return () => {
-      if (script && script.parentNode) {
-        script.parentNode.removeChild(script);
-      }
-    };
-  }, []);
-
   const [nominalZakat, setNominalZakat] = useState(0);
 
   return (

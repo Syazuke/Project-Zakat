@@ -6,7 +6,6 @@ export const dynamic = "force-dynamic";
 
 export async function GET(request) {
   try {
-    // 1. Cek Karcis Satpam (Disamakan dengan file lain: isLoggedIn)
     const cookieStore = cookies();
     const isLoggedIn = cookieStore.get("isLoggedIn");
 
@@ -14,29 +13,14 @@ export async function GET(request) {
       return NextResponse.json({ message: "Akses Ditolak" }, { status: 401 });
     }
 
-    // 2. Ambil data dari database (Huruf kecil: zakatTransaction)
     const transactions = await prisma.zakatTransaction.findMany({
-      where: {
-        status: {
-          in: [
-            "SUCCESS",
-            "success",
-            "PAID",
-            "paid",
-            "settlement",
-            "Settlement",
-          ],
-        },
-      },
       orderBy: {
         createdAt: "desc",
       },
     });
-
-    // 3. Kirim datanya ke Frontend
     return NextResponse.json({ data: transactions }, { status: 200 });
   } catch (error) {
-    console.error("Error Export API Zakat:", error);
+    console.error("Error Get API Zakat:", error);
     return NextResponse.json(
       { message: "Terjadi kesalahan server" },
       { status: 500 },

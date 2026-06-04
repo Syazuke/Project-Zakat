@@ -1,23 +1,20 @@
 "use client";
 
-import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
+import toast, { Toaster } from "react-hot-toast";
 
 export default function LoginPage() {
   const router = useRouter();
-
-  const [role, setRole] = useState("user");
-
-  // State untuk form input
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
-
+    setIsLoading(true);
     try {
-      // Kirim data ke API Login
       const response = await fetch("/api/login", {
         method: "POST",
         headers: {
@@ -26,47 +23,40 @@ export default function LoginPage() {
         body: JSON.stringify({
           email: email,
           password: password,
-          role: role,
         }),
       });
-
       const data = await response.json();
-
-      // CEK STATUS: Jika ditolak (401, 404, 403, dll)
       if (!response.ok) {
-        alert(`Gagal Masuk: ${data.message}`);
-        return; // Hentikan eksekusi di sini! Jangan lanjut ke bawah.
+        toast.error(`Gagal Masuk: ${data.message}`);
+        setIsLoading(false);
+        return;
       }
-
-      // Jika berhasil (Status 200/OK), jalankan ini:
-      alert(`Selamat datang, ${data.user.name}!`);
-
-      // Simpan data sesi ke localStorage
+      toast.success(`Selamat datang!`);
       localStorage.setItem("isLoggedIn", "true");
-      localStorage.setItem("userRole", data.user.role);
-      localStorage.setItem("userName", data.user.name);
-
-      // Catatan: Jika Anda sudah menggunakan HTTP-only cookies lewat JWT di backend,
-      // baris document.cookie di bawah ini sebenarnya tidak perlu lagi (bahkan disarankan dihapus demi keamanan).
-      // Tapi saya biarkan agar sesuai dengan desain Anda saat ini.
       document.cookie =
         "isLoggedIn=true; path=/; max-age=86400; Secure; SameSite=Strict";
-
-      // Arahkan ke halaman yang sesuai
-      if (data.user.role === "admin") {
+      setTimeout(() => {
         router.push("/admin/dashboard");
-      } else {
-        router.push("/"); // Lempar ke halaman Kalkulator Zakat
-      }
+      }, 1000);
     } catch (error) {
-      alert("Terjadi kesalahan jaringan. Silakan coba lagi.");
+      toast.error("Terjadi kesalahan jaringan. Silakan coba lagi.");
       console.error(error);
+      setIsLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen bg-emerald-50 flex flex-col justify-center items-center p-4 font-sans text-gray-800">
-      {/* Tombol Kembali ke Beranda */}
+      <Toaster
+        position="top-center"
+        reverseOrder={false}
+        toastOptions={{
+          duration: 3000,
+          style: {
+            fontWeight: "bold",
+          },
+        }}
+      />
       <a
         href="/"
         className="absolute top-6 left-6 flex items-center text-emerald-700 hover:text-emerald-900 transition font-medium"
@@ -88,17 +78,7 @@ export default function LoginPage() {
       </a>
 
       <div className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-emerald-100 overflow-hidden">
-        {/* Header Logo */}
-        <div className="bg-emerald-600 p-8 text-center">
-          <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-emerald-600 font-bold text-2xl mx-auto mb-3 shadow-inner">
-            Z
-          </div>
-          <h2 className="text-2xl font-bold text-white">Yayasan Zakat</h2>
-          <p className="text-emerald-100 text-sm mt-1">Mensucikan Harta Anda</p>
-        </div>
-
         <div className="p-8">
-          {/* Teks Sambutan */}
           <div className="text-center mb-8">
             <h3 className="text-xl font-bold text-gray-900">
               Selamat Datang Kembali!
@@ -107,25 +87,7 @@ export default function LoginPage() {
               Silakan masuk ke akun Anda untuk melanjutkan.
             </p>
           </div>
-
-          {/* Tab Pilihan Role (User / Admin) */}
-          <div className="flex p-1 bg-gray-100 rounded-lg mb-8">
-            <button
-              type="button"
-              onClick={() => setRole("admin")}
-              className={`flex-1 py-2 text-sm font-semibold rounded-md transition-all duration-200 ${
-                role === "admin"
-                  ? "bg-white text-emerald-700 shadow-sm border border-gray-200"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              Amil (Admin)
-            </button>
-          </div>
-
-          {/* Form Login */}
           <form onSubmit={handleLogin} className="space-y-5">
-            {/* Input Email */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Alamat Email
@@ -139,8 +101,6 @@ export default function LoginPage() {
                 className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition bg-gray-50 focus:bg-white"
               />
             </div>
-
-            {/* Input Password */}
             <div>
               <div className="flex justify-between items-center mb-1">
                 <label className="block text-sm font-medium text-gray-700">
@@ -205,13 +165,12 @@ export default function LoginPage() {
                 </button>
               </div>
             </div>
-
-            {/* Tombol Submit */}
             <button
               type="submit"
+              disabled={isLoading}
               className="w-full bg-emerald-600 text-white font-bold text-lg py-3 rounded-lg hover:bg-emerald-700 shadow-lg shadow-emerald-200 transition transform hover:-translate-y-0.5 mt-4"
             >
-              Masuk
+              {isLoading ? "Memprosess..." : "Masuk sekarang"}
             </button>
           </form>
         </div>

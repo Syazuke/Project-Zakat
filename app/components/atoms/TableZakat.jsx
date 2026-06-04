@@ -1,72 +1,140 @@
 "use client";
 
-import React from "react";
+import useDashboardLogic from "@/app/hooks/useDashboardLogic";
+import { EllipsisVertical } from "lucide-react";
+import React, { useState, useRef, useEffect } from "react";
 
-const TableZakat = ({
-  filterBulanZakat,
-  setFilterBulanZakat,
-  handleDeleteLama,
-  handleOpenSpreadsheet,
-  handleDeleteSingle,
-  activeTab,
-  dataTampilZakat,
-  StatusBadge,
-  SPREADSHEET_URL_ZAKAT,
-  handleKonfirmasi,
-  SPREADSHEET_URL_INFAQ,
-}) => {
-  const SPREADSHEET_URL_Penyaluran_ZAKAT =
-    "https://docs.google.com/spreadsheets/d/1q0Inp0UdRk_aQbQqa0Hj7bRE52crtFKEGcxQljcHGyU/edit?usp=sharing";
+const TableZakat = ({ activeTab, StatusBadge }) => {
+  const {
+    filterBulanZakat,
+    setFilterBulanZakat,
+    handleDeleteLama,
+    handleDeleteSingle,
+    handleOpenSpreadsheet,
+    dataTampilZakat,
+    handleKonfirmasi,
+    SPREADSHEET_URL_INFAQ,
+    SPREADSHEET_URL_Penyaluran_INFAQ,
+    SPREADSHEET_URL_ZAKAT,
+    SPREADSHEET_URL_Penyaluran_ZAKAT,
+  } = useDashboardLogic();
+
+  const [isReportOpen, setIsReportOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsReportOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
     <div>
       {activeTab === "zakat" && (
-        <div>
-          <div className="p-6 border-b border-gray-100 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
-            <h3 className="text-lg font-bold text-gray-900">
+        <div className="flex flex-col">
+          {/* ✨ 1. HEADER DENGAN Z-INDEX MAKSIMAL (z-[60]) ✨ */}
+          <div className="p-4 md:p-6 border-b border-gray-100 flex flex-wrap justify-between items-center gap-4 relative z-[60]">
+            <h3 className="text-xl font-bold text-gray-900">
               Riwayat Kas Zakat
             </h3>
-            <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
+
+            <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
               <select
                 value={filterBulanZakat}
                 onChange={(e) => setFilterBulanZakat(e.target.value)}
-                className="border rounded-lg px-2 py-2 text-xs outline-none focus:border-emerald-500"
+                className="border border-gray-300 rounded-lg px-3 py-2 text-xs md:text-sm outline-none focus:border-emerald-500 bg-white"
               >
                 <option value="semua">Semua Waktu</option>
                 <option value="bulan_ini">Bulan Ini</option>
                 <option value="bulan_lalu">Bulan Lalu</option>
               </select>
-              <button
-                onClick={handleDeleteLama}
-                className="bg-red-50 text-red-600 px-2 py-2 rounded-lg text-xs font-semibold hover:bg-red-100"
-              >
-                Bersihkan 1 bulan lalu
-              </button>
-              <div className="flex gap-5">
+
+              <div className="flex items-center gap-2">
                 <button
-                  onClick={() => handleOpenSpreadsheet(SPREADSHEET_URL_ZAKAT)}
-                  className="bg-emerald-600 text-white px-2 py-2 rounded-lg text-xs font-semibold hover:bg-emerald-700 transition"
+                  onClick={handleDeleteLama}
+                  title="Bersihkan 1 bulan lalu"
+                  className="bg-red-50 text-red-600 px-3 py-2 rounded-lg text-xs md:text-sm font-semibold hover:bg-red-100 transition flex items-center gap-2"
                 >
-                  📄 Laporan Pemasukkan Zakat
+                  <span className="hidden sm:inline">
+                    Bersihkan 1 bulan lalu
+                  </span>
+                  <span className="sm:hidden text-lg">🗑️</span>
                 </button>
-                <button
-                  onClick={() =>
-                    handleOpenSpreadsheet(SPREADSHEET_URL_Penyaluran_ZAKAT)
-                  }
-                  className="bg-emerald-600 text-white px-2 py-2 rounded-lg text-xs font-semibold hover:bg-emerald-700 transition"
-                >
-                  📄 Laporan Penyaluran Zakat
-                </button>
-                <button
-                  onClick={() => handleOpenSpreadsheet(SPREADSHEET_URL_INFAQ)}
-                  className="bg-emerald-600 text-white px-2 py-2 rounded-lg text-xs font-semibold hover:bg-emerald-700 transition"
-                >
-                  📄 Laporan Pemasukan INFAQ
-                </button>
+
+                <div className="relative" ref={dropdownRef}>
+                  <button
+                    onClick={() => setIsReportOpen(!isReportOpen)}
+                    title="Menu Laporan"
+                    className={`p-2 rounded-lg transition border flex items-center justify-center ${
+                      isReportOpen
+                        ? "bg-emerald-50 border-emerald-200 text-emerald-700"
+                        : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
+                    }`}
+                  >
+                    <EllipsisVertical />
+                  </button>
+
+                  {/* ✨ DROPDOWN Z-INDEX PALING TINGGI (z-[100]) ✨ */}
+                  {isReportOpen && (
+                    <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-2xl z-[100] overflow-hidden">
+                      <div className="px-4 py-2 bg-gray-50 border-b border-gray-100">
+                        <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                          Pilih Laporan
+                        </span>
+                      </div>
+
+                      <button
+                        onClick={() => {
+                          handleOpenSpreadsheet(SPREADSHEET_URL_ZAKAT);
+                          setIsReportOpen(false);
+                        }}
+                        className="w-full text-left px-4 py-3 text-sm font-medium text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 border-b border-gray-50 transition"
+                      >
+                        📄 Pemasukan Zakat
+                      </button>
+                      <button
+                        onClick={() => {
+                          handleOpenSpreadsheet(
+                            SPREADSHEET_URL_Penyaluran_ZAKAT,
+                          );
+                          setIsReportOpen(false);
+                        }}
+                        className="w-full text-left px-4 py-3 text-sm font-medium text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 border-b border-gray-50 transition"
+                      >
+                        📤 Penyaluran Zakat
+                      </button>
+                      <button
+                        onClick={() => {
+                          handleOpenSpreadsheet(SPREADSHEET_URL_INFAQ);
+                          setIsReportOpen(false);
+                        }}
+                        className="w-full text-left px-4 py-3 text-sm font-medium text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 border-b border-gray-50 transition"
+                      >
+                        📄 Pemasukan Infaq
+                      </button>
+                      <button
+                        onClick={() => {
+                          handleOpenSpreadsheet(
+                            SPREADSHEET_URL_Penyaluran_INFAQ,
+                          );
+                          setIsReportOpen(false);
+                        }}
+                        className="w-full text-left px-4 py-3 text-sm font-medium text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 transition"
+                      >
+                        📤 Penyaluran Infaq
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
-          <div className="overflow-x-auto">
+
+          <div className="overflow-x-auto relative z-0">
             <table className="w-full text-left text-sm text-gray-600">
               <thead className="bg-emerald-50 text-emerald-800 font-semibold">
                 <tr>
@@ -99,7 +167,6 @@ const TableZakat = ({
                         {trx.name}
                       </td>
 
-                      {/* ✨ PERBAIKAN LOGIKA DI SINI ✨ */}
                       {["penghasilan", "maal", "fidyah", "fitrah"].includes(
                         trx.zakatType?.toLowerCase(),
                       ) ? (
@@ -120,7 +187,7 @@ const TableZakat = ({
                         <StatusBadge status={trx.status} />
                       </td>
                       <td className="px-6 py-4 text-center flex items-center justify-center gap-2">
-                        {trx.status === "PENDING_TUNAI" && (
+                        {trx.status.includes("PENDING") && (
                           <button
                             onClick={() => handleKonfirmasi(trx.id, "ZAKAT")}
                             className="bg-amber-500 hover:bg-amber-600 text-white px-3 py-1.5 rounded-md text-xs font-bold transition-all shadow-sm"
@@ -130,9 +197,10 @@ const TableZakat = ({
                         )}
                         <button
                           onClick={() => handleDeleteSingle(trx.id)}
-                          className="text-red-500 hover:bg-red-50 p-2 rounded-full"
+                          className="text-red-500 hover:bg-red-50 p-2 rounded-md font-medium transition"
+                          title="Hapus Transaksi"
                         >
-                          🗑️
+                          Delete
                         </button>
                       </td>
                     </tr>
