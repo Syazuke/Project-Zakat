@@ -1,7 +1,7 @@
 "use client";
 
 import Zakat from "@/app/components/atoms/Zakat";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 const PaymentZakat = () => {
   const [nominalZakat, setNominalZakat] = useState(0);
@@ -16,7 +16,10 @@ const PaymentZakat = () => {
           Form Pembayaran Zakat
         </h2>
         <div className="pt-6">
-          <Zakat nominalZakat={nominalZakat} />
+          <Zakat
+            nominalZakat={nominalZakat}
+            setNominalZakat={setNominalZakat}
+          />
         </div>
       </div>
     </section>

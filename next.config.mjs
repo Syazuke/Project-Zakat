@@ -1,6 +1,5 @@
 /** @type {import('next').NextConfig} */
 
-// Kita buat Daftar VIP (Whitelist) di sini
 const cspHeader = `
   default-src 'self';
   script-src 'self' 'unsafe-eval' 'unsafe-inline' https://app.sandbox.midtrans.com https://app.midtrans.com;
@@ -14,6 +13,9 @@ const cspHeader = `
   .trim();
 
 const nextConfig = {
+  images: {
+    formats: ["image/avif", "image/webp"],
+  },
   async headers() {
     return [
       {

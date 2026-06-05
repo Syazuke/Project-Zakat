@@ -1,10 +1,18 @@
-import Script from "next/script";
+import { Inter, Playfair_Display } from "next/font/google";
 import Footer from "./components/moleculs/Footer/page";
 import Navigation from "./components/moleculs/Navbar/page";
 import "./globals.css";
-import { Inter } from "next/font/google";
+import { ThemeProvider } from "./components/atoms/ThemeProvider";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+});
+
+const playfair = Playfair_Display({
+  subsets: ["latin"],
+  variable: "--font-playfair",
+});
 
 export const metadata = {
   title: "DKM Ayatul Muthmainnah",
@@ -13,22 +21,19 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className="scroll-smooth">
+    <html lang="en" className="scroll-smooth" suppressHydrationWarning>
       <head>
         <link
           rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
         />
       </head>
-      <body className={inter.className}>
-        <Navigation />
-        {children}
-        <Footer />
-        <Script
-          src="https://app.sandbox.midtrans.com/snap/snap.js"
-          data-client-key={process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY}
-          strategy="beforeInteractive"
-        />
+      <body className={`${inter.variable} ${playfair.variable} font-sans`}>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <Navigation />
+          {children}
+          <Footer />
+        </ThemeProvider>
       </body>
     </html>
   );

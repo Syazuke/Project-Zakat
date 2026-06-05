@@ -1,22 +1,21 @@
 "use client";
 
-import useDashboardLogic from "@/app/hooks/useDashboardLogic";
 import { EllipsisVertical } from "lucide-react";
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
-const TableSPP = ({ activeTab, StatusBadge }) => {
-  const {
-    filterBulanSPP,
-    setFilterBulanSPP,
-    handleDeleteLamaSPP,
-    handleDeleteSingleSPP,
-    dataTampilSPP,
-    handleKonfirmasi,
-    handleOpenSpreadsheet,
-    SPREADSHEET_URL_SPP,
-    SPREADSHEET_URL_Penggunaan_SPP,
-  } = useDashboardLogic();
-
+const TableSPP = ({
+  activeTab,
+  Confirmation,
+  DeleteSingleSpp,
+  DeleteLongSpp,
+  filterMonthSpp,
+  handleOpenSpreadsheet,
+  UrlReceiveSpp,
+  UrlUsedSpp,
+  ShowDataSpp,
+  StatusBadge,
+  setFilterMonthSpp,
+}) => {
   const [isReportOpen, setIsReportOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -39,8 +38,8 @@ const TableSPP = ({ activeTab, StatusBadge }) => {
             <h3 className="text-xl font-bold text-gray-900">Riwayat Kas SPP</h3>
             <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
               <select
-                value={filterBulanSPP}
-                onChange={(e) => setFilterBulanSPP(e.target.value)}
+                value={filterMonthSpp}
+                onChange={(e) => setFilterMonthSpp(e.target.value)}
                 className="border rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-500"
               >
                 <option value="semua">Semua Waktu</option>
@@ -50,7 +49,7 @@ const TableSPP = ({ activeTab, StatusBadge }) => {
 
               <div className="flex items-center gap-2">
                 <button
-                  onClick={handleDeleteLamaSPP}
+                  onClick={DeleteLongSpp}
                   className="bg-red-50 text-red-600 px-3 py-2 rounded-lg text-sm font-semibold hover:bg-red-100"
                 >
                   <span className="hidden md:inline">
@@ -74,17 +73,13 @@ const TableSPP = ({ activeTab, StatusBadge }) => {
                         </h1>
                       </div>
                       <button
-                        onClick={() =>
-                          handleOpenSpreadsheet(SPREADSHEET_URL_SPP)
-                        }
+                        onClick={() => handleOpenSpreadsheet(UrlReceiveSpp)}
                         className="w-full text-sm text-left px-4 py-3 font-medium text-gray-700  hover:bg-blue-50 hover:text-blue-700 border-b border-gray-50 transition-all duration-300"
                       >
                         📄 Pemasukan Dana
                       </button>
                       <button
-                        onClick={() =>
-                          handleOpenSpreadsheet(SPREADSHEET_URL_Penggunaan_SPP)
-                        }
+                        onClick={() => handleOpenSpreadsheet(UrlUsedSpp)}
                         className="w-full text-sm font-medium text-left text-gray-700 px-4 py-3 border-b border-gray-50 transition-all duration-300 hover:bg-blue-50 hover:text-blue-700"
                       >
                         📤 Penggunaan Dana
@@ -109,7 +104,7 @@ const TableSPP = ({ activeTab, StatusBadge }) => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {dataTampilSPP.length === 0 ? (
+                {ShowDataSpp.length === 0 ? (
                   <tr>
                     <td
                       colSpan="7"
@@ -119,36 +114,35 @@ const TableSPP = ({ activeTab, StatusBadge }) => {
                     </td>
                   </tr>
                 ) : (
-                  dataTampilSPP.map((spp) => (
-                    <tr key={spp.id} className="hover:bg-gray-50 transition">
+                  ShowDataSpp.map((i) => (
+                    <tr key={i.id} className="hover:bg-gray-50 transition">
                       <td className="px-6 py-4">
-                        {new Date(spp.createdAt).toLocaleDateString("id-ID")}
+                        {new Date(i.createdAt).toLocaleDateString("id-ID")}
                       </td>
                       <td className="px-6 py-4 font-medium text-gray-900">
-                        {spp.studentName}
+                        {i.studentName}
                       </td>
                       <td className="px-6 py-4 capitalize">
-                        {spp.sppType} ({spp.paymentMonth})
+                        {i.sppType} ({i.paymentMonth})
                       </td>
                       <td className="px-6 py-4 font-bold text-blue-600">
-                        Rp {spp.amount.toLocaleString("id-ID")}
+                        Rp {i.amount.toLocaleString("id-ID")}
                       </td>
-                      <td className="px-6 py-4">{spp.message}</td>
+                      <td className="px-6 py-4">{i.message}</td>
                       <td className="px-6 py-4">
-                        <StatusBadge status={spp.status} />
+                        <StatusBadge status={i.status} />
                       </td>
                       <td className="px-6 py-4 text-center flex items-center justify-center gap-2">
-                        {/* ✨ PERBAIKAN: Tombol muncul jika status mengandung kata PENDING (baik Tunai maupun Online) */}
-                        {spp.status.includes("PENDING") && (
+                        {i.status.includes("PENDING") && (
                           <button
-                            onClick={() => handleKonfirmasi(spp.id, "SPP")}
+                            onClick={() => Confirmation(i.id, "SPP")}
                             className="bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded-md text-xs font-bold transition-all shadow-sm"
                           >
                             ✅ Terima Dana
                           </button>
                         )}
                         <button
-                          onClick={() => handleDeleteSingleSPP(spp.id)}
+                          onClick={() => DeleteSingleSpp(i.id)}
                           className="text-red-500 hover:bg-red-50 p-2 rounded-full transition-colors"
                           title="Hapus Transaksi"
                         >

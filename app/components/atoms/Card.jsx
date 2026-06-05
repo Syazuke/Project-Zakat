@@ -1,6 +1,4 @@
-import React from "react";
-
-const Card = ({ saldoZakat, saldoSPP, pendingVerifikasi, totalOrang }) => {
+const Card = ({ saldoSPP, saldoZakat }) => {
   return (
     <div className="flex flex-col md:flex-row gap-4">
       <div className="bg-emerald-600 text-white p-6 w-full rounded-2xl shadow-md border border-emerald-700 flex flex-col justify-between">

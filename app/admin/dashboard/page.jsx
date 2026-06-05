@@ -1,34 +1,73 @@
 "use client";
 
-import React from "react";
 import Card from "@/app/components/atoms/Card";
-import ModalHapus from "@/app/components/atoms/ModalHapus";
+import ModalConfirm from "@/app/components/atoms/ModalConfirm";
 import NavDashboard from "@/app/components/atoms/NavDashboard";
-import Sidebar from "@/app/components/atoms/Sidebar";
 import TablePenyaluran from "@/app/components/atoms/TablePenyaluran";
 import TableSPP from "@/app/components/atoms/TableSPP";
 import TableZakat from "@/app/components/atoms/TableZakat";
 import TarikDana from "@/app/components/atoms/TarikDana";
-import { Toaster } from "react-hot-toast";
 import useDashboardLogic from "@/app/hooks/useDashboardLogic";
+import { Toaster } from "react-hot-toast";
+
+const StatusBadge = ({ status }) => {
+  if (
+    status === "settlement" ||
+    status === "capture" ||
+    status === "SUCCESS" ||
+    status === "PAID"
+  ) {
+    return (
+      <span className="px-2 py-1 bg-emerald-100 text-emerald-700 rounded text-xs font-bold shadow-sm">
+        LUNAS
+      </span>
+    );
+  }
+  if (status === "PENDING_TUNAI") {
+    return (
+      <span className="px-2 py-1 bg-amber-100 text-amber-800 rounded text-xs font-bold animate-pulse shadow-sm">
+        ⏳ MENUNGGU TUNAI
+      </span>
+    );
+  }
+  if (status === "PENDING") {
+    return (
+      <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-bold animate-pulse shadow-sm">
+        ⏳ CEK TRANSFER
+      </span>
+    );
+  }
+  return (
+    <span className="px-2 py-1 bg-red-100 text-red-700 rounded text-xs font-bold shadow-sm">
+      {status}
+    </span>
+  );
+};
 
 export default function AdminDashboard() {
   const {
+    dataTampilSPP,
+    dataTampilZakat,
     executeConfirm,
     triggerDeleteLamaSPP,
     triggerDeleteSingleSPP,
-    triggerDeleteLama,
-    triggerDeleteSingle,
+    triggerDeleteLamaZakat,
+    triggerDeleteSingleZakat,
     triggerDeletePenyaluran,
     triggerLogout,
     triggerKonfirmasi,
     triggerWithdraw,
-    adminName,
+    handleOpenSpreadsheet,
     isLoading,
+    setIsLoading,
     confirmConfig,
     setConfirmConfig,
     saldoSPP,
     saldoZakat,
+    filterBulanSPP,
+    setFilterBulanSPP,
+    filterBulanZakat,
+    setFilterBulanZakat,
     riwayatPenyaluran,
     activeTab,
     setActiveTab,
@@ -37,41 +76,23 @@ export default function AdminDashboard() {
     withdrawForm,
     setWithdrawForm,
     isWithdrawing,
+    isExecuting,
+    SPREADSHEET_URL_INFAQ,
+    SPREADSHEET_URL_Penyaluran_INFAQ,
+    SPREADSHEET_URL_ZAKAT,
+    SPREADSHEET_URL_Penyaluran_ZAKAT,
+    SPREADSHEET_URL_SPP,
+    SPREADSHEET_URL_Penggunaan_SPP,
   } = useDashboardLogic();
 
-  const StatusBadge = ({ status }) => {
-    if (
-      status === "settlement" ||
-      status === "capture" ||
-      status === "SUCCESS" ||
-      status === "PAID"
-    ) {
-      return (
-        <span className="px-2 py-1 bg-emerald-100 text-emerald-700 rounded text-xs font-bold shadow-sm">
-          LUNAS
-        </span>
-      );
-    }
-    if (status === "PENDING_TUNAI") {
-      return (
-        <span className="px-2 py-1 bg-amber-100 text-amber-800 rounded text-xs font-bold animate-pulse shadow-sm">
-          ⏳ MENUNGGU TUNAI
-        </span>
-      );
-    }
-    if (status === "PENDING") {
-      return (
-        <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-bold animate-pulse shadow-sm">
-          ⏳ CEK TRANSFER
-        </span>
-      );
-    }
-    return (
-      <span className="px-2 py-1 bg-red-100 text-red-700 rounded text-xs font-bold shadow-sm">
-        {status}
-      </span>
-    );
-  };
+  const newTransaction = dataTampilZakat.some(
+    (i) =>
+      i.status === "PENDING" ||
+      i.status === "PENDING_TUNAI" ||
+      dataTampilSPP.some(
+        (i) => i.status === "PENDING" || i.status === "PENDING_TUNAI",
+      ),
+  );
 
   if (isLoading)
     return (
@@ -81,7 +102,7 @@ export default function AdminDashboard() {
     );
 
   return (
-    <div className="min-h-screen bg-gray-50 flex font-sans overflow-hidden relative">
+    <div className="min-h-screen bg-background text-foreground flex font-sans overflow-hidden relative">
       <Toaster position="top-center" reverseOrder={false} />
 
       <TarikDana
@@ -93,7 +114,7 @@ export default function AdminDashboard() {
         isWithdrawing={isWithdrawing}
       />
 
-      <ModalHapus
+      <ModalConfirm
         isOpen={confirmConfig.isOpen}
         pesan={confirmConfig.message}
         onClose={() =>
@@ -106,28 +127,21 @@ export default function AdminDashboard() {
           })
         }
         onConfirm={executeConfirm}
-      />
-
-      <Sidebar
-        setIsWithdrawModalOpen={setIsWithdrawModalOpen}
-        handleLogout={triggerLogout}
+        isLoading={isExecuting}
       />
 
       <main className="flex flex-col h-screen overflow-y-auto w-full lg:ml-64">
         <NavDashboard
           setIsWithdrawModalOpen={setIsWithdrawModalOpen}
-          adminName={adminName}
+          handleLogout={triggerLogout}
+          newTransaction={newTransaction}
         />
 
         <div className="p-4 md:p-6 space-y-6">
-          <Card
-            saldoSPP={saldoSPP}
-            saldoZakat={saldoZakat}
-            totalOrang={totalOrang}
-          />
+          <Card saldoSPP={saldoSPP} saldoZakat={saldoZakat} />
 
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-visible">
-            <div className="flex border-b border-gray-200 overflow-x-auto">
+          <div className="bg-white dark:text-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-visible">
+            <div className="flex border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
               <button
                 onClick={() => setActiveTab("zakat")}
                 className={`flex-1 py-4 px-4 text-sm font-bold transition whitespace-nowrap ${activeTab === "zakat" ? "bg-emerald-50 text-emerald-700 border-b-2 border-emerald-600" : "text-gray-500 hover:bg-gray-50 hover:text-emerald-600"}`}
@@ -147,37 +161,38 @@ export default function AdminDashboard() {
                 Riwayat Penyaluran Dana
               </button>
             </div>
-
-            {/* KONTEN TAB ZAKAT */}
             {activeTab === "zakat" && (
               <TableZakat
-                filterBulanZakat={filterBulanZakat}
-                setFilterBulanZakat={setFilterBulanZakat}
-                handleDeleteLama={triggerDeleteLama}
-                handleOpenSpreadsheet={handleOpenSpreadsheet}
-                handleDeleteSingle={triggerDeleteSingle}
                 activeTab={activeTab}
-                dataTampilZakat={dataTampilZakat}
+                Confirmation={triggerKonfirmasi}
+                DeleteLongZakat={triggerDeleteLamaZakat}
+                DeleteSingleZakat={triggerDeleteSingleZakat}
+                filterMonthZakat={filterBulanZakat}
+                handleOpenSpreadsheet={handleOpenSpreadsheet}
+                UrlReceiveZakat={SPREADSHEET_URL_ZAKAT}
+                UrlUsedZakat={SPREADSHEET_URL_Penyaluran_ZAKAT}
+                UrlReceiveInfaq={SPREADSHEET_URL_INFAQ}
+                UrlUsedInfaq={SPREADSHEET_URL_Penyaluran_INFAQ}
+                ShowDataZakat={dataTampilZakat}
                 StatusBadge={StatusBadge}
-                SPREADSHEET_URL_ZAKAT={SPREADSHEET_URL_ZAKAT}
-                handleKonfirmasi={triggerKonfirmasi}
-                SPREADSHEET_URL_INFAQ={SPREADSHEET_URL_INFAQ}
+                setFilterMonthZakat={setFilterBulanZakat}
               />
             )}
-
-            {/* KONTEN TAB SPP */}
             {activeTab === "spp" && (
               <TableSPP
                 activeTab={activeTab}
-                filterBulanSPP={filterBulanSPP}
-                setFilterBulanSPP={setFilterBulanSPP}
-                handleDeleteLamaSPP={triggerDeleteLamaSPP}
+                Confirmation={triggerKonfirmasi}
+                DeleteLongSpp={triggerDeleteLamaSPP}
+                DeleteSingleSpp={triggerDeleteSingleSPP}
+                filterMonthSpp={filterBulanSPP}
                 handleOpenSpreadsheet={handleOpenSpreadsheet}
-                handleDeleteSingleSPP={triggerDeleteSingleSPP}
-                dataTampilSPP={dataTampilSPP}
+                isLoading={isLoading}
+                setIsLoading={setIsLoading}
+                UrlReceiveSpp={SPREADSHEET_URL_SPP}
+                UrlUsedSpp={SPREADSHEET_URL_Penggunaan_SPP}
                 StatusBadge={StatusBadge}
-                SPREADSHEET_URL_SPP={SPREADSHEET_URL_SPP}
-                handleKonfirmasi={triggerKonfirmasi}
+                ShowDataSpp={dataTampilSPP}
+                setFilterMonthSpp={setFilterBulanSPP}
               />
             )}
 

@@ -18,6 +18,7 @@ export default function useDashboardLogic() {
   const router = useRouter();
   const [adminName, setAdminName] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [isExecuting, setIsExecuting] = useState(false);
   const [saldoZakat, setSaldoZakat] = useState({
     kotor: 0,
     ditarik: 0,
@@ -173,7 +174,7 @@ export default function useDashboardLogic() {
     });
   };
 
-  const triggerDeleteSingle = (id) => {
+  const triggerDeleteSingleZakat = (id) => {
     setConfirmConfig({
       isOpen: true,
       type: "ZAKAT_SINGLE",
@@ -183,7 +184,7 @@ export default function useDashboardLogic() {
     });
   };
 
-  const triggerDeleteLama = () => {
+  const triggerDeleteLamaZakat = () => {
     setConfirmConfig({
       isOpen: true,
       type: "ZAKAT_LAMA",
@@ -215,12 +216,13 @@ export default function useDashboardLogic() {
 
   const executeConfirm = async () => {
     const { type, id, extraData } = confirmConfig;
-
+    setIsExecuting(true);
     if (type === "LOGOUT") {
       localStorage.clear();
       document.cookie =
         "isLoggedIn=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
       router.push("/");
+      setIsExecuting(false);
       return;
     }
 
@@ -250,6 +252,7 @@ export default function useDashboardLogic() {
         toast.error("Terjadi kesalahan jaringan saat menarik dana.");
       } finally {
         setIsWithdrawing(false);
+        setIsExecuting(false);
         setConfirmConfig({
           isOpen: false,
           type: "",
@@ -280,6 +283,7 @@ export default function useDashboardLogic() {
       } catch (error) {
         toast.error("Terjadi kesalahan sistem saat konfirmasi.");
       } finally {
+        setIsExecuting(false);
         setConfirmConfig({
           isOpen: false,
           type: "",
@@ -345,6 +349,7 @@ export default function useDashboardLogic() {
     } catch (error) {
       toast.error("Terjadi kesalahan jaringan saat menghapus data.");
     } finally {
+      setIsExecuting(false);
       setConfirmConfig({
         isOpen: false,
         type: "",
@@ -385,8 +390,8 @@ export default function useDashboardLogic() {
     executeConfirm,
     triggerDeleteLamaSPP,
     triggerDeleteSingleSPP,
-    triggerDeleteLama,
-    triggerDeleteSingle,
+    triggerDeleteLamaZakat,
+    triggerDeleteSingleZakat,
     triggerDeletePenyaluran,
     triggerLogout,
     triggerKonfirmasi,
@@ -398,6 +403,7 @@ export default function useDashboardLogic() {
     fetchRiwayatTransaksi,
     adminName,
     isLoading,
+    setIsLoading,
     confirmConfig,
     setConfirmConfig,
     saldoSPP,
@@ -416,6 +422,7 @@ export default function useDashboardLogic() {
     withdrawForm,
     setWithdrawForm,
     isWithdrawing,
+    isExecuting,
     SPREADSHEET_URL_INFAQ,
     SPREADSHEET_URL_Penyaluran_INFAQ,
     SPREADSHEET_URL_ZAKAT,
