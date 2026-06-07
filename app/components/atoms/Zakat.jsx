@@ -11,6 +11,7 @@ const Zakat = ({ nominalZakat, Type }) => {
   const [jenisZakat, setJenisZakat] = useState(Type || "zakat penghasilan");
   const [metodeBayar, setMetodeBayar] = useState("online");
   const [isPopup, setIsPopup] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (Type) setJenisZakat(Type);
@@ -24,6 +25,8 @@ const Zakat = ({ nominalZakat, Type }) => {
       alert("Minimal pembayaran adalah Rp 10.000");
       return;
     }
+
+    setIsLoading(true);
 
     const namaMuzaki = nama.trim() === "" ? "Hamba Allah" : nama;
 
@@ -64,6 +67,8 @@ const Zakat = ({ nominalZakat, Type }) => {
       setIsPopup(true);
     } catch (error) {
       alert("Terjadi kesalahan sistem");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -73,12 +78,10 @@ const Zakat = ({ nominalZakat, Type }) => {
   };
 
   return (
-    <div className="bg-emerald-50 p-6 rounded-xl border border-emerald-100 mt-6 space-y-4 text-left">
-      <h3 className="font-bold text-emerald-800 text-lg border-b border-emerald-200 pb-2">
-        Lengkapi Data Muzakki
-      </h3>
-
-      {/* Input Nama */}
+    <div className="bg-emerald-50 px-6 py-4 rounded-xl border border-emerald-100 space-y-4">
+      <h1 className="text-center text-4xl text-emerald-800 font-bold font-serif border-gray-200 border-b py-4">
+        Form Pembayaran Zakat
+      </h1>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
           Nama Lengkap
@@ -186,18 +189,24 @@ const Zakat = ({ nominalZakat, Type }) => {
       <button
         type="button"
         onClick={checkoutZakat}
-        disabled={nominal < 10000}
+        disabled={nominal < 10000 || isLoading}
         className={`w-full font-bold py-3.5 rounded-lg transition-all mt-4 shadow-md ${
-          nominal < 10000
+          nominal < 10000 || isLoading
             ? "bg-gray-400 text-gray-100 cursor-not-allowed shadow-none"
             : metodeBayar === "tunai"
               ? "bg-amber-500 text-white hover:bg-amber-600 hover:-translate-y-0.5"
               : "bg-[#10B981] text-white hover:bg-emerald-600 hover:-translate-y-0.5"
         }`}
       >
-        {metodeBayar === "tunai"
-          ? "Catat Zakat Tunai"
-          : "Kirim Konfirmasi via WhatsApp"}
+        {isLoading ? (
+          <>
+            <span className="animate-spin text-xl">⏳</span> Memproses...
+          </>
+        ) : metodeBayar === "tunai" ? (
+          "Catat Zakat Tunai"
+        ) : (
+          "Kirim Konfirmasi via WhatsApp"
+        )}
       </button>
       <PopUp
         isOpen={isPopup}

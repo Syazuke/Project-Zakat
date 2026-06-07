@@ -3,7 +3,6 @@ import React from "react";
 
 const ModalHapus = ({ isOpen, onClose, onConfirm, pesan, isLoading }) => {
   if (!isOpen) return null;
-  w;
   return (
     <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
       <div className="bg-white rounded-xl p-6 max-w-sm w-full shadow-2xl transform transition-all scale-100">

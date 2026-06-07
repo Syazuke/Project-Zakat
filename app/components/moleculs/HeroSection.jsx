@@ -1,12 +1,11 @@
 "use client";
 
-import React from "react";
-import Image from "next/image";
 import Masjid from "@/app/assets/images/masjid.webp";
-import { useRouter } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
 
 const HeroSection = () => {
-  const navigate = useRouter("");
   return (
     <section
       id="beranda"
@@ -14,13 +13,13 @@ const HeroSection = () => {
     >
       {" "}
       <div className="w-full md:w-1/2 flex flex-col gap-6">
-        <buton
-          onClick={() => navigate.push("/")}
-          className="flex gap-2 items-center cursor-pointer opacity-60 transition-all hover:text-emerald-400 duration-300 w-fit mb-4"
+        <Link
+          href="/"
+          className="flex items-center text-emerald-700 hover:text-emerald-900 transition font-medium"
         >
-          <i class="fa-solid fa-angle-left"></i>
-          <span>kembali</span>
-        </buton>
+          <ArrowLeft />
+          Kembali
+        </Link>
         <p className="bg-emerald-100 p-3 rounded-full w-fit">
           🌙 Ramadan Kareem - Bersedekahlah dengan ikhlas
         </p>

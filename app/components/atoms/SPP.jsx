@@ -12,6 +12,7 @@ const FormSpp = () => {
   const [pesan, setPesan] = useState("");
   const [metodeBayar, setMetodeBayar] = useState("online");
   const [isPopup, setIsPopup] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const HARGA_SPP_PER_BULAN = 300000;
 
@@ -58,6 +59,8 @@ const FormSpp = () => {
       return;
     }
 
+    setIsLoading(true);
+
     const bulanFinal = jenisSpp === "SPP" ? bulanTagihan.join(", ") : "-";
 
     const dataTransaksi = {
@@ -97,6 +100,8 @@ const FormSpp = () => {
       setIsPopup(true);
     } catch (error) {
       alert("Terjadi kesalahan sistem");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -107,8 +112,8 @@ const FormSpp = () => {
   };
 
   return (
-    <div className="bg-blue-50 p-6 rounded-xl border border-blue-100 mt-6 space-y-5 text-left max-w-2xl mx-auto">
-      <h3 className="font-bold text-blue-800 text-lg border-b border-blue-200 pb-2">
+    <div className="bg-blue-50 px-6 py-4 rounded-xl border border-blue-100 space-y-4 mt-6 text-left w-full mx-auto">
+      <h3 className="font-bold text-blue-800 text-4xl text-center font-serif border-b border-gray-200 py-4">
         Formulir Pembayaran Sekolah
       </h3>
 
@@ -256,18 +261,24 @@ const FormSpp = () => {
       <button
         type="button"
         onClick={checkoutSPP}
-        disabled={nominal < 10000 || namaSiswa.trim() === ""}
+        disabled={nominal < 10000 || namaSiswa.trim() === "" || isLoading}
         className={`w-full font-bold py-3.5 rounded-lg transition-all shadow-md mt-4 ${
-          nominal < 10000 || namaSiswa.trim() === ""
-            ? "bg-gray-400 text-gray-100 cursor-not-allowed shadow-none"
+          nominal < 10000 || namaSiswa.trim() === "" || isLoading
+            ? "bg-gray-400 text-gray-100 cursor-not-allowed shadow-none "
             : metodeBayar === "tunai"
               ? "bg-amber-500 text-white hover:bg-amber-600 hover:-translate-y-0.5"
               : "bg-green-600 text-white hover:bg-green-700 hover:-translate-y-0.5"
         }`}
       >
-        {metodeBayar === "tunai"
-          ? "Catat Tagihan Tunai"
-          : "Kirim Konfirmasi via WhatsApp"}
+        {isLoading ? (
+          <>
+            <span className="animate-spin text-xl">⏳</span> Memproses...
+          </>
+        ) : metodeBayar === "tunai" ? (
+          "Catat Zakat Tunai"
+        ) : (
+          "Kirim Konfirmasi via WhatsApp"
+        )}
       </button>
       <PopUp
         isOpen={isPopup}

@@ -1,6 +1,7 @@
 "use client";
 
 import administratorDark from "@/app/assets/images/administratorDark.png";
+import administrator from "@/app/assets/images/5882.jpg";
 import {
   Bell,
   ChevronDown,
@@ -42,15 +43,15 @@ const NavDashboard = ({
   }, []);
 
   return (
-    <header className="shadow-sm p-4 flex justify-between items-center sticky top-0 bg-background text-foreground z-[900]">
+    <header className="shadow-sm p-4 border-b border-b-white flex justify-between items-center top-0 z-[900]">
       <div className="flex flex-row font-serif gap-2 items-center">
         <button
           onClick={() => setIsOpen(true)}
-          className="z-40 p-2 bg-emerald-800 text-white dark:text-black rounded-lg shadow-md hover:bg-emerald-700 transition lg:hidden"
+          className="z-40 p-2 bg-emerald-800 text-white dark:text-foreground rounded-lg shadow-md hover:bg-emerald-700 transition lg:hidden"
         >
           <Menu />
         </button>
-        <h1 className="text-lg md:text-2xl lg:text-3xl font-bold text-gray-900 tracking-wide">
+        <h1 className="text-lg md:text-2xl lg:text-3xl font-bold text-dark dark:text-foreground tracking-wide">
           Dashboard
         </h1>
       </div>
@@ -59,8 +60,8 @@ const NavDashboard = ({
         <button onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
           {mounted && (theme === "dark" ? <Sun /> : <Moon />)}
         </button>
-        <button className="relative p-2 text-gray-500 hover:bg-gray-100 rounded-full transition">
-          <Bell size={24} className="text-black" />
+        <button className="relative p-2 hover:bg-gray-100 rounded-full transition">
+          <Bell size={24} className="text-black dark:text-foreground" />
           {newTransaction && (
             <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-600 rounded-full border-2 border-white animate-pulse"></span>
           )}
@@ -68,22 +69,30 @@ const NavDashboard = ({
         <div className="relative" ref={profileRef}>
           <button
             onClick={() => setIsOpenProfil(!isOpenProfil)}
-            className="flex items-center gap-2 sm:gap-3 p-1.5 rounded-lg hover:bg-gray-50 transition border border-transparent hover:border-gray-200"
+            className="flex items-center gap-2 sm:gap-3 p-1.5 rounded-lg hover:bg-gray-50 transition border border-transparent hover:border-gray-200 "
           >
-            <Image
-              src={administratorDark}
-              alt="Profil"
-              className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover shadow-sm"
-            />
+            {theme === "dark" ? (
+              <Image
+                src={administrator}
+                alt="Profil"
+                className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover shadow-sm"
+              />
+            ) : (
+              <Image
+                src={administratorDark}
+                alt="Profil"
+                className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover shadow-sm"
+              />
+            )}
 
             <div className="hidden sm:flex flex-col items-start">
-              <h3 className="text-sm font-bold text-gray-800 leading-tight">
+              <h3 className="text-sm font-bold text-black dark:text-white leading-tight">
                 Administrator
               </h3>
               <p className="text-xs opacity-50 font-sans">Super Admin</p>
             </div>
 
-            <div className="text-black ml-1">
+            <div className="text-background dark:text-foreground ml-1">
               {isOpenProfil ? (
                 <ChevronUp size={24} />
               ) : (
@@ -131,26 +140,30 @@ const NavDashboard = ({
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-[999] w-[75%] sm:w-[40%] md:w-[30%] bg-emerald-800 text-white flex flex-col transition-transform duration-300 ease-in-out
+        className={`fixed inset-y-0 left-0 z-[999] bg-emerald-800 text-white flex flex-col transition-transform duration-300 ease-in-out w-[60%] md:w-[30%]
           ${isOpen ? "translate-x-0" : "-translate-x-full"} 
-          lg:hidden`}
+          lg:translate-x-0`}
       >
         <div className="p-6 border-b border-emerald-700 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Image
               src={administratorDark}
               alt=""
-              className="w-12 h-12 rounded-full border-2 border-emerald-600"
+              className="w-10 h-10 md:w-12 md:h-12 rounded-full border-2 border-emerald-600"
             />
             <div>
-              <h2 className="font-bold text-lg leading-tight">Administrator</h2>
-              <p className="text-xs opacity-70 font-sans">Zakat & Madrasah</p>
+              <h2 className="font-bold text-sm md:text-lg leading-tight">
+                Administrator
+              </h2>
+              <p className="text-[10px] md:text-xs opacity-70 font-sans">
+                Zakat & Madrasah
+              </p>
             </div>
           </div>
 
           <button
             onClick={() => setIsOpen(false)}
-            className="text-emerald-300 hover:text-white transition"
+            className="text-emerald-300 hover:text-white transition lg:hidden"
           >
             <X />
           </button>

@@ -8,7 +8,7 @@ export default function TablePenyaluran({ riwayat, handleDelete }) {
   );
 
   return (
-    <div className="p-4 md:p-6 bg-white animate-fade-in">
+    <div className="p-4 md:p-6 bg-white rounded-full animate-fade-in">
       <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
         <div>
           <h2 className="text-xl font-bold text-slate-800">

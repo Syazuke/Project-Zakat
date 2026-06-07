@@ -10,7 +10,7 @@ import {
 import { useRouter } from "next/navigation";
 
 export default function HomePage() {
-  const router = useRouter(); // ✨ Perbaikan di sini
+  const router = useRouter();
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -20,28 +20,24 @@ export default function HomePage() {
             Selamat Datang di Portal Layanan Terpadu
           </h1>
           <p className="text-xl text-gray-600">
-            Silakan pilih layanan yang ingin Anda tuju.
+            Silakan pilih lembaga layanan yang ingin Anda tuju.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto">
-          {/* Card Zakat */}
+        <div className="grid md:grid-cols-2 gap-4 max-w-7xl mx-auto">
           <div
-            className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-shadow cursor-pointer border-2 border-transparent hover:border-green-500"
-            onClick={() => router.push("/DKM")} // ✨ Perbaikan di sini
+            className="bg-white w-full rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-shadow cursor-pointer border-2 border-transparent hover:border-green-500"
+            onClick={() => router.push("/DKM")}
           >
-            <div className="bg-gradient-to-br from-green-500 to-green-600 p-8 text-white">
+            <div className="bg-gradient-to-br from-green-500 to-green-600 p-4 text-white">
               <div className="flex items-center justify-center mb-6">
                 <div className="bg-white/20 p-6 rounded-full">
                   <Building2 className="w-16 h-16" />
                 </div>
               </div>
               <h2 className="text-3xl font-semibold text-center mb-2">
-                Baitul Mal
-              </h2>
-              <h3 className="text-xl text-center text-green-100">
                 Lembaga Amil Zakat
-              </h3>
+              </h2>
             </div>
 
             <div className="p-8">
@@ -59,24 +55,19 @@ export default function HomePage() {
               </button>
             </div>
           </div>
-
-          {/* Card SPP */}
           <div
             className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-shadow cursor-pointer border-2 border-transparent hover:border-blue-500"
-            onClick={() => router.push("/Madrasah")} // ✨ Perbaikan di sini
+            onClick={() => router.push("/Madrasah")}
           >
-            <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-8 text-white">
+            <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-4 text-white">
               <div className="flex items-center justify-center mb-6">
                 <div className="bg-white/20 p-6 rounded-full">
                   <GraduationCap className="w-16 h-16" />
                 </div>
               </div>
               <h2 className="text-3xl font-semibold text-center mb-2">
-                Administrasi Sekolah
+                Lembaga Sekolah
               </h2>
-              <h3 className="text-xl text-center text-blue-100">
-                Pembayaran SPP
-              </h3>
             </div>
 
             <div className="p-8">

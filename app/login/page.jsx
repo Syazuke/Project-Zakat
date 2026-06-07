@@ -60,7 +60,7 @@ export default function LoginPage() {
       />
       <a
         href="/"
-        className="absolute top-2/8 left-6 flex items-center text-emerald-700 hover:text-emerald-900 transition font-medium"
+        className="absolute top-[5%] left-6 flex items-center text-emerald-700 hover:text-emerald-900 transition font-medium"
       >
         <ArrowLeft />
         Kembali ke Beranda

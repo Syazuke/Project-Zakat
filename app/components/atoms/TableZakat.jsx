@@ -1,7 +1,7 @@
 "use client";
 
 import { EllipsisVertical } from "lucide-react";
-import React, { useState, useRef, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const TableZakat = ({
   activeTab,
@@ -32,7 +32,7 @@ const TableZakat = ({
   }, []);
 
   return (
-    <div>
+    <div className="bg-white rounded-full">
       <div className="flex flex-col">
         <div className="p-4 md:p-6 border-b border-gray-100 flex flex-wrap justify-between items-center gap-4 relative z-[60]">
           <h3 className="text-xl font-bold text-gray-900">Riwayat Kas Zakat</h3>
@@ -41,7 +41,7 @@ const TableZakat = ({
             <select
               value={filterMonthZakat}
               onChange={(e) => setFilterMonthZakat(e.target.value)}
-              className="border border-gray-300 rounded-lg px-3 py-2 text-xs md:text-sm outline-none focus:border-emerald-500 bg-white"
+              className="border border-gray-300 rounded-lg px-3 py-2 text-xs md:text-sm outline-none focus:border-emerald-500 bg-white dark:text-black"
             >
               <option value="semua">Semua Waktu</option>
               <option value="bulan_ini">Bulan Ini</option>

@@ -3,24 +3,22 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Wallet, ShieldCheck } from "lucide-react";
 import Image from "next/image";
 import madrasah from "@/app/assets/images/masjid.webp";
+import Link from "next/link";
 
 export default function SppModern() {
   const router = useRouter();
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* Navbar Minimalis */}
-      <nav className="p-6">
-        <button
-          onClick={() => router.push("/")}
-          className="text-slate-500 hover:text-indigo-600 flex items-center gap-2 font-medium"
-        >
-          <ArrowLeft className="w-5 h-5" /> Kembali
-        </button>
-      </nav>
+      <Link
+        href="/"
+        className="flex items-center text-blue-700 hover:text-blue-900 transition font-medium px-4 py-6"
+      >
+        <ArrowLeft />
+        Kembali
+      </Link>
 
-      <div className="container mx-auto px-4 max-w-6xl flex flex-col md:flex-row items-center gap-12 mt-10">
-        {/* Teks Kiri */}
+      <div className="container mx-auto px-4 max-w-6xl flex flex-col md:flex-row items-center gap-1">
         <div className="flex-1">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-100 text-indigo-700 text-sm font-semibold mb-6">
             <ShieldCheck className="w-4 h-4" /> Pembayaran Terenkripsi & Aman
@@ -40,10 +38,8 @@ export default function SppModern() {
             <p>Bayar SPP disini</p>
           </button>
         </div>
-
-        {/* Card Form Kanan (Melayang) */}
-        <div className="flex-1 w-full max-w-md">
-          <Image src={madrasah} alt="baslk" />
+        <div className="flex-1 w-full">
+          <Image src={madrasah} alt="baslk" className="rounded-2xl" />
         </div>
       </div>
     </div>
