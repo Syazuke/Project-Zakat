@@ -1,15 +1,37 @@
 "use client";
 
 import Card from "@/app/components/atoms/Card";
-import ModalConfirm from "@/app/components/atoms/ModalConfirm";
 import NavDashboard from "@/app/components/atoms/NavDashboard";
-import TablePenyaluran from "@/app/components/atoms/TablePenyaluran";
-import TableSPP from "@/app/components/atoms/TableSPP";
-import TableZakat from "@/app/components/atoms/TableZakat";
-import TarikDana from "@/app/components/atoms/TarikDana";
 import useDashboardLogic from "@/app/hooks/useDashboardLogic";
+import dynamic from "next/dynamic";
 import { Toaster } from "react-hot-toast";
-
+import TableZakat from "@/app/components/atoms/TableZakat";
+const TableSPP = dynamic(() => import("@/app/components/atoms/TableSPP"), {
+  ssr: false,
+  loading: () => (
+    <div className="text-center font-bold text-blue-600 animate-pulse">
+      Memuat table Sekolah
+    </div>
+  ),
+});
+const TablePenyaluran = dynamic(
+  () => import("@/app/components/atoms/TablePenyaluran"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="text-center font-bold text-red-600 animate-pulse">
+        Memuat Table Penyaluran
+      </div>
+    ),
+  },
+);
+const ModalConfirm = dynamic(
+  () => import("@/app/components/atoms/ModalConfirm"),
+  { ssr: false },
+);
+const TarikDana = dynamic(() => import("@/app/components/atoms/TarikDana"), {
+  ssr: false,
+});
 const StatusBadge = ({ status }) => {
   if (
     status === "settlement" ||

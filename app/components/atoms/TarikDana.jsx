@@ -23,14 +23,16 @@ export default function TarikDana({
             Catat Pengeluaran Kas
           </h3>
         </div>
-
-        {/* Body Modal */}
         <form onSubmit={handleWithdraw} className="p-6 space-y-4">
           <div>
-            <label className="block text-sm font-bold text-gray-700 mb-1">
+            <label
+              htmlFor="sumber"
+              className="block text-sm font-bold text-gray-700 mb-1"
+            >
               Sumber Dana
             </label>
             <select
+              id="sumber"
               value={withdrawForm.source}
               onChange={(e) =>
                 setWithdrawForm({ ...withdrawForm, source: e.target.value })
@@ -44,12 +46,16 @@ export default function TarikDana({
           </div>
 
           <div>
-            <label className="block text-sm font-bold text-gray-700 mb-1">
+            <label
+              htmlFor="nominal"
+              className="block text-sm font-bold text-gray-700 mb-1"
+            >
               Nominal Pengeluaran (Rp)
             </label>
             <div className="flex items-center border border-gray-300 rounded-lg px-3 focus-within:ring-2 focus-within:ring-red-500 bg-white">
               <span className="text-black mr-2 font-semibold">Rp</span>
               <input
+                id="nominal"
                 type="text"
                 value={
                   withdrawForm.amount
@@ -65,10 +71,14 @@ export default function TarikDana({
           </div>
 
           <div>
-            <label className="block text-sm font-bold text-gray-700 mb-1">
+            <label
+              htmlFor="pesan"
+              className="block text-sm font-bold text-gray-700 mb-1"
+            >
               Keterangan / Tujuan Pengeluaran
             </label>
             <textarea
+              id="pesan"
               value={withdrawForm.note}
               onChange={(e) =>
                 setWithdrawForm({ ...withdrawForm, note: e.target.value })

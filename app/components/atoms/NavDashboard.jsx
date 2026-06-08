@@ -46,6 +46,7 @@ const NavDashboard = ({
     <header className="shadow-sm p-4 border-b border-b-white flex justify-between items-center top-0 z-[900]">
       <div className="flex flex-row font-serif gap-2 items-center">
         <button
+          aria-label="Open menu Navigasi"
           onClick={() => setIsOpen(true)}
           className="z-40 p-2 bg-emerald-800 text-white dark:text-foreground rounded-lg shadow-md hover:bg-emerald-700 transition lg:hidden"
         >
@@ -57,10 +58,16 @@ const NavDashboard = ({
       </div>
 
       <div className="flex items-center gap-2">
-        <button onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
+        <button
+          aria-label="Thema"
+          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+        >
           {mounted && (theme === "dark" ? <Sun /> : <Moon />)}
         </button>
-        <button className="relative p-2 hover:bg-gray-100 rounded-full transition">
+        <button
+          aria-label="Lihat Notifikasi"
+          className="relative p-2 hover:bg-gray-100 rounded-full transition"
+        >
           <Bell size={24} className="text-black dark:text-foreground" />
           {newTransaction && (
             <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-600 rounded-full border-2 border-white animate-pulse"></span>
@@ -68,6 +75,7 @@ const NavDashboard = ({
         </button>
         <div className="relative" ref={profileRef}>
           <button
+            aria-label="Ganti tema layar"
             onClick={() => setIsOpenProfil(!isOpenProfil)}
             className="flex items-center gap-2 sm:gap-3 p-1.5 rounded-lg hover:bg-gray-50 transition border border-transparent hover:border-gray-200 "
           >
@@ -75,12 +83,14 @@ const NavDashboard = ({
               <Image
                 src={administrator}
                 alt="Profil"
+                priority={true}
                 className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover shadow-sm"
               />
             ) : (
               <Image
                 src={administratorDark}
                 alt="Profil"
+                priority={true}
                 className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover shadow-sm"
               />
             )}
@@ -111,12 +121,16 @@ const NavDashboard = ({
               </div>
 
               <div className="p-1">
-                <button className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-600 hover:bg-emerald-50 hover:text-emerald-700 rounded-lg transition">
+                <button
+                  aria-label="foto profil"
+                  className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-600 hover:bg-emerald-50 hover:text-emerald-700 rounded-lg transition"
+                >
                   <User size={16} />
                   Profil Akun
                 </button>
 
                 <button
+                  aria-label="logout"
                   onClick={() => {
                     setIsOpenProfil(false);
                     handleLogout();
@@ -148,7 +162,7 @@ const NavDashboard = ({
           <div className="flex items-center gap-3">
             <Image
               src={administratorDark}
-              alt=""
+              alt="administrator"
               className="w-10 h-10 md:w-12 md:h-12 rounded-full border-2 border-emerald-600"
             />
             <div>
@@ -162,6 +176,7 @@ const NavDashboard = ({
           </div>
 
           <button
+            aria-label="Tutup menu sidebar"
             onClick={() => setIsOpen(false)}
             className="text-emerald-300 hover:text-white transition lg:hidden"
           >
@@ -180,6 +195,7 @@ const NavDashboard = ({
 
         <div className="p-4 border-t border-emerald-700 space-y-2">
           <button
+            aria-label="tarik dana"
             onClick={() => {
               setIsWithdrawModalOpen(true);
               setIsOpen(false);
@@ -189,6 +205,7 @@ const NavDashboard = ({
             💸 Tarik Dana
           </button>
           <button
+            aria-label="logout sidebar"
             onClick={handleLogout}
             className="w-full flex items-center justify-center gap-2 p-3 bg-red-500 hover:bg-red-600 rounded-lg text-white font-bold transition shadow-sm"
           >

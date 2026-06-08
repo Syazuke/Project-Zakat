@@ -83,10 +83,14 @@ const Zakat = ({ nominalZakat, Type }) => {
         Form Pembayaran Zakat
       </h1>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label
+          htmlFor="namaLengkap"
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
           Nama Lengkap
         </label>
         <input
+          id="namaLengkap"
           type="text"
           value={nama}
           onChange={(e) => setNama(e.target.value)}
@@ -94,13 +98,15 @@ const Zakat = ({ nominalZakat, Type }) => {
           className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-500 outline-none bg-white"
         />
       </div>
-
-      {/* Pilihan Jenis Zakat */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label
+          htmlFor="jenisZakat"
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
           Jenis Zakat
         </label>
         <select
+          id="jenisZakat"
           value={jenisZakat}
           onChange={(e) => setJenisZakat(e.target.value)}
           className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-500 outline-none bg-white cursor-pointer"
@@ -110,14 +116,16 @@ const Zakat = ({ nominalZakat, Type }) => {
           <option value="Zakat fidyah">Fidyah</option>
         </select>
       </div>
-
-      {/* METODE PEMBAYARAN */}
       <div className="bg-white p-4 rounded-lg border border-emerald-100">
-        <label className="block text-sm font-bold text-emerald-800 mb-3">
+        <label
+          htmlFor="motedePembayaran"
+          className="block text-sm font-bold text-emerald-800 mb-3"
+        >
           Pilih Metode Pembayaran
         </label>
         <div className="grid grid-cols-2 gap-3">
           <label
+            htmlFor="metodeOnline"
             className={`flex items-center justify-center p-3 rounded-xl border-2 cursor-pointer transition-all ${
               metodeBayar === "online"
                 ? "border-emerald-500 bg-emerald-50 text-emerald-700"
@@ -125,6 +133,7 @@ const Zakat = ({ nominalZakat, Type }) => {
             }`}
           >
             <input
+              id="metodeOnline"
               type="radio"
               className="hidden"
               name="payment"
@@ -135,6 +144,7 @@ const Zakat = ({ nominalZakat, Type }) => {
             <span className="text-sm font-bold">💳 Transfer Online</span>
           </label>
           <label
+            htmlFor="metodeTunai"
             className={`flex items-center justify-center p-3 rounded-xl border-2 cursor-pointer transition-all ${
               metodeBayar === "tunai"
                 ? "border-emerald-500 bg-emerald-50 text-emerald-700"
@@ -142,6 +152,7 @@ const Zakat = ({ nominalZakat, Type }) => {
             }`}
           >
             <input
+              id="metodeTunai"
               type="radio"
               className="hidden"
               name="payment"
@@ -156,12 +167,16 @@ const Zakat = ({ nominalZakat, Type }) => {
 
       {/* Input Nominal */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label
+          htmlFor="inputNominal"
+          className="block text-sm font-medium text-gray-700 mb-2"
+        >
           Nominal Zakat (Rp)
         </label>
         <div className="flex items-center border border-gray-300 rounded-lg px-3 py-3 bg-white focus-within:ring-2 focus-within:ring-emerald-500">
           <span className="text-gray-500 font-semibold mr-2">Rp.</span>
           <input
+            id="inputNominal"
             type="text"
             value={nominal === 0 ? "" : nominal.toLocaleString("id-ID")}
             onChange={handleFormatRupiah}
@@ -173,10 +188,14 @@ const Zakat = ({ nominalZakat, Type }) => {
 
       {/* Pesan Doa */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label
+          htmlFor="pesan"
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
           Pesan / Doa (Opsional)
         </label>
         <textarea
+          id="pesan"
           value={pesan}
           onChange={(e) => setPesan(e.target.value)}
           placeholder="Tuliskan doa atau niat zakat Anda di sini..."

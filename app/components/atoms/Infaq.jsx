@@ -79,13 +79,15 @@ const InfaqForm = ({ nominalInfaq, Type }) => {
       <h2 className="font-bold text-emerald-800 text-center font-serif text-4xl border-b border-gray-200 py-4">
         Formulir Infaq / Sedekah
       </h2>
-
-      {/* Input Nama */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label
+          htmlFor="namaLengkap"
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
           Nama Lengkap
         </label>
         <input
+          id="namaLengkap"
           type="text"
           value={nama}
           onChange={(e) => setNama(e.target.value)}
@@ -93,14 +95,16 @@ const InfaqForm = ({ nominalInfaq, Type }) => {
           className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-500 outline-none bg-white"
         />
       </div>
-
-      {/* METODE PEMBAYARAN */}
       <div className="bg-white p-4 rounded-lg border border-emerald-100">
-        <label className="block text-sm font-bold text-emerald-800 mb-3">
+        <label
+          htmlFor="metodePembayaran"
+          className="block text-sm font-bold text-emerald-800 mb-3"
+        >
           Pilih Metode Pembayaran
         </label>
         <div className="grid grid-cols-2 gap-3">
           <label
+            htmlFor="metodeOnline"
             className={`flex items-center justify-center p-3 rounded-xl border-2 cursor-pointer transition-all ${
               metodeBayar === "online"
                 ? "border-emerald-500 bg-emerald-50 text-emerald-700"
@@ -108,6 +112,7 @@ const InfaqForm = ({ nominalInfaq, Type }) => {
             }`}
           >
             <input
+              id="metodeOnline"
               type="radio"
               className="hidden"
               name="payment"
@@ -118,6 +123,7 @@ const InfaqForm = ({ nominalInfaq, Type }) => {
             <span className="text-sm font-bold">💳 Transfer Online</span>
           </label>
           <label
+            htmlFor="metodeTunai"
             className={`flex items-center justify-center p-3 rounded-xl border-2 cursor-pointer transition-all ${
               metodeBayar === "tunai"
                 ? "border-emerald-500 bg-emerald-50 text-emerald-700"
@@ -125,6 +131,7 @@ const InfaqForm = ({ nominalInfaq, Type }) => {
             }`}
           >
             <input
+              id="metodeTunai"
               type="radio"
               className="hidden"
               name="payment"
@@ -136,15 +143,17 @@ const InfaqForm = ({ nominalInfaq, Type }) => {
           </label>
         </div>
       </div>
-
-      {/* Input Nominal */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label
+          htmlFor="nominal"
+          className="block text-sm font-medium text-gray-700 mb-2"
+        >
           Nominal Infaq / Sedekah (Rp)
         </label>
         <div className="flex items-center border border-gray-300 rounded-lg px-3 py-3 bg-white focus-within:ring-2 focus-within:ring-emerald-500">
           <span className="text-gray-500 font-semibold mr-2">Rp.</span>
           <input
+            id="nominal"
             type="text"
             value={nominal === 0 ? "" : nominal.toLocaleString("id-ID")}
             onChange={handleFormatRupiah}
@@ -153,13 +162,15 @@ const InfaqForm = ({ nominalInfaq, Type }) => {
           />
         </div>
       </div>
-
-      {/* Pesan Doa */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label
+          htmlFor="pesan"
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
           Pesan / Doa (Opsional)
         </label>
         <textarea
+          id="pesan"
           value={pesan}
           onChange={(e) => setPesan(e.target.value)}
           placeholder="Tuliskan doa atau niat sedekah Anda di sini..."
@@ -167,8 +178,6 @@ const InfaqForm = ({ nominalInfaq, Type }) => {
           className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-500 outline-none resize-none bg-white"
         ></textarea>
       </div>
-
-      {/* Logika Tombol */}
       <button
         type="button"
         onClick={checkoutInfaq}

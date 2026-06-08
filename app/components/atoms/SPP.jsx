@@ -1,6 +1,5 @@
 "use client";
 
-import { Check } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import PopUp from "./Popup";
 
@@ -74,6 +73,7 @@ const FormSpp = () => {
     };
 
     try {
+      await new Promise((resolve) => setTimeout(resolve, 2000));
       await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -118,10 +118,14 @@ const FormSpp = () => {
       </h3>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label
+          htmlFor="namaLengkap"
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
           Nama Lengkap Siswa <span className="text-red-500">*</span>
         </label>
         <input
+          id="namaLengkap"
           type="text"
           value={namaSiswa}
           onChange={(e) => setNamaSiswa(e.target.value)}
@@ -131,10 +135,14 @@ const FormSpp = () => {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label
+          htmlFor="jenisTagihan"
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
           Jenis Tagihan
         </label>
         <select
+          id="jenisTagihan"
           value={jenisSpp}
           onChange={(e) => {
             const pilihanBaru = e.target.value;
@@ -154,14 +162,19 @@ const FormSpp = () => {
       </div>
 
       <div className="bg-white p-4 rounded-lg border border-blue-100">
-        <label className="block text-sm font-bold text-blue-800 mb-3">
+        <label
+          htmlFor="metodePembayaran"
+          className="block text-sm font-bold text-blue-800 mb-3"
+        >
           Pilih Metode Pembayaran
         </label>
         <div className="grid grid-cols-2 gap-3">
           <label
+            htmlFor="metodeOnline"
             className={`flex items-center justify-center p-3 rounded-xl border-2 cursor-pointer transition-all ${metodeBayar === "online" ? "border-blue-500 bg-blue-50 text-blue-700" : "border-gray-200 hover:bg-gray-50"}`}
           >
             <input
+              id="metodeOnline"
               type="radio"
               className="hidden"
               name="payment"
@@ -172,9 +185,11 @@ const FormSpp = () => {
             <span className="text-sm font-bold">💳 Transfer Online</span>
           </label>
           <label
+            htmlFor="metodeTunai"
             className={`flex items-center justify-center p-3 rounded-xl border-2 cursor-pointer transition-all ${metodeBayar === "tunai" ? "border-blue-500 bg-blue-50 text-blue-700" : "border-gray-200 hover:bg-gray-50"}`}
           >
             <input
+              id="metodeTunai"
               type="radio"
               className="hidden"
               name="payment"
@@ -189,7 +204,10 @@ const FormSpp = () => {
 
       {jenisSpp === "SPP" && (
         <div className="bg-white p-4 rounded-lg border border-gray-200">
-          <label className="block text-sm font-bold text-gray-800 mb-3">
+          <label
+            htmlFor="jenisSPP"
+            className="block text-sm font-bold text-gray-800 mb-3"
+          >
             Pilih Bulan Tagihan <span className="text-red-500">*</span>
             <span className="block text-xs text-gray-500 font-normal mt-0.5">
               Tarif: Rp {HARGA_SPP_PER_BULAN.toLocaleString("id-ID")} / bulan
@@ -198,6 +216,7 @@ const FormSpp = () => {
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {daftarBulan.map((bulan) => (
               <label
+                htmlFor={`spp-${bulan}`}
                 key={bulan}
                 className={`flex items-center gap-2 p-2 rounded border cursor-pointer transition ${
                   bulanTagihan.includes(bulan)
@@ -206,6 +225,7 @@ const FormSpp = () => {
                 }`}
               >
                 <input
+                  id={`spp-${bulan}`}
                   type="checkbox"
                   checked={bulanTagihan.includes(bulan)}
                   onChange={() => handleToggleBulan(bulan)}
@@ -219,7 +239,10 @@ const FormSpp = () => {
       )}
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label
+          htmlFor="nominalPembayaran"
+          className="block text-sm font-medium text-gray-700 mb-2"
+        >
           Total Nominal Pembayaran (Rp) <span className="text-red-500">*</span>
         </label>
         <div
@@ -229,6 +252,7 @@ const FormSpp = () => {
         >
           <span className="text-gray-500 font-semibold mr-2">Rp.</span>
           <input
+            id="nominalPembayaran"
             type="text"
             value={nominal === 0 ? "" : nominal.toLocaleString("id-ID")}
             onChange={handleFormatRupiah}
@@ -246,10 +270,14 @@ const FormSpp = () => {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label
+          htmlFor="pesan"
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
           Keterangan Tambahan (Opsional)
         </label>
         <textarea
+          id="pesan"
           value={pesan}
           onChange={(e) => setPesan(e.target.value)}
           placeholder="Misal: Pembayaran SPP bulan lalu yang tertunda..."
@@ -262,7 +290,7 @@ const FormSpp = () => {
         type="button"
         onClick={checkoutSPP}
         disabled={nominal < 10000 || namaSiswa.trim() === "" || isLoading}
-        className={`w-full font-bold py-3.5 rounded-lg transition-all shadow-md mt-4 ${
+        className={`w-full font-bold py-3.5 rounded-lg transition-all shadow-md mt-4 flex items-center justify-center gap-2 ${
           nominal < 10000 || namaSiswa.trim() === "" || isLoading
             ? "bg-gray-400 text-gray-100 cursor-not-allowed shadow-none "
             : metodeBayar === "tunai"
@@ -275,7 +303,7 @@ const FormSpp = () => {
             <span className="animate-spin text-xl">⏳</span> Memproses...
           </>
         ) : metodeBayar === "tunai" ? (
-          "Catat Zakat Tunai"
+          "Catat Pembayaran Tunai"
         ) : (
           "Kirim Konfirmasi via WhatsApp"
         )}

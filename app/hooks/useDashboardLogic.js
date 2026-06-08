@@ -81,9 +81,6 @@ export default function useDashboardLogic() {
           ditarik: sppKeluar,
           bersih: sppMasuk - sppKeluar,
         });
-
-        setTotalOrang(data.totalMuzakki || 0);
-        setPendingVerifikasi(data.pendingVerifikasi || 0);
       }
     } catch (error) {
       console.error("Gagal memuat statistik", error);

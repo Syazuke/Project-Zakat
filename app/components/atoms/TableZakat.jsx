@@ -4,7 +4,6 @@ import { EllipsisVertical } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 const TableZakat = ({
-  activeTab,
   Confirmation,
   DeleteLongZakat,
   DeleteSingleZakat,

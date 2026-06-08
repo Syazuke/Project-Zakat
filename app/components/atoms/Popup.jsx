@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import { Apple, Check, CheckCheck } from "lucide-react";
 
 const PopUp = ({ isOpen, onClose, pesan, title }) => {
   if (!isOpen) return null;
@@ -8,19 +8,7 @@ const PopUp = ({ isOpen, onClose, pesan, title }) => {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity">
       <div className="bg-white rounded-2xl p-6 sm:p-8 max-w-sm w-full text-center shadow-2xl transform transition-all scale-100 animate-fade-in">
         <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-emerald-100 mb-4">
-          <svg
-            className="h-10 w-10 text-emerald-600"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M5 13l4 4L19 7"
-            />
-          </svg>
+          <Check className="w-10 h-10" />
         </div>
         <h3 className="text-xl font-bold text-gray-900 mb-2">{title}</h3>
         <p className="text-gray-600 mb-6 text-sm">{pesan}</p>
