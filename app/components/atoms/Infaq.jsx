@@ -151,7 +151,7 @@ const InfaqForm = ({ nominalInfaq, Type }) => {
           Nominal Infaq / Sedekah (Rp)
         </label>
         <div className="flex items-center border border-gray-300 rounded-lg px-3 py-3 bg-white focus-within:ring-2 focus-within:ring-emerald-500">
-          <span className="text-gray-500 font-semibold mr-2">Rp.</span>
+          <span className="text-gray-600 font-semibold mr-2">Rp.</span>
           <input
             id="nominal"
             type="text"

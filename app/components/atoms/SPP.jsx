@@ -143,6 +143,7 @@ const FormSpp = () => {
         </label>
         <select
           id="jenisTagihan"
+          aria-label="pilih jenis spp"
           value={jenisSpp}
           onChange={(e) => {
             const pilihanBaru = e.target.value;
@@ -209,7 +210,7 @@ const FormSpp = () => {
             className="block text-sm font-bold text-gray-800 mb-3"
           >
             Pilih Bulan Tagihan <span className="text-red-500">*</span>
-            <span className="block text-xs text-gray-500 font-normal mt-0.5">
+            <span className="block text-xs text-gray-600 font-normal mt-0.5">
               Tarif: Rp {HARGA_SPP_PER_BULAN.toLocaleString("id-ID")} / bulan
             </span>
           </label>
@@ -250,7 +251,7 @@ const FormSpp = () => {
             jenisSpp === "SPP" ? "bg-gray-100" : ""
           }`}
         >
-          <span className="text-gray-500 font-semibold mr-2">Rp.</span>
+          <span className="text-gray-600 font-semibold mr-2">Rp.</span>
           <input
             id="nominalPembayaran"
             type="text"

@@ -107,6 +107,7 @@ const Zakat = ({ nominalZakat, Type }) => {
         </label>
         <select
           id="jenisZakat"
+          aria-label="pilih jenis zakat"
           value={jenisZakat}
           onChange={(e) => setJenisZakat(e.target.value)}
           className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-500 outline-none bg-white cursor-pointer"
@@ -174,7 +175,7 @@ const Zakat = ({ nominalZakat, Type }) => {
           Nominal Zakat (Rp)
         </label>
         <div className="flex items-center border border-gray-300 rounded-lg px-3 py-3 bg-white focus-within:ring-2 focus-within:ring-emerald-500">
-          <span className="text-gray-500 font-semibold mr-2">Rp.</span>
+          <span className="text-gray-600 font-semibold mr-2">Rp.</span>
           <input
             id="inputNominal"
             type="text"

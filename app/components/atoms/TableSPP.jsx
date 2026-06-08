@@ -38,6 +38,8 @@ const TableSPP = ({
             <h3 className="text-xl font-bold text-gray-900">Riwayat Kas SPP</h3>
             <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
               <select
+                name="filter bulan spp"
+                aria-label="filter bulan"
                 value={filterMonthSpp}
                 onChange={(e) => setFilterMonthSpp(e.target.value)}
                 className="border rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-500"
@@ -68,7 +70,7 @@ const TableSPP = ({
                   {isReportOpen && (
                     <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-2xl z-[100] overflow-hidden">
                       <div className="px-4 py-2 bg-gray-50 border-b border-gray-100">
-                        <h1 className="text-xs font-bold text-gray-500 uppercase tracking-wider font-sans">
+                        <h1 className="text-xs font-bold text-gray-600 uppercase tracking-wider font-sans">
                           Pilih Laporan
                         </h1>
                       </div>

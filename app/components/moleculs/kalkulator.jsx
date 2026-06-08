@@ -128,7 +128,7 @@ const Kalkulator = () => {
 
                   <div className="flex items-center border border-gray-300 rounded-lg px-3 py-3 focus-within:ring-2 focus-within:ring-emerald-500 focus-within:border-transparent bg-white transition">
                     {item.id !== "hari" && (
-                      <span className="text-gray-500 font-semibold mr-2">
+                      <span className="text-gray-600 font-semibold mr-2">
                         Rp.
                       </span>
                     )}
@@ -151,7 +151,7 @@ const Kalkulator = () => {
                       className="w-full focus:outline-none bg-transparent text-black"
                     />
                     {item.id === "hari" && (
-                      <span className="text-gray-500 font-medium ml-2">
+                      <span className="text-gray-600 font-medium ml-2">
                         Hari
                       </span>
                     )}
@@ -182,7 +182,7 @@ const Kalkulator = () => {
                   <p className="text-4xl font-bold text-emerald-600">
                     Rp {zakatToPay.toLocaleString("id-ID")}
                   </p>
-                  <p className="text-sm text-gray-500 mt-2">
+                  <p className="text-sm text-gray-600 mt-2">
                     {zakatType === "fidyah"
                       ? "*Perhitungan menggunakan estimasi fidyah Rp 65.000/hari"
                       : "*Perhitungan ini menggunakan standar 2.5%"}

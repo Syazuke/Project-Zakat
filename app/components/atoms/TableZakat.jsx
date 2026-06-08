@@ -38,6 +38,8 @@ const TableZakat = ({
 
           <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
             <select
+              name="filter bulan zakat"
+              aria-label="filter bulan"
               value={filterMonthZakat}
               onChange={(e) => setFilterMonthZakat(e.target.value)}
               className="border border-gray-300 rounded-lg px-3 py-2 text-xs md:text-sm outline-none focus:border-emerald-500 bg-white dark:text-black"
@@ -74,7 +76,7 @@ const TableZakat = ({
                 {isReportOpen && (
                   <div className="absolute right-0 mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-2xl z-[100] overflow-hidden">
                     <div className="px-4 py-2 bg-gray-50 border-b border-gray-100">
-                      <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                      <span className="text-xs font-bold text-gray-600 uppercase tracking-wider">
                         Pilih Laporan
                       </span>
                     </div>

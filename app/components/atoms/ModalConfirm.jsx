@@ -9,7 +9,7 @@ const ModalHapus = ({ isOpen, onClose, onConfirm, pesan, isLoading }) => {
         <h3 className="text-lg font-bold text-gray-900 text-center mb-2">
           Warning!
         </h3>
-        <p className="text-sm text-gray-500 text-center mb-6">
+        <p className="text-sm text-gray-600 text-center mb-6">
           {pesan ||
             "Apakah Anda yakin ingin menghapus data ini? Tindakan ini tidak dapat dibatalkan."}
         </p>

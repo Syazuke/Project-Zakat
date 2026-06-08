@@ -79,13 +79,22 @@ const NavDashboard = ({
             onClick={() => setIsOpenProfil(!isOpenProfil)}
             className="flex items-center gap-2 sm:gap-3 p-1.5 rounded-lg hover:bg-gray-50 transition border border-transparent hover:border-gray-200 "
           >
-            {theme === "dark" ? (
-              <Image
-                src={administrator}
-                alt="Profil"
-                priority={true}
-                className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover shadow-sm"
-              />
+            {mounted ? (
+              theme === "dark" ? (
+                <Image
+                  src={administrator}
+                  alt="Profil"
+                  priority={true}
+                  className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover shadow-sm"
+                />
+              ) : (
+                <Image
+                  src={administratorDark}
+                  alt="Profil"
+                  priority={true}
+                  className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover shadow-sm"
+                />
+              )
             ) : (
               <Image
                 src={administratorDark}
@@ -99,7 +108,7 @@ const NavDashboard = ({
               <h3 className="text-sm font-bold text-black dark:text-white leading-tight">
                 Administrator
               </h3>
-              <p className="text-xs opacity-50 font-sans">Super Admin</p>
+              <p className="text-xs text-gray-600 font-sans">Super Admin</p>
             </div>
 
             <div className="text-background dark:text-foreground ml-1">
@@ -117,7 +126,7 @@ const NavDashboard = ({
                 <p className="text-sm font-bold text-gray-900 truncate">
                   Administrator
                 </p>
-                <p className="text-xs text-gray-500 truncate">admin@dkm.com</p>
+                <p className="text-xs text-gray-600 truncate">admin@dkm.com</p>
               </div>
 
               <div className="p-1">
@@ -154,7 +163,7 @@ const NavDashboard = ({
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-[999] bg-emerald-800 text-white flex flex-col transition-transform duration-300 ease-in-out w-[60%] md:w-[30%]
+        className={`fixed inset-y-0 left-0 z-[999] bg-emerald-800 text-white flex flex-col transition-transform duration-300 ease-in-out w-[60%] md:w-[30%] lg:w-[20%] xl:w-[13%]
           ${isOpen ? "translate-x-0" : "-translate-x-full"} 
           lg:translate-x-0`}
       >
@@ -169,7 +178,7 @@ const NavDashboard = ({
               <h2 className="font-bold text-sm md:text-lg leading-tight">
                 Administrator
               </h2>
-              <p className="text-[10px] md:text-xs opacity-70 font-sans">
+              <p className="text-[10px] md:text-xs text-gray-600 font-sans">
                 Zakat & Madrasah
               </p>
             </div>

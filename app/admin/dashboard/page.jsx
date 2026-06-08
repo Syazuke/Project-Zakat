@@ -166,19 +166,19 @@ export default function AdminDashboard() {
             <div className="flex border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
               <button
                 onClick={() => setActiveTab("zakat")}
-                className={`flex-1 py-4 px-4 text-sm font-bold transition-all whitespace-nowrap ${activeTab === "zakat" ? "bg-emerald-50 text-emerald-700 border-b-2 border-emerald-600 rounded-tl-xl" : "text-gray-500 hover:bg-gray-50 hover:text-emerald-600 hover:rounded-tl-xl duration-500"}`}
+                className={`flex-1 py-4 px-4 text-sm font-bold transition-all whitespace-nowrap ${activeTab === "zakat" ? "bg-emerald-50 text-emerald-700 border-b-2 border-emerald-600 rounded-tl-xl" : "text-gray-600 hover:bg-gray-50 hover:text-emerald-600 hover:rounded-tl-xl duration-500"}`}
               >
                 Data Kas Zakat
               </button>
               <button
                 onClick={() => setActiveTab("spp")}
-                className={`flex-1 py-4 px-4 text-sm font-bold transition whitespace-nowrap ${activeTab === "spp" ? "bg-blue-50 text-blue-700 border-b-2 border-blue-600" : "text-gray-500 hover:bg-gray-50 hover:text-blue-600"}`}
+                className={`flex-1 py-4 px-4 text-sm font-bold transition whitespace-nowrap ${activeTab === "spp" ? "bg-blue-50 text-blue-700 border-b-2 border-blue-600" : "text-gray-600 hover:bg-gray-50 hover:text-blue-600"}`}
               >
                 Data Kas Madrasah
               </button>
               <button
                 onClick={() => setActiveTab("penyaluran")}
-                className={`flex-1 py-4 px-4 text-sm font-bold transition whitespace-nowrap ${activeTab === "penyaluran" ? "bg-red-50 text-red-700 border-b-2 border-red-600 rounded-tr-xl" : "text-gray-500 hover:bg-gray-50 hover:text-red-600 hover:rounded-tr-xl"}`}
+                className={`flex-1 py-4 px-4 text-sm font-bold transition whitespace-nowrap ${activeTab === "penyaluran" ? "bg-red-50 text-red-700 border-b-2 border-red-600 rounded-tr-xl" : "text-gray-600 hover:bg-gray-50 hover:text-red-600 hover:rounded-tr-xl"}`}
               >
                 Riwayat Penyaluran Dana
               </button>

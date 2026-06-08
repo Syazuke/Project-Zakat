@@ -33,6 +33,8 @@ export default function TarikDana({
             </label>
             <select
               id="sumber"
+              name="sumber dana"
+              aria-label="sumber dana"
               value={withdrawForm.source}
               onChange={(e) =>
                 setWithdrawForm({ ...withdrawForm, source: e.target.value })
@@ -56,6 +58,7 @@ export default function TarikDana({
               <span className="text-black mr-2 font-semibold">Rp</span>
               <input
                 id="nominal"
+                name="nominal"
                 type="text"
                 value={
                   withdrawForm.amount

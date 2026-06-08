@@ -13,13 +13,15 @@ const cspHeader = `
   .trim();
 
 const nextConfig = {
+  experimental: {
+    optimizeCss: true,
+  },
   images: {
     formats: ["image/avif", "image/webp"],
   },
   async headers() {
     return [
       {
-        // Terapkan pelindung ini ke seluruh halaman website /(.*)
         source: "/(.*)",
         headers: [
           {
@@ -27,7 +29,7 @@ const nextConfig = {
             value: cspHeader,
           },
           {
-            key: "X-Frame-Options", // Mencegah web Anda di-copy ke dalam iframe (Clickjacking)
+            key: "X-Frame-Options",
             value: "DENY",
           },
           {
